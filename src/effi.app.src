@@ -1,6 +1,6 @@
 {application, effi,
  [
-  {description, "An Erlang effi library"},
+  {description, "Erlang Foreign Function Interface"},
   {vsn, "1"},
   {modules, [
              effi
