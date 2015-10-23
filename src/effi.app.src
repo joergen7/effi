@@ -1,0 +1,14 @@
+{application, effi,
+ [
+  {description, "An Erlang effi library"},
+  {vsn, "1"},
+  {modules, [
+             effi
+            ]},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {env, []}
+ ]}.
