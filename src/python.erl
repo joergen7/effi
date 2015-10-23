@@ -1,11 +1,11 @@
--module( bash ).
--behaviour( interact ).
+-module( python ).
+-behaviour( script ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Callback exports
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0] ).
+-export( [ffi_type/0, shebang/0] ).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -14,17 +14,9 @@
 
 %% ffi_type/0
 %
-ffi_type() -> interact.
+ffi_type() -> script.
 
 
-%% interpreter/0
+%% shebang/0
 %
-interpreter() -> "bash".
-
-
-%% prefix/0
-prefix() -> "set -eu -o pipefail".
-
-%% suffix/0
-%
-suffix() -> "exit".
+shebang() -> "#!/usr/bin/env python".

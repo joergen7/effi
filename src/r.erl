@@ -1,4 +1,4 @@
--module( bash ).
+-module( r ).
 -behaviour( interact ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,12 +19,14 @@ ffi_type() -> interact.
 
 %% interpreter/0
 %
-interpreter() -> "bash".
+interpreter() -> "Rscript --vanilla -".
 
 
 %% prefix/0
-prefix() -> "set -eu -o pipefail".
+%
+prefix() -> "".
+
 
 %% suffix/0
 %
-suffix() -> "exit".
+suffix() -> "q()".
