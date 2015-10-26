@@ -15,7 +15,10 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -callback ffi_type() -> atom().
+-callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iolist().
+-callback dismissal( OutName::string(), IsList::boolean() ) -> iolist().
 -callback shebang() -> string().
+-callback extension() -> string().
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,10 +44,13 @@ when is_atom( Lang ),
   Shebang = apply( Lang, shebang, [] ),
   
   % complement script with shebang
-  Script1 =  [Shebang,$\n,Script],
+  Script1 = [Shebang,$\n,Script],
+
+  % get file extension
+  Ext = apply( Lang, extension, [] ),
   
   % compose script filename
-  ScriptFile = lists:flatten( [Dir,$/,?SCRIPT_FILE] ),
+  ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
 
   io:format( "Storing data in ~s:~n~s~n", [ScriptFile, Script1] ),
 
