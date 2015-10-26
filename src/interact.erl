@@ -2,6 +2,12 @@
 -behaviour( effi ).
 
 %% ------------------------------------------------------------
+%% Includes
+%% ------------------------------------------------------------
+
+-include( "common.hrl" ).
+
+%% ------------------------------------------------------------
 %% Callback definitions
 %% ------------------------------------------------------------
 
@@ -16,16 +22,16 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [run/3] ).
+-export( [create_port/3] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% run/3
+%% create_port/3
 %
-run( Lang, Script, Dir )
+create_port( Lang, Script, Dir )
 
 when is_atom( Lang ),
      is_list( Script ),
@@ -49,7 +55,7 @@ when is_atom( Lang ),
                     [exit_status,
                      stderr_to_stdout,
                      {cd, Dir},
-                     {line, 1000000}] ),
+                     {line, ?BUF_SIZE}] ),
   io:format( "Sending data:~n~s~n", [Script1] ),
   true = port_command( Port, Script1 ),
 

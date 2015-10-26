@@ -39,7 +39,7 @@ assignment( ParamName, false, Value ) ->
   [ParamName, $=, quote( Value ), $\n];
   
 assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=(", string:join( lists:map( fun quote/1, ValueList ), "," ), ")\n"].
+  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
 
 
 %% dismissal/2
@@ -48,7 +48,7 @@ dismissal( OutName, false ) ->
   ["echo \"", ?MSG, OutName, ?COLON, "[\\\"$", OutName, "\\\"]\"\n"];
 
 dismissal( OutName, true ) ->
-  ["TMP=`printf \",\\\"%s\\\"\" ${", OutName,
+  ["TMP=`printf \"", ?COMMA, "\\\"%s\\\"\" ${", OutName,
    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, OutName, ?COLON, "[$TMP]\"\n"].
 
 
