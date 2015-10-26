@@ -148,7 +148,7 @@ when is_port( Port ),
       {failed, lists:flatten( lists:reverse( OutAcc ) )};
 
     % exit signal received
-    {'EXIT', FromPid, Reason} ->
+    {'EXIT', _FromPid, _Reason} ->
       destroy_port( Port );
 
     % if nothing matches, raise error
