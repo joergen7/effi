@@ -147,6 +147,10 @@ when is_port( Port ),
     {Port, {exit_status, _}} ->
       {failed, lists:flatten( lists:reverse( OutAcc ) )};
 
+    % exit signal received
+    {'EXIT', FromPid, Reason} ->
+      destroy_port( Port );
+
     % if nothing matches, raise error
     Msg ->
       error( {bad_msg, Msg} )
@@ -156,11 +160,13 @@ when is_port( Port ),
 
 %% parse_assoc/1
 %
-parse_assoc( AssocStr ) ->
+parse_assoc( AssocStr ) when is_list( AssocStr ) ->
+
   [Name, S1] = string:tokens( AssocStr, ?COLON ),
   S2 = string:substr( S1, 2, length( S1 )-2 ),
   L1 = string:tokens( S2, ?COMMA ),
   L2 = [string:substr( S, 2, length( S )-2 ) || S <- L1],
+
   #{Name => L2}.
 
 
