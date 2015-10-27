@@ -2,7 +2,7 @@
 %% Type definitions
 %% ------------------------------------------------------------
 
--type result() :: {success, #{string() => [string()]}, string()}
+-type result() :: {finished, #{string() => [string()]}, string()}
                 | {failed, string()}.
 
 %% ------------------------------------------------------------

@@ -170,7 +170,7 @@ when is_port( Port ),
 
     % process succeeded
     {Port, {exit_status, 0}} ->
-      {success, ResultAcc, lists:flatten( lists:reverse( OutAcc ) )};
+      {finished, ResultAcc, lists:flatten( lists:reverse( OutAcc ) )};
 
     % process failed
     {Port, {exit_status, _}} ->
@@ -212,7 +212,7 @@ greet_bash_test_() ->
   ParamMap = #{"person" => "Jorgen"},
   TypeMap  = #{"person" => false, "out" => false},
 
-  {success, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
+  {finished, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
   
   Result = maps:get( "out", ResultMap ),
     
