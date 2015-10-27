@@ -40,3 +40,11 @@ when Port      :: port(),
 when AssocStr  :: string(),
      ResultMap :: #{string => [string()]}.
 				       
+-spec spawn_link_run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) -> Pid
+when Lang     :: atom(),
+     Script   :: iodata(), 
+     Dir      :: string(),
+     OutList  :: [string()],
+     ParamMap :: #{string() => string() | [string()]},
+     TypeMap  :: #{string() => boolean()},
+     Pid      :: pid().

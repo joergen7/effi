@@ -22,7 +22,7 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [run/6] ).
+-export( [run/6, spawn_link_run/6] ).
 
 
 
@@ -48,6 +48,35 @@ when is_atom( Lang ),
   % receive result
   listen_port( Port, [], #{}, [] ).
 
+%% spawn_run/6
+%
+spawn_link_run( Lang, Script, Dir, OutList, ParamMap, TypeMap )
+
+when is_atom( Lang ),
+     is_list( Script ),
+     is_list( Dir ),
+     is_list( OutList ),
+     is_map( ParamMap ),
+     is_map( TypeMap ) ->
+
+  Parent = self(),
+
+  spawn_link(
+    fun() ->
+
+      % trap exits
+      _OldBoolean = process_flag( trap_exit, true ),
+
+      % run script
+      Reply = run( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
+
+      % relay reply
+      Parent ! Reply
+
+    end ).
+
+  
+    
 
 %% ------------------------------------------------------------
 %% Internal functions
@@ -128,7 +157,7 @@ when is_port( Port ),
           % parse line
           AssocMap = parse_assoc( AssocStr ),
 
-          %continue
+          % continue
           listen_port( Port, [], maps:merge( ResultAcc, AssocMap ), OutAcc );
 
         % line is an ordinary output
