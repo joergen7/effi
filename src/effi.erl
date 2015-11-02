@@ -48,8 +48,14 @@ when is_atom( Lang ),
   % receive result
   listen_port( Port, [], #{}, [] ).
 
-%% spawn_run/6
-%
+%% spawn_link_run/6
+%%
+%% @doc Starts the specified script in background. Returns the PID of
+%%      the process spawned. On script termination, a finished/failed
+%%      message is sent to the calling process. Script execution can
+%%      be aborted by sending a {'EXIT', Pid, Reason} message to this
+%%      process.
+%%
 spawn_link_run( Lang, Script, Dir, OutList, ParamMap, TypeMap )
 
 when is_atom( Lang ),
@@ -170,11 +176,11 @@ when is_port( Port ),
 
     % process succeeded
     {Port, {exit_status, 0}} ->
-      {finished, ResultAcc, lists:flatten( lists:reverse( OutAcc ) )};
+      {finished, self(), ResultAcc, lists:flatten( lists:reverse( OutAcc ) )};
 
     % process failed
     {Port, {exit_status, _}} ->
-      {failed, lists:flatten( lists:reverse( OutAcc ) )};
+      {failed, self(), lists:flatten( lists:reverse( OutAcc ) )};
 
     % exit signal received
     {'EXIT', _FromPid, _Reason} ->
