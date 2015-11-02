@@ -217,8 +217,9 @@ greet_bash_test_() ->
   OutList  = ["out"],
   ParamMap = #{"person" => "Jorgen"},
   TypeMap  = #{"person" => false, "out" => false},
+  Self      = self(),
 
-  {finished, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
+  {finished, Self, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
   
   Result = maps:get( "out", ResultMap ),
     
