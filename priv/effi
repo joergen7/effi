@@ -44,7 +44,8 @@ opt_spec_list() ->
    {listout, $O, "listout", string,        "Add list output name [example: -O out]"},
    {singin,  $i, "singin",  string,        "Bind singular input name [example: -i inp:a.txt]"},
    {listin,  $I, "listin",  string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
-   {file,    $f, "file",    string,        "Declare input/output name to be a file [example: -f out]"}
+   {file,    $f, "file",    string,        "Declare input/output name to be a file [example: -f out]"},
+   {prefix,  $p, "prefix",  string,        "The prefix to append to all output files"}
   ].   	    
 
 %% print_bibtex_entry/0
@@ -112,39 +113,42 @@ process( OptList, [ScriptFile] ) ->
   
 %% get_info/1
 %
-get_info( OptList ) -> get_info( OptList, {undef, undef, [], #{}, #{}, #{}} ).
+get_info( OptList ) -> get_info( OptList, {undef, undef, undef, [], #{}, #{}, #{}} ).
 
 %% get_info/2
 %
 get_info( [], Info ) -> Info;
 
-get_info( [{lang, Lang1}|T], {_Lang, Dir, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang1, Dir, OutList, InMap, LMap, FMap} );
+get_info( [{lang, Lang1}|T], {_Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang1, Dir, Prefix, OutList, InMap, LMap, FMap} );
   
-get_info( [{dir, Dir1}|T], {Lang, _Dir, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang, Dir1, OutList, InMap, LMap, FMap} );
+get_info( [{dir, Dir1}|T], {Lang, _Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang, Dir1, Prefix, OutList, InMap, LMap, FMap} );
+  
+get_info( [{prefix, Prefix1}|T], {Lang, _Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang, Dir, Prefix1, OutList, InMap, LMap, FMap} );
 
-get_info( [{singout, Name}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+get_info( [{singout, Name}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
   Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}} );
+  get_info( T, {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}} );
   
-get_info( [{listout, Name}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+get_info( [{listout, Name}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
   Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}} );
+  get_info( T, {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}} );
   		  
-get_info( [{singin, I}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+get_info( [{singin, I}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
   [Name, S1] = string:tokens( I, ":" ),
   Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}} );
+  get_info( T, {Lang, Dir, Prefix, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}} );
   
-get_info( [{listin, I}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+get_info( [{listin, I}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
   [Name, S1] = string:tokens( I, ":" ),
   L1 = string:tokens( S1, "," ),
   Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}} );
+  get_info( T, {Lang, Dir, Prefix, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}} );
   		  
-get_info( [{file, F}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang, Dir, OutList, InMap, LMap, FMap#{F => true}} ).
+get_info( [{file, F}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap#{F => true}} ).
 
 
 
