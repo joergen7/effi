@@ -76,7 +76,7 @@ bibtex_entry() ->
 %
 print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 
-%% trigger/2
+%% runscript/2
 %
 runscript( OptList, [ScriptFile, SumFile] ) ->
 
@@ -87,7 +87,7 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
   % run script
   case effi:checkrun( OptList, Script ) of
   
-    failed -> error( script_failed );
+    {failed, Reason} -> error( Reason );
     
     {finished, RMap} ->
   

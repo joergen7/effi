@@ -53,9 +53,7 @@ when is_atom( Lang ),
   
   % run
   case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-  
-    failed        -> failed;
-  
+    failed           -> {failed, script_error};
     {finished, RMap} ->
     
       % check post-conditions
@@ -234,12 +232,18 @@ refactor( Name, Value, Dir, Prefix, FMap ) ->
   Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
   
   Src = string:join( [Dir, Value], "/" ),
-  Dest = string:join( [Dir, Value1], "/" ),
+  Dest = string:join( [Dir, "_output", Value1], "/" ),
   
-  % rename
-  case file:rename( Src, Dest ) of
-    ok -> Value1;
-    {error, Reason} -> error( Reason )
+  % create directory if necessary
+  case filelib:ensure_dir( Dest ) of
+    {error, R1} -> error( R1 );
+    ok ->
+  
+      % create symbolic link
+      case file:make_symlink( Src, Dest ) of
+        ok -> Value1;
+        {error, R2} -> error( R2 )
+      end
   end.
 
 
