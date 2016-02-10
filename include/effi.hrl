@@ -2,8 +2,8 @@
 %% Type definitions
 %% ------------------------------------------------------------
 
--type result() :: {finished, #{string() => [string()]}, string()}
-                | {failed, string()}.
+-type result() :: {finished, #{string() => [string()]}}
+                | failed.
 
 %% ------------------------------------------------------------
 %% Function specifications
@@ -27,11 +27,10 @@ when Lang     :: atom(),
      TypeMap  :: #{string() => boolean()},
      Result   :: result().
 
--spec listen_port( Port, LineAcc, ResultAcc, OutAcc ) -> Result
+-spec listen_port( Port, LineAcc, ResultAcc ) -> Result
 when Port      :: port(),
      LineAcc   :: iolist(),
      ResultAcc :: #{string() => [string()]},
-     OutAcc    :: iolist(),
      Result    :: result().
 				      
 -spec parse_assoc( AssocStr ) -> ResultMap

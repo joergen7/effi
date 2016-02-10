@@ -1,4 +1,7 @@
 #!/usr/bin/env escript
+%% -*- erlang -*-
+
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
 -define( BUILD, "2016-02-10" ).
@@ -7,7 +10,7 @@
 %
 main( [] ) ->
   print_usage(),
-  error( no_scriptfile );
+  error( {script_and_summary_expected, []} );
   
 main( CmdLine ) ->
 
@@ -19,7 +22,7 @@ main( CmdLine ) ->
                    true  -> print_usage();
                    false -> case lists:member( cite, OptList ) of
                               true  -> print_bibtex_entry();
-                              false -> process( OptList, NonOptList )
+                              false -> runscript( OptList, NonOptList )
                             end
                  end
       end;
@@ -29,7 +32,7 @@ main( CmdLine ) ->
 
 %% print_usage/0
 %
-print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile>" ).
+print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile> <summaryfile>" ).
 
 %% opt_spec_list/0
 %
@@ -45,7 +48,7 @@ opt_spec_list() ->
    {singin,  $i, "singin",  string,        "Bind singular input name [example: -i inp:a.txt]"},
    {listin,  $I, "listin",  string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
    {file,    $f, "file",    string,        "Declare input/output name to be a file [example: -f out]"},
-   {prefix,  $p, "prefix",  string,        "The prefix to append to all output files"}
+   {prefix,  $p, "prefix",  string,        "Prefix to append to output files produced by the script"}
   ].   	    
 
 %% print_bibtex_entry/0
@@ -73,82 +76,23 @@ bibtex_entry() ->
 %
 print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 
-%% process/2
+%% trigger/2
 %
-process( _OptList, [] ) ->
-  error( noscriptfile );
-  
-process( _OptList, NonOptList )when length( NonOptList ) > 1 ->
-  error( {too_many_scriptfiles, NonOptList} );
+runscript( OptList, [ScriptFile, SumFile] ) ->
 
-process( OptList, [ScriptFile] ) ->
-
-  % read script from script file
+  % read script from file
   {ok, B} = file:read_file( ScriptFile ),
   Script = binary_to_list( B ),
   
-  % gather info
-  {Lang, Dir, OutList, InMap, LMap, _FMap} = get_info( OptList ),
+  % run script
+  Ret = effi:checkrun( OptList, Script ),
   
-  % check pre-conditions
-  % TODO
-  
-  % run
-  Result = effi:run( Lang, Script, Dir, OutList, InMap, LMap ),
-  
-  io:format( "~p~n~n", [Result] ),
-  
-  X = case Result of
-    {finished, _ResultAcc, Output} -> Output;
-    {failed, Output} -> Output
-  end,
-  io:format( "~s~n~n", [X] ).
-  
-  % check post-conditions
-  % TODO
-  
-  % rename output files
-  % TODO
+  % write summary
+  file:write_file( SumFile, io_lib:format( "~p~n", [Ret] ) );
   
   
-%% get_info/1
-%
-get_info( OptList ) -> get_info( OptList, {undef, undef, undef, [], #{}, #{}, #{}} ).
 
-%% get_info/2
-%
-get_info( [], Info ) -> Info;
-
-get_info( [{lang, Lang1}|T], {_Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang1, Dir, Prefix, OutList, InMap, LMap, FMap} );
-  
-get_info( [{dir, Dir1}|T], {Lang, _Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang, Dir1, Prefix, OutList, InMap, LMap, FMap} );
-  
-get_info( [{prefix, Prefix1}|T], {Lang, Dir, _Prefix, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang, Dir, Prefix1, OutList, InMap, LMap, FMap} );
-
-get_info( [{singout, Name}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}} );
-  
-get_info( [{listout, Name}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}} );
-  		  
-get_info( [{singin, I}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  [Name, S1] = string:tokens( I, ":" ),
-  Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, Prefix, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}} );
-  
-get_info( [{listin, I}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  [Name, S1] = string:tokens( I, ":" ),
-  L1 = string:tokens( S1, "," ),
-  Pf = maps:get( Name, FMap, false ),
-  get_info( T, {Lang, Dir, Prefix, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}} );
-  		  
-get_info( [{file, F}|T], {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  get_info( T, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap#{F => true}} ).
-
+runscript( _OptList, NonOptList ) ->
+  error( {script_and_summary_expected, NonOptList} ).
 
 

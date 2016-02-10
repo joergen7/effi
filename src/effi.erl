@@ -22,32 +22,101 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [run/6] ).
+-export( [checkrun/2, checkrun/8] ).
 
 %% ------------------------------------------------------------
 %% API functions
 %% ------------------------------------------------------------
 
-%% run/6
-%
-run( Lang, Script, Dir, OutList, ParamMap, TypeMap )
 
+checkrun( OptList, Script )
+when is_list( OptList ),
+     is_list( Script ) ->
+
+  % gather info
+  {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} = get_info( OptList ),
+  
+  % check and run
+  checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script ).
+  
+checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script )
 when is_atom( Lang ),
-     is_list( Script ),
      is_list( Dir ),
      is_list( OutList ),
-     is_map( ParamMap ),
-     is_map( TypeMap ) ->
+     is_map( InMap ),
+     is_map( LMap ),
+     is_map( FMap ),
+     is_list( Script ) ->
+  
+  % check pre-conditions
+  % TODO
+  
+  % run
+  RMap = case run( Lang, Script, Dir, OutList, InMap, LMap ) of
+    {finished, X} -> X;
+    failed        -> error( script_failed )
+  end,
+  
+  io:format( "~p~n~n", [RMap] ),
+    
+  % check post-conditions
+  % TODO
+  
+  % rename output files
+  case Prefix of
+    undef -> RMap;
+    _     -> RMap % TODO
+  end.
+
+%% ------------------------------------------------------------
+%% Internal functions
+%% ------------------------------------------------------------
+
+%% run/6
+%
+run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) ->
 
   % create port
   Port = create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
   
   % receive result
   listen_port( Port ).
+  
+  
+%% get_info/1
+%
+get_info( OptList ) ->
+  lists:foldl( fun acc_info/2, {undef, undef, undef, [], #{}, #{}, #{}}, OptList ).
 
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
+
+%% acc_info/2
+%
+acc_info( {lang, Lang1}, {_Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  {Lang1, Dir, Prefix, OutList, InMap, LMap, FMap};
+acc_info( {dir, Dir1}, {Lang, _Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  {Lang, Dir1, Prefix, OutList, InMap, LMap, FMap};
+acc_info( {prefix, Prefix1}, {Lang, Dir, _Prefix, OutList, InMap, LMap, FMap} ) ->
+  {Lang, Dir, Prefix1, OutList, InMap, LMap, FMap};
+acc_info( {singout, Name}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  Pf = maps:get( Name, FMap, false ),
+  {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}};
+acc_info( {listout, Name}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  Pf = maps:get( Name, FMap, false ),
+  {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}};
+acc_info( {singin, I}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  [Name, S1] = string:tokens( I, ":" ),
+  Pf = maps:get( Name, FMap, false ),
+  {Lang, Dir, Prefix, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}};
+acc_info( {listin, I}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  [Name, S1] = string:tokens( I, ":" ),
+  L1 = string:tokens( S1, "," ),
+  Pf = maps:get( Name, FMap, false ),
+  {Lang, Dir, Prefix, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}};
+acc_info( {file, F}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
+  {Lang, Dir, Prefix, OutList, InMap, LMap, FMap#{F => true}}.
+
+
+
 
   
 %% create_port/6
@@ -85,29 +154,24 @@ when is_atom( Lang ),
 %% listen_port/1
 %
 listen_port( Port ) ->
-  listen_port( Port, [], #{}, [] ).
+  listen_port( Port, [], #{} ).
   
 
-%% listen_port/4
+%% listen_port/3
 %
-listen_port( Port, LineAcc, ResultAcc, OutAcc )
-
-when is_port( Port ),
-     is_list( LineAcc ),
-     is_map( ResultAcc ),
-     is_list( OutAcc ) ->
+listen_port( Port, LineAcc, ResultAcc ) ->
 
   receive
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
-      listen_port( Port, [PartLine|LineAcc], ResultAcc, OutAcc );
+      listen_port( Port, [PartLine|LineAcc], ResultAcc );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->
 
       % reconstruct line from iolist
-      Line = lists:reverse( [<<"\n">>,PartLine|LineAcc] ),
+      Line = lists:flatten( lists:reverse( [PartLine|LineAcc] ) ),
 
       case Line of
 
@@ -118,23 +182,26 @@ when is_port( Port ),
           AssocMap = parse_assoc( AssocStr ),
 
           % continue
-          listen_port( Port, [], maps:merge( ResultAcc, AssocMap ), OutAcc );
+          listen_port( Port, [], maps:merge( ResultAcc, AssocMap ) );
 
         % line is an ordinary output
-        Line ->
+        _ ->
+        
+          % print line
+          io:format( "~s~n", [Line] ),
 
           % continue
-          listen_port( Port, [], ResultAcc, [Line|OutAcc] )
+          listen_port( Port, [], ResultAcc )
 
       end;
 
     % process succeeded
     {Port, {exit_status, 0}} ->
-      {finished, ResultAcc, lists:reverse( OutAcc )};
+      {finished, ResultAcc};
 
     % process failed
     {Port, {exit_status, _}} ->
-      {failed, lists:reverse( OutAcc )};
+      failed;
 
     % if nothing matches, raise error
     Msg ->
@@ -167,9 +234,8 @@ greet_bash_test_() ->
   OutList  = ["out"],
   ParamMap = #{"person" => "Jorgen"},
   TypeMap  = #{"person" => false, "out" => false},
-  Self      = self(),
 
-  {finished, Self, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
+  {finished, ResultMap} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
   
   Result = maps:get( "out", ResultMap ),
     
