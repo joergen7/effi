@@ -1,4 +1,4 @@
--module(effi).
+-module( effi ).
 
 %% ------------------------------------------------------------
 %% Includes
@@ -22,10 +22,7 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [run/6, spawn_link_run/6] ).
-
-
-
+-export( [run/6] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -46,61 +43,13 @@ when is_atom( Lang ),
   Port = create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
   
   % receive result
-  listen_port( Port, [], #{}, [] ).
-
-%% spawn_link_run/6
-%%
-%% @doc Starts the specified script in background. Returns the PID of
-%%      the process spawned. On script termination, a finished/failed
-%%      message is sent to the calling process. Script execution can
-%%      be aborted by sending a {'EXIT', Pid, Reason} message to this
-%%      process.
-%%
-spawn_link_run( Lang, Script, Dir, OutList, ParamMap, TypeMap )
-
-when is_atom( Lang ),
-     is_list( Script ),
-     is_list( Dir ),
-     is_list( OutList ),
-     is_map( ParamMap ),
-     is_map( TypeMap ) ->
-
-  Parent = self(),
-
-  spawn_link(
-    fun() ->
-
-      % trap exits
-      _OldBoolean = process_flag( trap_exit, true ),
-
-      % run script
-      Reply = run( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
-
-      % relay reply
-      Parent ! Reply
-
-    end ).
-
-  
-    
+  listen_port( Port ).
 
 %% ------------------------------------------------------------
 %% Internal functions
 %% ------------------------------------------------------------
 
-%% destroy_port/1
-%
-destroy_port( Port ) when is_port( Port ) ->
-
-  {os_pid, OsPid} = erlang:port_info( Port, os_pid ),
-
-  port_close( Port ),
   
-  _Output = os:cmd( io_lib:format( "kill -9 ~p `pgrep -P ~p`", [OsPid, OsPid] ) ),  
-
-  ok.
-  
-
 %% create_port/6
 %
 create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap )
@@ -133,6 +82,11 @@ when is_atom( Lang ),
   apply( FfiType, create_port, [Lang, [Prefix, Script, $\n, Suffix], Dir] ).
 
 
+%% listen_port/1
+%
+listen_port( Port ) ->
+  listen_port( Port, [], #{}, [] ).
+  
 
 %% listen_port/4
 %
@@ -153,7 +107,7 @@ when is_port( Port ),
     {Port, {data, {eol, PartLine}}} ->
 
       % reconstruct line from iolist
-      Line = lists:flatten( lists:reverse( [PartLine|LineAcc] ) ),
+      Line = lists:reverse( [<<"\n">>,PartLine|LineAcc] ),
 
       case Line of
 
@@ -176,15 +130,11 @@ when is_port( Port ),
 
     % process succeeded
     {Port, {exit_status, 0}} ->
-      {finished, self(), ResultAcc, lists:flatten( lists:reverse( OutAcc ) )};
+      {finished, ResultAcc, lists:reverse( OutAcc )};
 
     % process failed
     {Port, {exit_status, _}} ->
-      {failed, self(), lists:flatten( lists:reverse( OutAcc ) )};
-
-    % exit signal received
-    {'EXIT', _FromPid, _Reason} ->
-      destroy_port( Port );
+      {failed, lists:reverse( OutAcc )};
 
     % if nothing matches, raise error
     Msg ->

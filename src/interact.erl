@@ -50,12 +50,13 @@ when is_atom( Lang ),
   Script1 = [Prefix, $\n, Script, $\n, Suffix, $\n],
 
   % run ticket
-  io:format( "Opening ~s port in ~s.~n", [Interpreter, Dir] ),
+  io:format( "Opening ~s port in ~s~n", [Interpreter, Dir] ),
   Port = open_port( {spawn, Interpreter},
                     [exit_status,
                      stderr_to_stdout,
                      {cd, Dir},
-                     {line, ?BUF_SIZE}] ),
+                     {line, ?BUF_SIZE},
+                     binary] ),
   io:format( "Sending data:~n~s~n", [Script1] ),
   true = port_command( Port, Script1 ),
 

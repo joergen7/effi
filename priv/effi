@@ -1,0 +1,150 @@
+#!/usr/bin/env escript
+
+-define( VSN, "0.1.0" ).
+-define( BUILD, "2016-02-10" ).
+
+%% main/1
+%
+main( [] ) ->
+  print_usage(),
+  error( no_scriptfile );
+  
+main( CmdLine ) ->
+
+  case getopt:parse( opt_spec_list(), CmdLine ) of
+    {ok, {OptList, NonOptList}} ->
+      case lists:member( version, OptList ) of
+        true  -> print_vsn();
+        false -> case lists:member( help, OptList ) of
+                   true  -> print_usage();
+                   false -> case lists:member( cite, OptList ) of
+                              true  -> print_bibtex_entry();
+                              false -> process( OptList, NonOptList )
+                            end
+                 end
+      end;
+   {error, {Reason, Data}} ->
+      error( {Reason, Data} )
+  end.
+
+%% print_usage/0
+%
+print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile>" ).
+
+%% opt_spec_list/0
+%
+opt_spec_list() ->
+  [
+   {version, $v, "version", undefined,     "Show Effi version"},
+   {help,    $h, "help",    undefined,     "Show command line options"},
+   {cite,    $c, "cite",    undefined,     "Show Bibtex entry for citation"},
+   {lang,    $l, "lang",    {atom, bash},  "Foreign language [range: bash, python, r]"},
+   {dir,     $d, "dir",     {string, "."}, "Working directory"},
+   {singout, $o, "singout", string,        "Add singular output name [example: -o out]"},
+   {listout, $O, "listout", string,        "Add list output name [example: -O out]"},
+   {singin,  $i, "singin",  string,        "Bind singular input name [example: -i inp:a.txt]"},
+   {listin,  $I, "listin",  string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
+   {file,    $f, "file",    string,        "Declare input/output name to be a file [example: -f out]"}
+  ].   	    
+
+%% print_bibtex_entry/0
+%
+print_bibtex_entry() -> io:format( "~n~s~n~n", [bibtex_entry()] ).
+
+%% bibtex_entry/0
+%
+bibtex_entry() ->
+  string:join( ["@InProceedings{Brandt2015,",
+         "Title                    = {Cuneiform: A Functional Language for Large Scale Scientific Data Analysis},",
+         "Author                   = {Brandt, J{\"o}rgen and Bux, Marc and Leser, Ulf},",
+         "Booktitle                = {Proceedings of the Workshops of the EDBT/ICDT},",
+         "Year                     = {2015},",
+         "Address                  = {Brussels, Belgium},",
+         "Month                    = {March},",
+         "Pages                    = {17--26},",
+         "Volume                   = {1330},",
+         "Abstract                 = {The need to analyze massive scientific data sets on the one hand and the availability of distributed compute resources with an increasing number of CPU cores on the other hand have promoted the development of a variety of languages and systems for parallel, distributed data analysis. Among them are data-parallel query languages such as Pig Latin or Spark as well as scientific workflow languages such as Swift or Pegasus DAX. While data-parallel query languages focus on the exploitation of data parallelism, scientific workflow languages focus on the integration of external tools and libraries. However, a language that combines easy integration of arbitrary tools, treated as black boxes, with the ability to fully exploit data parallelism does not exist yet. Here, we present Cuneiform, a novel language for large-scale scientific data analysis. We highlight its functionality with respect to a set of desirable features for such languages, introduce its syntax and semantics by example, and show its flexibility and conciseness with use cases, including a complex real-life workflow from the area of genome research. Cuneiform scripts are executed dynamically on the workflow execution platform Hi-WAY which is based on Hadoop YARN. The language Cuneiform, including tool support for programming, workflow visualization, debugging, logging, and provenance-tracing, and the parallel execution engine Hi-WAY are fully implemented.},",
+         "Doi                      = {10.13140/RG.2.1.3547.6561},",
+         "Url                      = {http://ceur-ws.org/Vol-1330/paper-03.pdf}",
+         "}"], "\n" ).
+
+%% print_vsn/0
+%
+print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
+
+%% process/2
+%
+process( _OptList, [] ) ->
+  error( noscriptfile );
+  
+process( _OptList, NonOptList )when length( NonOptList ) > 1 ->
+  error( {too_many_scriptfiles, NonOptList} );
+
+process( OptList, [ScriptFile] ) ->
+
+  % read script from script file
+  {ok, B} = file:read_file( ScriptFile ),
+  Script = binary_to_list( B ),
+  
+  % gather info
+  {Lang, Dir, OutList, InMap, LMap, FMap} = get_info( OptList ),
+  
+  % check pre-conditions
+  % TODO
+  
+  % run
+  Result = effi:run( Lang, Script, Dir, OutList, InMap, LMap ),
+  
+  io:format( "~p~n~n", [Result] ),
+  
+  X = case Result of
+    {finished, _ResultAcc, Output} -> Output;
+    {failed, Output} -> Output
+  end,
+  io:format( "~s~n~n", [X] ).
+  
+  % check post-conditions
+  % TODO
+  
+  % rename output files
+  % TODO
+  
+  
+%% get_info/1
+%
+get_info( OptList ) -> get_info( OptList, {undef, undef, [], #{}, #{}, #{}} ).
+
+%% get_info/2
+%
+get_info( [], Info ) -> Info;
+
+get_info( [{lang, Lang1}|T], {_Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang1, Dir, OutList, InMap, LMap, FMap} );
+  
+get_info( [{dir, Dir1}|T], {Lang, _Dir, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang, Dir1, OutList, InMap, LMap, FMap} );
+
+get_info( [{singout, Name}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  Pf = maps:get( Name, FMap, false ),
+  get_info( T, {Lang, Dir, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}} );
+  
+get_info( [{listout, Name}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  Pf = maps:get( Name, FMap, false ),
+  get_info( T, {Lang, Dir, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}} );
+  		  
+get_info( [{singin, I}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  [Name, S1] = string:tokens( I, ":" ),
+  Pf = maps:get( Name, FMap, false ),
+  get_info( T, {Lang, Dir, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}} );
+  
+get_info( [{listin, I}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  [Name, S1] = string:tokens( I, ":" ),
+  L1 = string:tokens( S1, "," ),
+  Pf = maps:get( Name, FMap, false ),
+  get_info( T, {Lang, Dir, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}} );
+  		  
+get_info( [{file, F}|T], {Lang, Dir, OutList, InMap, LMap, FMap} ) ->
+  get_info( T, {Lang, Dir, OutList, InMap, LMap, FMap#{F => true}} ).
+
+
+
