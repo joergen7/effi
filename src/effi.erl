@@ -52,21 +52,22 @@ when is_atom( Lang ),
   % TODO
   
   % run
-  RMap = case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-    {finished, X} -> X;
-    failed        -> error( script_failed )
-  end,
+  case run( Lang, Script, Dir, OutList, InMap, LMap ) of
   
-  io:format( "~p~n~n", [RMap] ),
+    failed        -> failed;
+  
+    {finished, RMap} ->
     
-  % check post-conditions
-  % TODO
+      % check post-conditions
+      % TODO
   
-  % rename output files
-  case Prefix of
-    undef -> RMap;
-    _     -> RMap % TODO
+      % rename output files
+      case Prefix of
+        undef -> {finished, RMap};
+        _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
+      end
   end.
+  
 
 %% ------------------------------------------------------------
 %% Internal functions
@@ -222,6 +223,24 @@ parse_assoc( AssocStr ) when is_list( AssocStr ) ->
   #{Name => L2}.
 
 
+%% refactor/2
+%
+refactor_result( RMap, Dir, Prefix, FMap ) ->
+  maps:map( fun( Name, Value ) -> refactor( Name, Value, Dir, Prefix, FMap ) end, RMap ).
+  
+refactor( Name, Value, Dir, Prefix, FMap ) ->
+
+  % create new value
+  Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
+  
+  Src = string:join( [Dir, Value], "/" ),
+  Dest = string:join( [Dir, Value1], "/" ),
+  
+  % rename
+  case file:rename( Src, Dest ) of
+    ok -> Value1;
+    {error, Reason} -> error( Reason )
+  end.
 
 
 

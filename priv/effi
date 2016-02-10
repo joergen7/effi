@@ -85,10 +85,15 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
   Script = binary_to_list( B ),
   
   % run script
-  Ret = effi:checkrun( OptList, Script ),
+  case effi:checkrun( OptList, Script ) of
   
-  % write summary
-  file:write_file( SumFile, io_lib:format( "~p~n", [Ret] ) );
+    failed -> error( script_failed );
+    
+    {finished, RMap} ->
+  
+      % write summary
+      file:write_file( SumFile, io_lib:format( "~p~n", [Ret] ) )
+  end;
   
   
 
