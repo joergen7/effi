@@ -81,18 +81,23 @@ print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 runscript( OptList, [ScriptFile, SumFile] ) ->
 
   % read script from file
-  {ok, B} = file:read_file( ScriptFile ),
-  Script = binary_to_list( B ),
-  
-  % run script
-  case effi:checkrun( OptList, Script ) of
-  
-    {failed, Reason} -> error( Reason );
+  case file:read_file( ScriptFile ) of
+    {error, R1} -> error( {R1, read_file, ScriptFile} );
+    {ok, B} ->
     
-    {finished, RMap} ->
+      Script = binary_to_list( B ),
   
-      % write summary
-      file:write_file( SumFile, io_lib:format( "~p~n", [RMap] ) )
+      % run script
+      case effi:checkrun( OptList, Script ) of
+        {failed, R2} -> error( R2 );
+        {finished, RMap} ->
+  
+          % write summary
+          case file:write_file( SumFile, io_lib:format( "~p~n", [RMap] ) ) of
+            {error, R3} -> {R3, write_file, SumFile};
+            ok -> ok
+          end
+      end
   end;
   
   

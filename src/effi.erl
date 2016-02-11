@@ -265,19 +265,13 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
       % create new value
       Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
   
-      Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
-      Link = string:join( [Dir, "_output", Value1], "/" ),
-  
-      % create directory if necessary
-      case filelib:ensure_dir( Link ) of
-        {error, R1} -> error( R1 );
-        ok ->
-  
-          % create symbolic link
-          case file:make_symlink( Orig, Link ) of
-            ok -> Value1;
-            {error, R2} -> error( R2 )
-          end
+      Src = string:join( [Dir, Value], "/" ),
+      Dest = string:join( [Dir, Value1], "/" ),
+    
+      % rename
+      case file:rename( Src, Dest ) of
+        {error, R2} -> error( {R2, rename, [Src, Dest]} );
+        ok -> Value1
       end
   end.
 
