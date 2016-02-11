@@ -49,20 +49,26 @@ when is_atom( Lang ),
      is_list( Script ) ->
   
   % check pre-conditions
-  % TODO
-  
-  % run
-  case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-    failed           -> {failed, script_error};
-    {finished, RMap} ->
+  case check_if_file( InMap, Dir, FMap ) of
+    PreMissingList=[_|_] -> {failed, {precond, PreMissingList}};
+    []                   ->
     
-      % check post-conditions
-      % TODO
+      % run
+      case run( Lang, Script, Dir, OutList, InMap, LMap ) of
+        failed           -> {failed, script_error};
+        {finished, RMap} ->
+    
+          % check post-conditions
+          case check_if_file( RMap, Dir, FMap ) of
+            PostMissingList=[_|_] -> {failed, {postcond, PostMissingList}};
+            []                    ->
   
-      % rename output files
-      case Prefix of
-        undef -> {finished, RMap};
-        _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
+              % refactor output files if prefix is defined
+              case Prefix of
+                undef -> {finished, RMap};
+                _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
+              end
+          end
       end
   end.
   
@@ -70,6 +76,29 @@ when is_atom( Lang ),
 %% ------------------------------------------------------------
 %% Internal functions
 %% ------------------------------------------------------------
+
+
+check_if_file( PMap, Dir, FMap ) ->
+  lists:foldl( fun( P, Acc ) -> acc_check( P, Acc, PMap, Dir, FMap ) end,
+               maps:keys( PMap ) ).
+  
+acc_check( P, Acc, PMap, Dir, FMap ) ->
+
+  % check if parameter is of type file
+  case maps:get( P, FMap ) of
+    false -> Acc;
+    true  ->
+    
+      % get value
+      V = maps:get( P, PMap ),
+      
+      % check if file exists
+      case filelib:is_regular( string:join( [Dir, V], "/" ) ) of
+        true  -> Acc;
+        false -> [V|Acc]
+      end
+  end.
+
 
 %% run/6
 %
@@ -224,25 +253,31 @@ parse_assoc( AssocStr ) when is_list( AssocStr ) ->
 %% refactor/2
 %
 refactor_result( RMap, Dir, Prefix, FMap ) ->
-  maps:map( fun( Name, Value ) -> refactor( Name, Value, Dir, Prefix, FMap ) end, RMap ).
+  maps:map( fun( P, Value ) -> refactor( P, Value, Dir, Prefix, FMap ) end, RMap ).
   
-refactor( Name, Value, Dir, Prefix, FMap ) ->
+refactor( P, Value, Dir, Prefix, FMap ) ->
 
-  % create new value
-  Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
+  % check if parameter is of type file
+  case maps:get( P, FMap ) of
+    false -> Value;
+    true  ->
+
+      % create new value
+      Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
   
-  Src = string:join( [Dir, Value], "/" ),
-  Dest = string:join( [Dir, "_output", Value1], "/" ),
+      Src = string:join( [Dir, Value], "/" ),
+      Dest = string:join( [Dir, "_output", Value1], "/" ),
   
-  % create directory if necessary
-  case filelib:ensure_dir( Dest ) of
-    {error, R1} -> error( R1 );
-    ok ->
+      % create directory if necessary
+      case filelib:ensure_dir( Dest ) of
+        {error, R1} -> error( R1 );
+        ok ->
   
-      % create symbolic link
-      case file:make_symlink( Src, Dest ) of
-        ok -> Value1;
-        {error, R2} -> error( R2 )
+          % create symbolic link
+          case file:make_symlink( Src, Dest ) of
+            ok -> Value1;
+            {error, R2} -> error( R2 )
+          end
       end
   end.
 

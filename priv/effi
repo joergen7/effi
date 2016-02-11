@@ -92,7 +92,7 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
     {finished, RMap} ->
   
       % write summary
-      file:write_file( SumFile, io_lib:format( "~p~n", [Ret] ) )
+      file:write_file( SumFile, io_lib:format( "~p~n", [RMap] ) )
   end;
   
   
