@@ -265,7 +265,7 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
       % create new value
       Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
   
-      Orig = string:join( [Dir, Value], "/" ),
+      Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
       Link = string:join( [Dir, "_output", Value1], "/" ),
   
       % create directory if necessary
