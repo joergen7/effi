@@ -3,7 +3,7 @@
   {description, "Erlang Foreign Function Interface"},
   {vsn, "0.1.0"},
   {modules, [
-             effi
+             effi, interact, script, bash, python, r
             ]},
   {registered, []},
   {applications, [
