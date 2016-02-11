@@ -53,20 +53,27 @@ when is_atom( Lang ),
     PreMissingList=[_|_] -> {failed, {precond, PreMissingList}};
     []                   ->
     
-      % run
-      case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-        failed           -> {failed, script_error};
-        {finished, RMap} ->
+      % create repo directory if necessary
+      RepoDir = string:join( [Dir, "_repo/"], "/" ),
+      case filelib:ensure_dir( RepoDir ) of
+        {error, R1} -> error( {R1, ensure_dir, RepoDir} );
+        ok          ->
+
+          % run
+          case run( Lang, Script, Dir, OutList, InMap, LMap ) of
+            failed           -> {failed, script_error};
+            {finished, RMap} ->
     
-          % check post-conditions
-          case check_if_file( RMap, Dir, FMap ) of
-            PostMissingList=[_|_] -> {failed, {postcond, PostMissingList}};
-            []                    ->
+              % check post-conditions
+              case check_if_file( RMap, Dir, FMap ) of
+                PostMissingList=[_|_] -> {failed, {postcond, PostMissingList}};
+                []                    ->
   
-              % refactor output files if prefix is defined
-              case Prefix of
-                undef -> {finished, RMap};
-                _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
+                  % refactor output files if prefix is defined
+                  case Prefix of
+                    undef -> {finished, RMap};
+                    _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
+                  end
               end
           end
       end
@@ -267,17 +274,11 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
   
       Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
       Link = string:join( [Dir, "_repo", Value1], "/" ),
-  
-      % create directory if necessary
-      case filelib:ensure_dir( Link ) of
-        {error, R1} -> error( {R1, ensure_dir, Link} );
-        ok ->
-  
-          % create symbolic link
-          case file:make_symlink( Orig, Link ) of
-            {error, R2} -> error( {R2, symlink, [Orig, Link]} );
-            ok -> Value1
-          end
+    
+      % create symbolic link
+      case file:make_symlink( Orig, Link ) of
+        {error, R2} -> error( {R2, symlink, [Orig, Link]} );
+        ok -> Value1
       end
   end.
 
