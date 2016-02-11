@@ -274,7 +274,7 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
         ok ->
   
           % create symbolic link
-          case file:make_symlink( Link, Orig ) of
+          case file:make_symlink( Orig, Link ) of
             ok -> Value1;
             {error, R2} -> error( R2 )
           end
