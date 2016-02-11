@@ -79,7 +79,7 @@ when is_atom( Lang ),
 
 
 check_if_file( PMap, Dir, FMap ) ->
-  lists:foldl( fun( P, Acc ) -> acc_check( P, Acc, PMap, Dir, FMap ) end,
+  lists:foldl( fun( P, Acc ) -> acc_check( P, Acc, PMap, Dir, FMap ) end, [],
                maps:keys( PMap ) ).
   
 acc_check( P, Acc, PMap, Dir, FMap ) ->
