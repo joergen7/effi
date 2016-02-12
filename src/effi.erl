@@ -76,7 +76,7 @@ check_run( OptList, Script ) ->
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
           
               % generate summary
-              {finished, get_summary( OptList, RMap, Out, Tstart, Tdur )}
+              {finished, get_summary( OptList, RMap1, Out, Tstart, Tdur )}
           end
       end
   end.
