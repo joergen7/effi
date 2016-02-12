@@ -26,7 +26,7 @@ main( CmdLine ) ->
                             end
                  end
       end;
-   {error, {Reason, Data}} ->
+    {error, {Reason, Data}} ->
       error( {Reason, Data} )
   end.
 
@@ -38,18 +38,19 @@ print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile> <summaryfi
 %
 opt_spec_list() ->
   [
-   {version,  $v, "version",  undefined,     "Show Effi version"},
-   {help,     $h, "help",     undefined,     "Show command line options"},
-   {cite,     $c, "cite",     undefined,     "Show Bibtex entry for citation"},
-   {lang,     $l, "lang",     {atom, bash},  "Foreign language [range: bash, python, r]"},
-   {dir,      $d, "dir",      {string, "."}, "Working directory"},
-   {prefix,   $p, "prefix",   string,        "Prefix to append to output files produced by the script"},
-   {taskname, $t, "taskname", string,        "Task name to be stored in summary file"},
-   {singout,  $o, "singout",  string,        "Add singular output name [example: -o out]"},
-   {listout,  $O, "listout",  string,        "Add list output name [example: -O out]"},
-   {singin,   $i, "singin",   string,        "Bind singular input name [example: -i inp:a.txt]"},
-   {listin,   $I, "listin",   string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
-   {file,     $f, "file",     string,        "Declare input/output name to be a file [example: -f out]"}
+   {version,  $v, "version",  undefined,         "Show Effi version"},
+   {help,     $h, "help",     undefined,         "Show command line options"},
+   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
+   {lang,     $l, "lang",     {atom, bash},      "Foreign language [range: bash, python, r]"},
+   {dir,      $d, "dir",      {string, "."},     "Working directory"},
+   {prefix,   $p, "prefix",   {string, "undef"}, "Prefix to append to output files produced by the script"},
+   {taskname, $t, "taskname", {string, "undef"}, "Task name to be stored in summary file"},
+   {refactor, $r, "refactor", {boolean, false},  "Refactor output files to have unique names"},
+   {singout,  $o, "singout",  string,            "Add singular output name [example: -o out]"},
+   {listout,  $O, "listout",  string,            "Add list output name [example: -O out]"},
+   {singin,   $i, "singin",   string,            "Bind singular input name [example: -i inp:a.txt]"},
+   {listin,   $I, "listin",   string,            "Bind list input name [example: -I inp:a.txt,b.txt]"},
+   {file,     $f, "file",     string,            "Declare input/output name to be a file [example: -f out]"}
   ].   	    
 
 %% print_bibtex_entry/0
@@ -81,22 +82,6 @@ print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 %
 runscript( OptList, [ScriptFile, SumFile] ) ->
 
-  % take start time
-  Tstart = trunc( os:system_time()/1000000 ),
-
-
-  % structure info
-  OptMap  = effi:get_optmap( OptList ),
-  
-  % extract info
-  Lang    = maps:get( lang, OptMap ),
-  Dir     = maps:get( dir, OptMap ),
-  Prefix  = maps:get( prefix, OptMap ),
-  OutList = maps:get( outlist, OptMap ),
-  InMap   = maps:get( inmap, OptMap ),
-  LMap    = maps:get( lmap, OptMap ),
-  FMap    = maps:get( fmap, OptMap ),
-
   % read script from file
   case file:read_file( ScriptFile ) of
     {error, R1} -> error( {R1, read_file, ScriptFile} );
@@ -106,8 +91,12 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
       Script = binary_to_list( B ),
  
       % run script
-      case effi:checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script ) of
-        {failed, R2, ActScript, Out}     ->
+      case effi:check_run( OptList, Script ) of
+      
+        {failed, R1, MissingList} ->
+          error( {R1, checkrun, MissingList} );
+      
+        {failed, script_error, ActScript, Out}     ->
         
           % print tool output
           lists:foreach( fun( Line ) -> io:format( "~s~n", [Line] ) end, Out ),
@@ -122,19 +111,14 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
           	       string:tokens( ActScript, "\n" ) ),
         
           % throw error
-          error( {R2, checkrun, Prefix} );
+          error( script_error );
 
-        {finished, RMap, Out} ->
+        {finished, Summary} ->
         
-          % take duration
-          Tdur = trunc( os:system_time()/1000000 )-Tstart,
-          
-          % generate summary
-          Sum = effi:get_summary( OptList, RMap, Out, Tstart, Tdur ),
  
           % write summary
-          case file:write_file( SumFile, io_lib:format( "~p~n", [Sum] ) ) of
-            {error, R4} -> {R4, write_file, SumFile};
+          case file:write_file( SumFile, io_lib:format( "~p~n", [Summary] ) ) of
+            {error, R4} -> error( {R4, write_file, SumFile} );
             ok          -> ok
           end
       end

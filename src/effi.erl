@@ -22,22 +22,33 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [checkrun/8, get_optmap/1, get_summary/5] ).
+-export( [check_run/2] ).
 
 %% ------------------------------------------------------------
 %% API functions
 %% ------------------------------------------------------------
 
-%% checkrun/8
+
+%% check_run/2
 %
-checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script )
-when is_atom( Lang ),
-     is_list( Dir ),
-     is_list( OutList ),
-     is_map( InMap ),
-     is_map( LMap ),
-     is_map( FMap ),
-     is_list( Script ) ->
+check_run( OptList, Script ) ->
+
+  % take start time
+  Tstart = trunc( os:system_time()/1000000 ),
+
+  % structure info
+  OptMap  = get_optmap( OptList ),
+
+  % extract info
+  Lang     = maps:get( lang, OptMap ),
+  Dir      = maps:get( dir, OptMap ),
+  Prefix   = maps:get( prefix, OptMap ),
+  OutList  = maps:get( outlist, OptMap ),
+  InMap    = maps:get( inmap, OptMap ),
+  LMap     = maps:get( lmap, OptMap ),
+  FMap     = maps:get( fmap, OptMap ),
+  Refactor = maps:get( refactor, OptMap ),
+
   
   % check pre-conditions
   case check_if_file( InMap, Dir, FMap ) of
@@ -54,17 +65,23 @@ when is_atom( Lang ),
           case check_if_file( RMap, Dir, FMap ) of
             PostMissingList=[_|_] -> {failed, postcond, PostMissingList};
             []                    ->
-  
-              % refactor output files if prefix is defined
-              case Prefix of
-                undef -> {finished, RMap, Out};
-                _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap ), Out}
-              end
+            
+              % refactor if desired
+              RMap1 = case Refactor of
+                        false -> RMap;
+                        true  -> refactor_result( RMap, Dir, Prefix, FMap )
+                      end,
+              
+              % take duration
+              Tdur = trunc( os:system_time()/1000000 )-Tstart,
+          
+              % generate summary
+              {finished, get_summary( OptList, RMap, Out, Tstart, Tdur )}
           end
       end
   end.
   
-%% get_info/1
+%% get_optmap/1
 %
 get_optmap( OptList )when is_list( OptList ) ->
 
@@ -80,17 +97,19 @@ get_optmap( OptList )when is_list( OptList ) ->
   lists:foldl( fun acc_info/2, Acc0, OptList ).
   
   
-%% get_summary/4
+%% get_summary/5
 %
-get_summary( OptList, Ret, Out, Tstart, Tdur ) ->
-
+get_summary( OptList, Ret, Out, Tstart, Tdur )
+when is_list( OptList ), is_map( Ret ), is_list( Out ),
+     is_integer( Tstart ), Tstart >= 0,
+     is_integer( Tdur ), Tdur >= 0 ->
+     
   OptMap = get_optmap( OptList ),
-  
+
   TaskName = maps:get( taskname, OptMap ),
   Prefix   = maps:get( prefix, OptMap ),
   Lang     = maps:get( lang, OptMap ),
   
-    
   #{optlist  => OptList,
     lang     => Lang,
     taskname => TaskName,
@@ -142,17 +161,18 @@ run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) ->
 
 %% acc_info/2
 %
-acc_info( {lang,     Lang},   Acc ) -> Acc#{lang     => Lang};
-acc_info( {dir,      Dir},    Acc ) -> Acc#{dir      => Dir};
-acc_info( {prefix,   Prefix}, Acc ) -> Acc#{prefix   => Prefix};
-acc_info( {taskname, Name},   Acc ) -> Acc#{taskname => Name};
-acc_info( {file,     Name},   Acc ) ->
+acc_info( {lang,     Lang},     Acc ) -> Acc#{lang     => Lang};
+acc_info( {dir,      Dir},      Acc ) -> Acc#{dir      => Dir};
+acc_info( {prefix,   Prefix},   Acc ) -> Acc#{prefix   => Prefix};
+acc_info( {taskname, Name},     Acc ) -> Acc#{taskname => Name};
+acc_info( {refactor, Refactor}, Acc ) -> Acc#{refactor => Refactor};
+acc_info( {file,     Name},     Acc ) ->
 
   FMap = maps:get( fmap, Acc ),
   
   Acc#{fmap => FMap#{Name => true}};
   
-acc_info( {singout,  Name},   Acc ) ->
+acc_info( {singout,  Name},     Acc ) ->
 
   OutList = maps:get( outlist, Acc ),
   LMap    = maps:get( lmap,    Acc ),
@@ -162,7 +182,7 @@ acc_info( {singout,  Name},   Acc ) ->
        lmap    => LMap#{Name => false},
        fmap    => FMap#{Name => maps:get( Name, FMap, false )}};
        
-acc_info( {listout,  Name},   Acc ) ->
+acc_info( {listout,  Name},     Acc ) ->
 
   OutList = maps:get( outlist, Acc ),
   LMap    = maps:get( lmap,    Acc ),
@@ -172,7 +192,7 @@ acc_info( {listout,  Name},   Acc ) ->
        lmap    => LMap#{Name => true},
        fmap    => FMap#{Name => maps:get( Name, FMap, false )}};
 
-acc_info( {singin,   I},      Acc ) ->
+acc_info( {singin,   I},        Acc ) ->
 
   [Name, Value] = string:tokens( I, ":" ),
   InMap         = maps:get( inmap, Acc ),
@@ -183,7 +203,7 @@ acc_info( {singin,   I},      Acc ) ->
        lmap  => LMap#{Name => false},
        fmap  => FMap#{Name => maps:get( Name, FMap, false )}};
        
-acc_info( {listin,   I},      Acc ) ->
+acc_info( {listin,   I},        Acc ) ->
 
   [Name, S1] = string:tokens( I, ":" ),
   ValueList  = string:tokens( S1, "," ),
