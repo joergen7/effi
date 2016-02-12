@@ -22,23 +22,14 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [checkrun/2, checkrun/8] ).
+-export( [checkrun/8, get_optmap/1, get_summary/5] ).
 
 %% ------------------------------------------------------------
 %% API functions
 %% ------------------------------------------------------------
 
-
-checkrun( OptList, Script )
-when is_list( OptList ),
-     is_list( Script ) ->
-
-  % gather info
-  {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} = get_info( OptList ),
-  
-  % check and run
-  checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script ).
-  
+%% checkrun/8
+%
 checkrun( Lang, Dir, Prefix, OutList, InMap, LMap, FMap, Script )
 when is_atom( Lang ),
      is_list( Dir ),
@@ -50,35 +41,65 @@ when is_atom( Lang ),
   
   % check pre-conditions
   case check_if_file( InMap, Dir, FMap ) of
-    PreMissingList=[_|_] -> {failed, {precond, PreMissingList}};
+    PreMissingList=[_|_] -> {failed, precond, PreMissingList};
     []                   ->
     
-      % create repo directory if necessary
-      RepoDir = string:join( [Dir, "_repo/"], "/" ),
-      case filelib:ensure_dir( RepoDir ) of
-        {error, R1} -> error( {R1, ensure_dir, RepoDir} );
-        ok          ->
 
-          % run
-          case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-            failed           -> {failed, script_error};
-            {finished, RMap} ->
+      % run
+      case run( Lang, Script, Dir, OutList, InMap, LMap ) of
+        {failed, ActScript, Out} -> {failed, script_error, ActScript, Out};
+        {finished, RMap, Out}    ->
     
-              % check post-conditions
-              case check_if_file( RMap, Dir, FMap ) of
-                PostMissingList=[_|_] -> {failed, {postcond, PostMissingList}};
-                []                    ->
+          % check post-conditions
+          case check_if_file( RMap, Dir, FMap ) of
+            PostMissingList=[_|_] -> {failed, postcond, PostMissingList};
+            []                    ->
   
-                  % refactor output files if prefix is defined
-                  case Prefix of
-                    undef -> {finished, RMap};
-                    _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap )}
-                  end
+              % refactor output files if prefix is defined
+              case Prefix of
+                undef -> {finished, RMap, Out};
+                _     -> {finished, refactor_result( RMap, Dir, Prefix, FMap ), Out}
               end
           end
       end
   end.
   
+%% get_info/1
+%
+get_optmap( OptList )when is_list( OptList ) ->
+
+  Acc0 = #{lang     => undef,
+           dir      => undef,
+           prefix   => undef,
+           taskname => undef,
+           outlist  => [],
+           inmap    => #{},
+           lmap     => #{},
+           fmap     => #{}},
+
+  lists:foldl( fun acc_info/2, Acc0, OptList ).
+  
+  
+%% get_summary/4
+%
+get_summary( OptList, Ret, Out, Tstart, Tdur ) ->
+
+  OptMap = get_optmap( OptList ),
+  
+  TaskName = maps:get( taskname, OptMap ),
+  Prefix   = maps:get( prefix, OptMap ),
+  Lang     = maps:get( lang, OptMap ),
+  
+    
+  #{optlist  => OptList,
+    lang     => Lang,
+    taskname => TaskName,
+    prefix   => Prefix,
+    ret      => Ret,
+    tstart   => Tstart,
+    tdur     => Tdur,
+    out      => Out}.
+
 
 %% ------------------------------------------------------------
 %% Internal functions
@@ -112,44 +133,69 @@ acc_check( P, Acc, PMap, Dir, FMap ) ->
 run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) ->
 
   % create port
-  Port = create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
+  {Port, ActScript} = create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
   
   % receive result
-  listen_port( Port ).
+  listen_port( Port, ActScript ).
   
   
-%% get_info/1
-%
-get_info( OptList ) ->
-  lists:foldl( fun acc_info/2, {undef, undef, undef, [], #{}, #{}, #{}}, OptList ).
-
 
 %% acc_info/2
 %
-acc_info( {lang, Lang1}, {_Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  {Lang1, Dir, Prefix, OutList, InMap, LMap, FMap};
-acc_info( {dir, Dir1}, {Lang, _Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  {Lang, Dir1, Prefix, OutList, InMap, LMap, FMap};
-acc_info( {prefix, Prefix1}, {Lang, Dir, _Prefix, OutList, InMap, LMap, FMap} ) ->
-  {Lang, Dir, Prefix1, OutList, InMap, LMap, FMap};
-acc_info( {singout, Name}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  Pf = maps:get( Name, FMap, false ),
-  {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => false}, FMap#{Name => Pf}};
-acc_info( {listout, Name}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  Pf = maps:get( Name, FMap, false ),
-  {Lang, Dir, Prefix, [Name|OutList], InMap, LMap#{Name => true}, FMap#{Name => Pf}};
-acc_info( {singin, I}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  [Name, S1] = string:tokens( I, ":" ),
-  Pf = maps:get( Name, FMap, false ),
-  {Lang, Dir, Prefix, OutList, InMap#{Name => S1}, LMap#{Name => false}, FMap#{Name => Pf}};
-acc_info( {listin, I}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  [Name, S1] = string:tokens( I, ":" ),
-  L1 = string:tokens( S1, "," ),
-  Pf = maps:get( Name, FMap, false ),
-  {Lang, Dir, Prefix, OutList, InMap#{Name => L1}, LMap#{Name => true}, FMap#{Name => Pf}};
-acc_info( {file, F}, {Lang, Dir, Prefix, OutList, InMap, LMap, FMap} ) ->
-  {Lang, Dir, Prefix, OutList, InMap, LMap, FMap#{F => true}}.
+acc_info( {lang,     Lang},   Acc ) -> Acc#{lang     => Lang};
+acc_info( {dir,      Dir},    Acc ) -> Acc#{dir      => Dir};
+acc_info( {prefix,   Prefix}, Acc ) -> Acc#{prefix   => Prefix};
+acc_info( {taskname, Name},   Acc ) -> Acc#{taskname => Name};
+acc_info( {file,     Name},   Acc ) ->
 
+  FMap = maps:get( fmap, Acc ),
+  
+  Acc#{fmap => FMap#{Name => true}};
+  
+acc_info( {singout,  Name},   Acc ) ->
+
+  OutList = maps:get( outlist, Acc ),
+  LMap    = maps:get( lmap,    Acc ),
+  FMap    = maps:get( fmap,    Acc ),
+
+  Acc#{outlist => [Name|OutList],
+       lmap    => LMap#{Name => false},
+       fmap    => FMap#{Name => maps:get( Name, FMap, false )}};
+       
+acc_info( {listout,  Name},   Acc ) ->
+
+  OutList = maps:get( outlist, Acc ),
+  LMap    = maps:get( lmap,    Acc ),
+  FMap    = maps:get( fmap,    Acc ),
+
+  Acc#{outlist => [Name|OutList],
+       lmap    => LMap#{Name => true},
+       fmap    => FMap#{Name => maps:get( Name, FMap, false )}};
+
+acc_info( {singin,   I},      Acc ) ->
+
+  [Name, Value] = string:tokens( I, ":" ),
+  InMap         = maps:get( inmap, Acc ),
+  LMap          = maps:get( lmap,  Acc ),
+  FMap          = maps:get( fmap,  Acc ),
+  
+  Acc#{inmap => InMap#{Name => Value},
+       lmap  => LMap#{Name => false},
+       fmap  => FMap#{Name => maps:get( Name, FMap, false )}};
+       
+acc_info( {listin,   I},      Acc ) ->
+
+  [Name, S1] = string:tokens( I, ":" ),
+  ValueList  = string:tokens( S1, "," ),
+  InMap      = maps:get( inmap, Acc ),
+  LMap       = maps:get( lmap,  Acc ),
+  FMap       = maps:get( fmap,  Acc ),
+
+  Acc#{inmap => InMap#{Name => ValueList},
+       lmap  => LMap#{Name => true},
+       fmap  => FMap#{Name => maps:get( Name, FMap, false )}}.
+       
+       
 
 
 
@@ -181,62 +227,63 @@ when is_atom( Lang ),
                [apply( Lang, dismissal, [OutName, maps:get( OutName, TypeMap )] ), $\n]
              end,
              OutList ),
+             
+  ActScript = lists:flatten( [Prefix, Script, $\n, Suffix] ),
 
   % run script    
-  apply( FfiType, create_port, [Lang, [Prefix, Script, $\n, Suffix], Dir] ).
+  Port = apply( FfiType, create_port, [Lang, ActScript, Dir] ),
+  
+  {Port, ActScript}.
 
 
-%% listen_port/1
+%% listen_port/2
 %
-listen_port( Port ) ->
-  listen_port( Port, [], #{} ).
+listen_port( Port, ActScript ) ->
+  listen_port( Port, ActScript, <<>>, #{}, [] ).
   
 
-%% listen_port/3
+%% listen_port/5
 %
-listen_port( Port, LineAcc, ResultAcc ) ->
+listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
   receive
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
-      listen_port( Port, [PartLine|LineAcc], ResultAcc );
+      listen_port( Port, ActScript, <<LineAcc/binary,PartLine/binary>>, ResultAcc, OutAcc );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->
 
       % reconstruct line from iolist
-      Line = lists:flatten( lists:reverse( [PartLine|LineAcc] ) ),
+      Line = <<LineAcc/binary,PartLine/binary>>,
 
       case Line of
 
         % line is a special message
-        ?MSG++AssocStr ->
+        <<?MSG, AssocStr/binary>> ->
           
           % parse line
           AssocMap = parse_assoc( AssocStr ),
 
           % continue
-          listen_port( Port, [], maps:merge( ResultAcc, AssocMap ) );
+          listen_port( Port, ActScript, <<>>, maps:merge( ResultAcc, AssocMap ), OutAcc );
 
         % line is an ordinary output
         _ ->
         
-          % print line
-          io:format( "~s~n", [Line] ),
-
           % continue
-          listen_port( Port, [], ResultAcc )
+          listen_port( Port, ActScript, <<>>, ResultAcc, [Line|OutAcc] )
 
       end;
 
     % process succeeded
     {Port, {exit_status, 0}} ->
-      {finished, ResultAcc};
+      {finished, ResultAcc, lists:reverse( OutAcc )};
 
     % process failed
     {Port, {exit_status, _}} ->
-      failed;
+      {failed, ActScript, lists:reverse( OutAcc )};
 
     % if nothing matches, raise error
     Msg ->
@@ -247,7 +294,10 @@ listen_port( Port, LineAcc, ResultAcc ) ->
 
 %% parse_assoc/1
 %
-parse_assoc( AssocStr ) when is_list( AssocStr ) ->
+parse_assoc( AssocStr )when is_binary( AssocStr ) ->
+  parse_assoc( binary_to_list( AssocStr ) );
+
+parse_assoc( AssocStr )when is_list( AssocStr ) ->
 
   [Name, S1] = string:tokens( AssocStr, ?COLON ),
   S2 = string:substr( S1, 2, length( S1 )-2 ),
@@ -270,10 +320,10 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
     true  ->
 
       % create new value
-      Value1 = string:join( [Prefix, filename:basename( Value )], "_" ),
+      Value1 = string:join( [Prefix, P, filename:basename( Value )], "_" ),
   
       Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
-      Link = string:join( [Dir, "_repo", Value1], "/" ),
+      Link = string:join( [Dir, Value1], "/" ),
     
       % create symbolic link
       case file:make_symlink( Orig, Link ) of
@@ -294,7 +344,7 @@ greet_bash_test_() ->
   ParamMap = #{"person" => "Jorgen"},
   TypeMap  = #{"person" => false, "out" => false},
 
-  {finished, ResultMap} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
+  {finished, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
   
   Result = maps:get( "out", ResultMap ),
     

@@ -2,7 +2,7 @@
 %% Type definitions
 %% ------------------------------------------------------------
 
--type result() :: {finished, #{string() => [string()]}}
+-type result() :: {finished, #{string() => [string()]}, [binary()]}
                 | failed.
 
 %% ------------------------------------------------------------
@@ -16,7 +16,7 @@ when Lang     :: atom(),
      OutList  :: [string()],
      ParamMap :: #{string() => string() | [string()]},
      TypeMap  :: #{string() => boolean()},
-     Port     :: port().
+     Port     :: {port(), iolist()}.
 
 -spec run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) -> Result
 when Lang     :: atom(),
@@ -27,14 +27,16 @@ when Lang     :: atom(),
      TypeMap  :: #{string() => boolean()},
      Result   :: result().
 
--spec listen_port( Port, LineAcc, ResultAcc ) -> Result
+-spec listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) -> Result
 when Port      :: port(),
-     LineAcc   :: iolist(),
+     ActScript :: iolist(),
+     LineAcc   :: binary(),
      ResultAcc :: #{string() => [string()]},
+     OutAcc    :: [binary()],
      Result    :: result().
 				      
 -spec parse_assoc( AssocStr ) -> ResultMap
-when AssocStr  :: string(),
+when AssocStr  :: string() | binary(),
      ResultMap :: #{string => [string()]}.
 				       
 
