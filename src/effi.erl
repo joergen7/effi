@@ -76,7 +76,7 @@ check_run( OptList, Script ) ->
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
           
               % generate summary
-              {finished, get_summary( OptList, RMap1, Out, Tstart, Tdur )}
+              {finished, get_summary( OptList, Script, RMap1, Out, Tstart, Tdur )}
           end
       end
   end.
@@ -99,8 +99,8 @@ get_optmap( OptList )when is_list( OptList ) ->
   
 %% get_summary/5
 %
-get_summary( OptList, Ret, Out, Tstart, Tdur )
-when is_list( OptList ), is_map( Ret ), is_list( Out ),
+get_summary( OptList, Script, Ret, Out, Tstart, Tdur )
+when is_list( OptList ), is_list( Script ), is_map( Ret ), is_list( Out ),
      is_integer( Tstart ), Tstart >= 0,
      is_integer( Tdur ), Tdur >= 0 ->
      
@@ -111,6 +111,7 @@ when is_list( OptList ), is_map( Ret ), is_list( Out ),
   Lang     = maps:get( lang, OptMap ),
   
   #{optlist  => OptList,
+    script   => Script,
     lang     => Lang,
     taskname => TaskName,
     prefix   => Prefix,

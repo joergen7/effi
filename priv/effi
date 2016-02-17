@@ -86,7 +86,7 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
   B = case file:read_file( ScriptFile ) of
         {error, R1} -> error( {R1, read_file, ScriptFile} );
         {ok, X}     -> X
-      end
+      end,
     
   % convert binary to string
   Script = binary_to_list( B ),
@@ -94,8 +94,8 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
   % run script
   Summary = case effi:check_run( OptList, Script ) of
       
-              {failed, R1, MissingList} ->
-                error( {R1, checkrun, MissingList} );
+              {failed, R2, MissingList} ->
+                error( {R2, checkrun, MissingList} );
       
               {failed, script_error, ActScript, Out}     ->
         
@@ -117,7 +117,7 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
                 error( script_error );
 
               {finished, Sum} -> Sum
-            end
+            end,
         
  
   % write summary
