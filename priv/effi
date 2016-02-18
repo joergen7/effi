@@ -10,8 +10,7 @@
 %
 main( [] ) ->
   print_intro(),
-  print_usage(),
-  error( {script_and_summary_expected, []} );
+  print_usage();
   
 main( CmdLine ) ->
 
