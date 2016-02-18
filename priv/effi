@@ -4,11 +4,12 @@
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-02-12" ).
+-define( BUILD, "2016-02-18" ).
 
 %% main/1
 %
 main( [] ) ->
+  print_intro(),
   print_usage(),
   error( {script_and_summary_expected, []} );
   
@@ -18,13 +19,17 @@ main( CmdLine ) ->
     {ok, {OptList, NonOptList}} ->
       case lists:member( version, OptList ) of
         true  -> print_vsn();
-        false -> case lists:member( help, OptList ) of
-                   true  -> print_usage();
-                   false -> case lists:member( cite, OptList ) of
-                              true  -> print_bibtex_entry();
-                              false -> runscript( OptList, NonOptList )
-                            end
-                 end
+        false ->
+          case lists:member( help, OptList ) of
+            true  ->
+              print_intro(),
+              print_usage();
+            false ->
+              case lists:member( cite, OptList ) of
+                true  -> print_bibtex_entry();
+                false -> runscript( OptList, NonOptList )
+              end
+          end
       end;
     {error, {Reason, Data}} ->
       error( {Reason, Data} )
@@ -73,6 +78,18 @@ bibtex_entry() ->
          "  Doi                      = {10.13140/RG.2.1.3547.6561},",
          "  Url                      = {http://ceur-ws.org/Vol-1330/paper-03.pdf}",
          "}"], "\n" ).
+
+print_intro() ->
+  io:format( "~s~n~n", [intro()] ).
+
+intro() ->
+  string:join( [
+      "   ._,,,,  ,,_,=_",
+      "    W   `_@__#__     The Erlang Foreign Function Interface (Effi) allows the",
+      "   @P+#   F @F @     execution of functions defined in different programming",
+      "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
+      "  ^^^^^  P qF  `     function's arguments, its body and output values."
+    ], "\n" ).
 
 %% print_vsn/0
 %
