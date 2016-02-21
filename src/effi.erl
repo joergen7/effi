@@ -77,7 +77,7 @@ check_run( OptList, Script ) ->
 
       % run
       case run( Lang, Script, Dir, OutList, InMap, LMap ) of
-        {failed, ActScript, Out} -> {failed, script_error, ActScript, Out};
+        {failed, ActScript, Out} -> {failed, script_error, {ActScript, Out}};
         {finished, RMap, Out}    ->
     
           % check post-conditions

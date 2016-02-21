@@ -132,9 +132,9 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
   Summary = case effi:check_run( OptList, Script ) of
       
               {failed, R2, MissingList} ->
-                error( {R2, checkrun, MissingList} );
+                error( {R2, MissingList} );
       
-              {failed, script_error, ActScript, Out}     ->
+              {failed, script_error, {ActScript, Out}}     ->
         
                 % print tool output
                 ok = lists:foreach( fun( Line ) ->
