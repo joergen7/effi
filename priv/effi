@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-02-18" ).
+-define( BUILD, "2016-02-21" ).
 
 %% main/1
 %
@@ -66,6 +66,7 @@ opt_spec_list() ->
    {prefix,   $p, "prefix",   {string, "undef"}, "Prefix to append to output files produced by the script"},
    {taskname, $t, "taskname", {string, "undef"}, "Task name to be stored in summary file"},
    {refactor, $r, "refactor", {boolean, false},  "Refactor output files to have unique names"},
+   {repodir,  $e, "repodir",  {string, "."},     "Repository directory for refactoring"},
    {singout,  $o, "singout",  string,            "Add singular output name [example: -o out]"},
    {listout,  $O, "listout",  string,            "Add list output name [example: -O out]"},
    {singin,   $i, "singin",   string,            "Bind singular input name [example: -i inp:a.txt]"},

@@ -67,6 +67,7 @@ check_run( OptList, Script ) ->
   LMap     = maps:get( lmap, OptMap ),
   FMap     = maps:get( fmap, OptMap ),
   Refactor = maps:get( refactor, OptMap ),
+  RepoDir  = maps:get( repodir, OptMap ),
 
   
   % check pre-conditions
@@ -88,7 +89,7 @@ check_run( OptList, Script ) ->
               % refactor if desired
               RMap1 = case Refactor of
                         false -> RMap;
-                        true  -> refactor_result( RMap, Dir, Prefix, FMap )
+                        true  -> refactor_result( RMap, Dir, RepoDir, Prefix, FMap )
                       end,
               
               % take duration
@@ -186,6 +187,7 @@ acc_info( {dir,      Dir},      Acc ) -> Acc#{dir      => Dir};
 acc_info( {prefix,   Prefix},   Acc ) -> Acc#{prefix   => Prefix};
 acc_info( {taskname, Name},     Acc ) -> Acc#{taskname => Name};
 acc_info( {refactor, Refactor}, Acc ) -> Acc#{refactor => Refactor};
+acc_info( {repodir,  Dir},      Acc ) -> Acc#{repodir  => Dir};
 acc_info( {file,     Name},     Acc ) ->
 
   FMap = maps:get( fmap, Acc ),
@@ -347,12 +349,12 @@ parse_assoc( AssocStr )when is_list( AssocStr ) ->
   #{Name => L2}.
 
 
-%% refactor/2
+%% refactor/5
 %
-refactor_result( RMap, Dir, Prefix, FMap ) ->
-  maps:map( fun( P, Value ) -> refactor( P, Value, Dir, Prefix, FMap ) end, RMap ).
+refactor_result( RMap, Dir, RepoDir, Prefix, FMap ) ->
+  maps:map( fun( P, Value ) -> refactor( P, Value, Dir, RepoDir, Prefix, FMap ) end, RMap ).
   
-refactor( P, Value, Dir, Prefix, FMap ) ->
+refactor( P, Value, Dir, RepoDir, Prefix, FMap ) ->
 
   % check if parameter is of type file
   case maps:get( P, FMap ) of
@@ -363,7 +365,10 @@ refactor( P, Value, Dir, Prefix, FMap ) ->
       Value1 = string:join( [Prefix, P, filename:basename( Value )], "_" ),
   
       Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
-      Link = string:join( [Dir, Value1], "/" ),
+      Link = string:join( [RepoDir, Value1], "/" ),
+
+      % create repo directory if necessary
+      filelib:ensure_dir( Link ),
     
       % create symbolic link
       case file:make_symlink( Orig, Link ) of
