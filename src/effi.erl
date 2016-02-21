@@ -371,7 +371,7 @@ refactor( P, Value, Dir, RepoDir, Prefix, FMap ) ->
       ok = case filelib:ensure_dir( Link ) of
         {error, R1} -> error( {R1, ensure_dir, Link} );
         ok -> ok
-      end
+      end,
     
       % create symbolic link
       case file:make_symlink( Orig, Link ) of
