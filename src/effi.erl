@@ -368,7 +368,10 @@ refactor( P, Value, Dir, RepoDir, Prefix, FMap ) ->
       Link = string:join( [RepoDir, Value1], "/" ),
 
       % create repo directory if necessary
-      filelib:ensure_dir( Link ),
+      ok = case filelib:ensure_dir( Link ) of
+        {error, R1} -> error( {R1, ensure_dir, Link} );
+        ok -> ok
+      end
     
       % create symbolic link
       case file:make_symlink( Orig, Link ) of
