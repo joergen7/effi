@@ -348,39 +348,9 @@ parse_assoc( AssocStr )when is_list( AssocStr ) ->
 
   #{Name => L2}.
 
-
-%% refactor/5
-%
-refactor_result( RMap, Dir, RepoDir, Prefix, FMap ) ->
-  maps:map( fun( P, Value ) -> refactor( P, Value, Dir, RepoDir, Prefix, FMap ) end, RMap ).
-  
-refactor( P, Value, Dir, RepoDir, Prefix, FMap ) ->
-
-  % check if parameter is of type file
-  case maps:get( P, FMap ) of
-    false -> Value;
-    true  ->
-
-      % create new value
-      Value1 = string:join( [Prefix, P, filename:basename( Value )], "_" ),
-  
-      Orig = filename:absname( string:join( [Dir, Value], "/" ) ),
-      Link = string:join( [RepoDir, Value1], "/" ),
-
-      % create repo directory if necessary
-      ok = case filelib:ensure_dir( Link ) of
-        {error, R1} -> error( {R1, ensure_dir, Link} );
-        ok -> ok
-      end,
-    
-      % create symbolic link
-      case file:make_symlink( Orig, Link ) of
-        {error, R2} -> error( {R2, symlink, [Orig, Link]} );
-        ok -> Value1
-      end
-  end.
-
-
+%% =============================================================================
+%% Unit Tests
+%% =============================================================================
 
 -ifdef( TEST ).
 
