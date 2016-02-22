@@ -58,20 +58,18 @@ print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile> <summaryfi
 %
 opt_spec_list() ->
   [
-   {version,  $v, "version",  undefined,         "Show Effi version"},
-   {help,     $h, "help",     undefined,         "Show command line options"},
-   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
-   {lang,     $l, "lang",     {atom, bash},      "Foreign language [range: bash, python, r]"},
-   {dir,      $d, "dir",      {string, "."},     "Working directory"},
-   {prefix,   $p, "prefix",   {string, "undef"}, "Prefix to append to output files produced by the script"},
-   {taskname, $t, "taskname", {string, "undef"}, "Task name to be stored in summary file"},
-   {refactor, $r, "refactor", {boolean, false},  "Refactor output files to have unique names"},
-   {repodir,  $e, "repodir",  {string, "."},     "Repository directory for refactoring"},
-   {singout,  $o, "singout",  string,            "Add singular output name [example: -o out]"},
-   {listout,  $O, "listout",  string,            "Add list output name [example: -O out]"},
-   {singin,   $i, "singin",   string,            "Bind singular input name [example: -i inp:a.txt]"},
-   {listin,   $I, "listin",   string,            "Bind list input name [example: -I inp:a.txt,b.txt]"},
-   {file,     $f, "file",     string,            "Declare input/output name to be a file [example: -f out]"}
+   {version,  $v, "version",  undefined,     "Show Effi version"},
+   {help,     $h, "help",     undefined,     "Show command line options"},
+   {cite,     $c, "cite",     undefined,     "Show Bibtex entry for citation"},
+   {lang,     $l, "lang",     atom,          "Foreign language [range: bash, python, r]"},
+   {dir,      $d, "dir",      {string, "."}, "Working directory"},
+   {prefix,   $p, "prefix",   integer,       "Invocation prefix stored in summary file"},
+   {taskname, $t, "taskname", string,        "Task name to be stored in summary file"},
+   {singout,  $o, "singout",  string,        "Add singular output name [example: -o out]"},
+   {listout,  $O, "listout",  string,        "Add list output name [example: -O out]"},
+   {singin,   $i, "singin",   string,        "Bind singular input name [example: -i inp:a.txt]"},
+   {listin,   $I, "listin",   string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
+   {file,     $f, "file",     string,        "Declare input/output name to be a file [example: -f out]"}
   ].   	    
 
 %% print_bibtex_entry/0

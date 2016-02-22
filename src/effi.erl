@@ -66,9 +66,6 @@ check_run( OptList, Script ) ->
   InMap    = maps:get( inmap, OptMap ),
   LMap     = maps:get( lmap, OptMap ),
   FMap     = maps:get( fmap, OptMap ),
-  Refactor = maps:get( refactor, OptMap ),
-  RepoDir  = maps:get( repodir, OptMap ),
-
   
   % check pre-conditions
   case check_if_file( InMap, Dir, FMap ) of
@@ -86,17 +83,11 @@ check_run( OptList, Script ) ->
             PostMissingList=[_|_] -> {failed, postcond, PostMissingList};
             []                    ->
             
-              % refactor if desired
-              RMap1 = case Refactor of
-                        false -> RMap;
-                        true  -> refactor_result( RMap, Dir, RepoDir, Prefix, FMap )
-                      end,
-              
               % take duration
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
           
               % generate summary
-              {finished, get_summary( OptList, Script, RMap1, Out, Tstart, Tdur )}
+              {finished, get_summary( OptList, Script, RMap, Out, Tstart, Tdur )}
           end
       end
   end.
