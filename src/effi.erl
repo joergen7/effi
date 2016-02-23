@@ -66,32 +66,32 @@ check_run( OptList, Script ) ->
   InMap    = maps:get( inmap, OptMap ),
   LMap     = maps:get( lmap, OptMap ),
   FMap     = maps:get( fmap, OptMap ),
-  
+
   % check pre-conditions
   case check_if_file( InMap, Dir, FMap ) of
     PreMissingList=[_|_] -> {failed, precond, PreMissingList};
     []                   ->
-    
+
 
       % run
       case run( Lang, Script, Dir, OutList, InMap, LMap ) of
         {failed, ActScript, Out} -> {failed, script_error, {ActScript, Out}};
         {finished, RMap, Out}    ->
-    
+
           % check post-conditions
           case check_if_file( RMap, Dir, FMap ) of
             PostMissingList=[_|_] -> {failed, postcond, PostMissingList};
             []                    ->
-            
+
               % take duration
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
-          
+
               % generate summary
               {finished, get_summary( OptList, Script, RMap, Out, Tstart, Tdur )}
           end
       end
   end.
-  
+
 %% get_optmap/1
 %
 get_optmap( OptList )when is_list( OptList ) ->
@@ -106,21 +106,21 @@ get_optmap( OptList )when is_list( OptList ) ->
            fmap     => #{}},
 
   lists:foldl( fun acc_info/2, Acc0, OptList ).
-  
-  
+
+
 %% get_summary/5
 %
 get_summary( OptList, Script, Ret, Out, Tstart, Tdur )
 when is_list( OptList ), is_list( Script ), is_map( Ret ), is_list( Out ),
      is_integer( Tstart ), Tstart >= 0,
      is_integer( Tdur ), Tdur >= 0 ->
-     
+
   OptMap = get_optmap( OptList ),
 
   TaskName = maps:get( taskname, OptMap ),
   Prefix   = maps:get( prefix, OptMap ),
   Lang     = maps:get( lang, OptMap ),
-  
+
   #{optlist  => OptList,
     script   => Script,
     lang     => Lang,
@@ -140,17 +140,17 @@ when is_list( OptList ), is_list( Script ), is_map( Ret ), is_list( Out ),
 check_if_file( PMap, Dir, FMap ) ->
   lists:foldl( fun( P, Acc ) -> acc_check( P, Acc, PMap, Dir, FMap ) end, [],
                maps:keys( PMap ) ).
-  
+
 acc_check( P, Acc, PMap, Dir, FMap ) ->
 
   % check if parameter is of type file
   case maps:get( P, FMap ) of
     false -> Acc;
     true  ->
-    
+
       % get value
       V = maps:get( P, PMap ),
-      
+
       % check if file exists
       case filelib:is_regular( string:join( [Dir, V], "/" ) ) of
         true  -> Acc;
@@ -165,11 +165,11 @@ run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) ->
 
   % create port
   {Port, ActScript} = create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ),
-  
+
   % receive result
   listen_port( Port, ActScript ).
-  
-  
+
+
 
 %% acc_info/2
 %
@@ -182,9 +182,9 @@ acc_info( {repodir,  Dir},      Acc ) -> Acc#{repodir  => Dir};
 acc_info( {file,     Name},     Acc ) ->
 
   FMap = maps:get( fmap, Acc ),
-  
+
   Acc#{fmap => FMap#{Name => true}};
-  
+
 acc_info( {singout,  Name},     Acc ) ->
 
   OutList = maps:get( outlist, Acc ),
@@ -194,7 +194,7 @@ acc_info( {singout,  Name},     Acc ) ->
   Acc#{outlist => [Name|OutList],
        lmap    => LMap#{Name => false},
        fmap    => FMap#{Name => maps:get( Name, FMap, false )}};
-       
+
 acc_info( {listout,  Name},     Acc ) ->
 
   OutList = maps:get( outlist, Acc ),
@@ -211,11 +211,11 @@ acc_info( {singin,   I},        Acc ) ->
   InMap         = maps:get( inmap, Acc ),
   LMap          = maps:get( lmap,  Acc ),
   FMap          = maps:get( fmap,  Acc ),
-  
+
   Acc#{inmap => InMap#{Name => Value},
        lmap  => LMap#{Name => false},
        fmap  => FMap#{Name => maps:get( Name, FMap, false )}};
-       
+
 acc_info( {listin,   I},        Acc ) ->
 
   [Name, S1] = string:tokens( I, ":" ),
@@ -227,12 +227,12 @@ acc_info( {listin,   I},        Acc ) ->
   Acc#{inmap => InMap#{Name => ValueList},
        lmap  => LMap#{Name => true},
        fmap  => FMap#{Name => maps:get( Name, FMap, false )}}.
-       
-       
 
 
 
-  
+
+
+
 %% create_port/6
 %
 create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap )
@@ -246,7 +246,7 @@ when is_atom( Lang ),
 
   % get Foreign Function Interface type
   FfiType = apply( Lang, ffi_type, [] ),
-  
+
   % collect assignments
   Prefix = lists:map(
              fun( ParamName ) ->
@@ -260,12 +260,12 @@ when is_atom( Lang ),
                [apply( Lang, dismissal, [OutName, maps:get( OutName, TypeMap )] ), $\n]
              end,
              OutList ),
-             
+
   ActScript = lists:flatten( [Prefix, Script, $\n, Suffix] ),
 
-  % run script    
+  % run script
   Port = apply( FfiType, create_port, [Lang, ActScript, Dir] ),
-  
+
   {Port, ActScript}.
 
 
@@ -273,7 +273,7 @@ when is_atom( Lang ),
 %
 listen_port( Port, ActScript ) ->
   listen_port( Port, ActScript, <<>>, #{}, [] ).
-  
+
 
 %% listen_port/5
 %
@@ -295,7 +295,7 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
-          
+
           % parse line
           AssocMap = parse_assoc( AssocStr ),
 
@@ -304,7 +304,7 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
         % line is an ordinary output
         _ ->
-        
+
           % continue
           listen_port( Port, ActScript, <<>>, ResultAcc, [Line|OutAcc] )
 
@@ -354,9 +354,9 @@ greet_bash_test_() ->
   TypeMap  = #{"person" => false, "out" => false},
 
   {finished, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),
-  
+
   Result = maps:get( "out", ResultMap ),
-    
+
   ?_assertEqual( ["Hello Jorgen"], Result ).
 
 -endif.
