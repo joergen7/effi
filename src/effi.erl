@@ -177,8 +177,6 @@ acc_info( {lang,     Lang},     Acc ) -> Acc#{lang     => Lang};
 acc_info( {dir,      Dir},      Acc ) -> Acc#{dir      => Dir};
 acc_info( {prefix,   Prefix},   Acc ) -> Acc#{prefix   => Prefix};
 acc_info( {taskname, Name},     Acc ) -> Acc#{taskname => Name};
-acc_info( {refactor, Refactor}, Acc ) -> Acc#{refactor => Refactor};
-acc_info( {repodir,  Dir},      Acc ) -> Acc#{repodir  => Dir};
 acc_info( {file,     Name},     Acc ) ->
 
   FMap = maps:get( fmap, Acc ),
@@ -283,7 +281,8 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
-      listen_port( Port, ActScript, <<LineAcc/binary,PartLine/binary>>, ResultAcc, OutAcc );
+      LineAcc1 = <<LineAcc/binary,PartLine/binary>>,
+      listen_port( Port, ActScript, LineAcc1, ResultAcc, OutAcc );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->

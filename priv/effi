@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-02-21" ).
+-define( BUILD, "2016-02-23" ).
 
 %% main/1
 %

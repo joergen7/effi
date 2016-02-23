@@ -93,6 +93,7 @@ when is_atom( Lang ),
   Port = open_port( {spawn, ScriptFile},
                     [exit_status,
                      stderr_to_stdout,
+                     binary,
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
