@@ -34,7 +34,10 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang::atom(), Script::string(), Dir::string() ) -> port().
+-callback create_port( Lang, Script, Dir ) -> port()
+when Lang   :: atom(),
+     Script :: string(),
+     Dir    :: string().
 
 
 %% ------------------------------------------------------------
@@ -144,25 +147,26 @@ when is_list( OptList ), is_list( Script ), is_map( Ret ), is_list( Out ),
 %% ------------------------------------------------------------
 
 
-check_if_file( PMap, Dir, FMap ) ->
-  lists:foldl( fun( P, Acc ) -> acc_check( P, Acc, PMap, Dir, FMap ) end, [],
-               maps:keys( PMap ) ).
+check_if_file( Fa0, Dir, FMap ) ->
+  lists:foldl( fun( N, Acc ) -> acc_missing( N, Acc, Fa0, Dir, FMap ) end, [],
+               maps:keys( Fa0 ) ).
 
-acc_check( P, Acc, PMap, Dir, FMap ) ->
-
-  % check if parameter is of type file
-  case maps:get( P, FMap ) of
-    false -> Acc;
+acc_missing( N, MissingLst, Fa0, Dir, FMap ) ->
+  case maps:get( N, FMap ) of
+    false -> MissingLst;
     true  ->
+      lists:foldl( fun( File, AccIn ) ->
+                     acc_file( File, AccIn, Dir )
+                   end,
+                   MissingLst,
+                   maps:get( N, Fa0 ) )
+  end.
 
-      % get value
-      V = maps:get( P, PMap ),
-
-      % check if file exists
-      case filelib:is_regular( string:join( [Dir, V], "/" ) ) of
-        true  -> Acc;
-        false -> [V|Acc]
-      end
+acc_file( File, MissingLst, Dir ) ->
+  AbsSrc = string:join( [Dir, File], "/" ),
+  case filelib:is_regular( AbsSrc ) of
+    false -> [File|MissingLst];
+    true  -> MissingLst
   end.
 
 
@@ -306,7 +310,8 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
         <<?MSG, AssocStr/binary>> ->
 
           % parse line
-          AssocMap = parse_assoc( AssocStr ),
+          {ok, Tokens, _} = erl_scan:string( binary_to_list( AssocStr ) ),
+          {ok, AssocMap}  = erl_parse:parse_term( Tokens ),
 
           % continue
           listen_port( Port, ActScript, <<>>, maps:merge( ResultAcc, AssocMap ), OutAcc );
@@ -333,20 +338,6 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
   end.
 
-
-%% parse_assoc/1
-%
-parse_assoc( AssocStr )when is_binary( AssocStr ) ->
-  parse_assoc( binary_to_list( AssocStr ) );
-
-parse_assoc( AssocStr )when is_list( AssocStr ) ->
-
-  [Name, S1] = string:tokens( AssocStr, ?COLON ),
-  S2 = string:substr( S1, 2, length( S1 )-2 ),
-  L1 = string:tokens( S2, ?COMMA ),
-  L2 = [string:substr( S, 2, length( S )-2 ) || S <- L1],
-
-  #{Name => L2}.
 
 %% =============================================================================
 %% Unit Tests

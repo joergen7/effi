@@ -57,7 +57,7 @@ suffix() -> "exit".
 %
 assignment( ParamName, false, Value ) ->
   [ParamName, $=, quote( Value ), $\n];
-  
+
 assignment( ParamName, true, ValueList ) ->
   [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
 
@@ -65,11 +65,11 @@ assignment( ParamName, true, ValueList ) ->
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["echo \"", ?MSG, OutName, ?COLON, "[\\\"$", OutName, "\\\"]\"\n"];
+  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[\\\"$", OutName, "\\\"]}.\"\n"];
 
 dismissal( OutName, true ) ->
-  ["TMP=`printf \"", ?COMMA, "\\\"%s\\\"\" ${", OutName,
-   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, OutName, ?COLON, "[$TMP]\"\n"].
+  ["TMP=`printf \",\\\"%s\\\"\" ${", OutName,
+   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{", OutName, "=>[$TMP]}.\"\n"].
 
 
 %% ------------------------------------------------------------

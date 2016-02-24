@@ -59,13 +59,13 @@ when is_atom( Lang ),
 
   % get interpreter
   Interpreter = apply( Lang, interpreter, [] ),
-  
+
   % get prefix
   Prefix = apply( Lang, prefix, [] ),
-  
+
   % get suffix
   Suffix = apply( Lang, suffix, [] ),
-  
+
   % complement script
   Script1 = [Prefix, $\n, Script, $\n, Suffix, $\n],
 
