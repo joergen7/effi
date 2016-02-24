@@ -52,6 +52,9 @@
 %
 check_run( OptList, Script ) ->
 
+
+  io:format( "Starting check_run ...~n" ),
+
   % take start time
   Tstart = trunc( os:system_time()/1000000 ),
 
@@ -61,17 +64,21 @@ check_run( OptList, Script ) ->
   % extract info
   Lang     = maps:get( lang, OptMap ),
   Dir      = maps:get( dir, OptMap ),
-  Prefix   = maps:get( prefix, OptMap ),
   OutList  = maps:get( outlist, OptMap ),
   InMap    = maps:get( inmap, OptMap ),
   LMap     = maps:get( lmap, OptMap ),
   FMap     = maps:get( fmap, OptMap ),
 
+  io:format( "Checking preconditions ...~n" ),
+
   % check pre-conditions
   case check_if_file( InMap, Dir, FMap ) of
-    PreMissingList=[_|_] -> {failed, precond, PreMissingList};
+    PreMissingList=[_|_] ->
+      io:format( "Preconditions not met! aborting ...~n" ),
+      {failed, precond, PreMissingList};
     []                   ->
 
+      io:format( "Preconditions met. Firing up ...~n" ),
 
       % run
       case run( Lang, Script, Dir, OutList, InMap, LMap ) of
@@ -216,13 +223,16 @@ acc_info( {singin,   I},        Acc ) ->
 
 acc_info( {listin,   I},        Acc ) ->
 
-  [Name, S1] = string:tokens( I, ":" ),
-  ValueList  = string:tokens( S1, "," ),
+  [Name|T] = string:tokens( I, ":" ),
+  ValueLst = case T of
+               []   -> [];
+               [S1] -> string:tokens( S1, "," )
+             end,
   InMap      = maps:get( inmap, Acc ),
   LMap       = maps:get( lmap,  Acc ),
   FMap       = maps:get( fmap,  Acc ),
 
-  Acc#{inmap => InMap#{Name => ValueList},
+  Acc#{inmap => InMap#{Name => ValueLst},
        lmap  => LMap#{Name => true},
        fmap  => FMap#{Name => maps:get( Name, FMap, false )}}.
 
@@ -281,14 +291,14 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
-      LineAcc1 = <<LineAcc/binary,PartLine/binary>>,
+      LineAcc1 = <<LineAcc/binary, PartLine/binary>>,
       listen_port( Port, ActScript, LineAcc1, ResultAcc, OutAcc );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->
 
       % reconstruct line from iolist
-      Line = <<LineAcc/binary,PartLine/binary>>,
+      Line = <<LineAcc/binary, PartLine/binary>>,
 
       case Line of
 
