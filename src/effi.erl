@@ -75,11 +75,13 @@ check_run( OptList, Script ) ->
   io:format( "Checking preconditions ...~n" ),
 
   % check pre-conditions
-  case check_if_file( InMap, Dir, FMap ) of
-    PreMissingList=[_|_] ->
-      io:format( "Preconditions not met! aborting ...~n" ),
-      {failed, precond, PreMissingList};
-    []                   ->
+  PreMissingLst = check_if_file( InMap, Dir, FMap ),
+
+  case PreMissingLst of
+    [_|_] ->
+      io:format( "Preconditions not met! ~p~naborting ...~n", [PreMissingLst] ),
+      {failed, precond, PreMissingLst};
+    []    ->
 
       io:format( "Preconditions met. Firing up ...~n" ),
 
@@ -89,9 +91,11 @@ check_run( OptList, Script ) ->
         {finished, RMap, Out}    ->
 
           % check post-conditions
-          case check_if_file( RMap, Dir, FMap ) of
-            PostMissingList=[_|_] -> {failed, postcond, PostMissingList};
-            []                    ->
+          PostMissingLst = check_if_file( RMap, Dir, FMap ),
+
+          case PostMissingLst of
+            [_|_] -> {failed, postcond, PostMissingLst};
+            []    ->
 
               % take duration
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
@@ -221,7 +225,7 @@ acc_info( {singin,   I},        Acc ) ->
   LMap          = maps:get( lmap,  Acc ),
   FMap          = maps:get( fmap,  Acc ),
 
-  Acc#{inmap => InMap#{Name => Value},
+  Acc#{inmap => InMap#{Name => [Value]},
        lmap  => LMap#{Name => false},
        fmap  => FMap#{Name => maps:get( Name, FMap, false )}};
 
@@ -262,7 +266,9 @@ when is_atom( Lang ),
   % collect assignments
   Prefix = lists:map(
              fun( ParamName ) ->
-               [apply( Lang, assignment, [ParamName, maps:get( ParamName, TypeMap ), maps:get( ParamName, ParamMap )] ),$\n]
+               Pl       = maps:get( ParamName, TypeMap ),
+               ValueLst = maps:get( ParamName, ParamMap ),
+               [apply( Lang, assignment, [ParamName, Pl, ValueLst] ),$\n]
              end,
              maps:keys( ParamMap ) ),
 
@@ -350,7 +356,7 @@ greet_bash_test_() ->
   Script   = "out=\"Hello $person\"",
   Dir      = "/tmp",
   OutList  = ["out"],
-  ParamMap = #{"person" => "Jorgen"},
+  ParamMap = #{"person" => ["Jorgen"]},
   TypeMap  = #{"person" => false, "out" => false},
 
   {finished, ResultMap, _} = run( bash, Script, Dir, OutList, ParamMap, TypeMap ),

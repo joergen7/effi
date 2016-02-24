@@ -55,7 +55,7 @@ suffix() -> "exit".
 
 %% assignment/3
 %
-assignment( ParamName, false, Value ) ->
+assignment( ParamName, false, [Value] ) ->
   [ParamName, $=, quote( Value ), $\n];
 
 assignment( ParamName, true, ValueList ) ->
