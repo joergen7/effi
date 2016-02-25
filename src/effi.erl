@@ -34,7 +34,7 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang, Script, Dir ) -> port()
+-callback create_port( Lang, Script, Dir ) -> {port(), string()}
 when Lang   :: atom(),
      Script :: string(),
      Dir    :: string().
@@ -55,9 +55,6 @@ when Lang   :: atom(),
 %
 check_run( OptList, Script ) ->
 
-
-  io:format( "Starting check_run ...~n" ),
-
   % take start time
   Tstart = trunc( os:system_time()/1000000 ),
 
@@ -72,18 +69,12 @@ check_run( OptList, Script ) ->
   LMap     = maps:get( lmap, OptMap ),
   FMap     = maps:get( fmap, OptMap ),
 
-  io:format( "Checking preconditions ...~n" ),
-
   % check pre-conditions
   PreMissingLst = check_if_file( InMap, Dir, FMap ),
 
   case PreMissingLst of
-    [_|_] ->
-      io:format( "Preconditions not met! ~p~naborting ...~n", [PreMissingLst] ),
-      {failed, precond, PreMissingLst};
+    [_|_] -> {failed, precond, PreMissingLst};
     []    ->
-
-      io:format( "Preconditions met. Firing up ...~n" ),
 
       % run
       case run( Lang, Script, Dir, OutList, InMap, LMap ) of
@@ -279,12 +270,11 @@ when is_atom( Lang ),
              end,
              OutList ),
 
-  ActScript = lists:flatten( [Prefix, Script, $\n, Suffix] ),
+  Script1 = string:join( [Prefix, Script, Suffix], "\n" ),
 
   % run script
-  Port = apply( FfiType, create_port, [Lang, ActScript, Dir] ),
+  {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script1, Dir] ).
 
-  {Port, ActScript}.
 
 
 %% listen_port/2

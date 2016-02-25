@@ -70,15 +70,13 @@ when is_atom( Lang ),
   Shebang = apply( Lang, shebang, [] ),
 
   % complement script with shebang
-  ActScript = [Shebang,$\n,Script],
+  ActScript = string:join( [Shebang,Script], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),
 
   % compose script filename
   ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
-
-  io:format( "Storing data in ~s:~n~s~n", [ScriptFile, ActScript] ),
 
 
 
@@ -97,6 +95,4 @@ when is_atom( Lang ),
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
-  io:format( "Done creating port.~n" ),
-
-  Port.
+  {Port, ActScript}.
