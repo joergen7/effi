@@ -5,4 +5,4 @@ clean:
 	rebar clean
 
 .rebar/effi_18.2.1_plt:
-	rebar update-deps build-plt
+	rebar get-deps build-plt
