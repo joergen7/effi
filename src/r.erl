@@ -56,9 +56,9 @@ suffix() -> "q()".
 
 %% assignment/3
 %
-assignment( ParamName, false, Value ) ->
+assignment( ParamName, false, [Value] ) ->
   [ParamName, $=, quote( Value ), $\n];
-    
+
 assignment( ParamName, true, ValueList ) ->
   [ParamName, "=c(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
 
@@ -66,11 +66,11 @@ assignment( ParamName, true, ValueList ) ->
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["cat(\"", ?MSG, OutName, ?COLON, "[\",", OutName, ",\"]\\n\")\n"];
-  
+  ["cat(\"", ?MSG, OutName, ":[\",", OutName, ",\"]\\n\")\n"];
+
 dismissal( OutName, true ) ->
-  ["cat(\"", ?MSG, OutName, ?COLON, "[\",paste(\"\\\"\",", OutName,
-  ",\"\\\"\",collapse=\"", ?COMMA, "\",sep=\"\"),\"]\\n\",sep=\"\")\n"].
+  ["cat(\"", ?MSG, OutName, ":[\",paste(\"\\\"\",", OutName,
+  ",\"\\\"\",collapse=\"", ",\",sep=\"\"),\"]\\n\",sep=\"\")\n"].
 
 
 %% ------------------------------------------------------------

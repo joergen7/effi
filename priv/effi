@@ -20,14 +20,14 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-02-21" ).
+-define( BUILD, "2016-02-24" ).
 
 %% main/1
 %
 main( [] ) ->
   print_intro(),
   print_usage();
-  
+
 main( CmdLine ) ->
 
   case getopt:parse( opt_spec_list(), CmdLine ) of
@@ -58,19 +58,19 @@ print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile> <summaryfi
 %
 opt_spec_list() ->
   [
-   {version,  $v, "version",  undefined,     "Show Effi version"},
-   {help,     $h, "help",     undefined,     "Show command line options"},
-   {cite,     $c, "cite",     undefined,     "Show Bibtex entry for citation"},
-   {lang,     $l, "lang",     atom,          "Foreign language [range: bash, python, r]"},
-   {dir,      $d, "dir",      {string, "."}, "Working directory"},
-   {prefix,   $p, "prefix",   integer,       "Invocation prefix stored in summary file"},
-   {taskname, $t, "taskname", string,        "Task name to be stored in summary file"},
-   {singout,  $o, "singout",  string,        "Add singular output name [example: -o out]"},
-   {listout,  $O, "listout",  string,        "Add list output name [example: -O out]"},
-   {singin,   $i, "singin",   string,        "Bind singular input name [example: -i inp:a.txt]"},
-   {listin,   $I, "listin",   string,        "Bind list input name [example: -I inp:a.txt,b.txt]"},
-   {file,     $f, "file",     string,        "Declare input/output name to be a file [example: -f out]"}
-  ].   	    
+   {version,  $v, "version",  undefined,         "Show Effi version"},
+   {help,     $h, "help",     undefined,         "Show command line options"},
+   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
+   {lang,     $l, "lang",     {atom, bash},      "Foreign language [range: bash, python, r]"},
+   {dir,      $d, "dir",      {string, "."},     "Working directory"},
+   {prefix,   $p, "prefix",   {integer, 0},      "Invocation prefix stored in summary file"},
+   {taskname, $t, "taskname", {string, "undef"}, "Task name to be stored in summary file"},
+   {singout,  $o, "singout",  string,            "Add singular output name [example: -o out]"},
+   {listout,  $O, "listout",  string,            "Add list output name [example: -O out]"},
+   {singin,   $i, "singin",   string,            "Bind singular input name [example: -i inp:a.txt]"},
+   {listin,   $I, "listin",   string,            "Bind list input name [example: -I inp:a.txt,b.txt]"},
+   {file,     $f, "file",     string,            "Declare input/output name to be a file [example: -f out]"}
+  ].
 
 %% print_bibtex_entry/0
 %
@@ -123,24 +123,24 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
         {error, R1} -> error( {R1, read_file, ScriptFile} );
         {ok, X}     -> X
       end,
-    
+
   % convert binary to string
   Script = binary_to_list( B ),
- 
+
   % run script
   Summary = case effi:check_run( OptList, Script ) of
-      
+
               {failed, R2, MissingList} ->
                 error( {R2, MissingList} );
-      
+
               {failed, script_error, {ActScript, Out}}     ->
-        
+
                 % print tool output
                 ok = lists:foreach( fun( Line ) ->
                 	              io:format( "~s~n", [Line] )
                 	            end,
                 	            Out ),
-          
+
                 % print actual script
                 ok = io:format( "[script]~n" ),
                 _ = lists:foldl( fun( Line, N ) ->
@@ -148,21 +148,21 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
           	                   N+1
           	                 end,
           	                 1, string:tokens( ActScript, "\n" ) ),
-        
+
                 % throw error
                 error( script_error );
 
               {finished, Sum} -> Sum
             end,
-        
- 
+
+
   % write summary
   case file:write_file( SumFile, io_lib:format( "~p~n", [Summary] ) ) of
     {error, R4} -> error( {R4, write_file, SumFile} );
     ok          -> ok
   end;
-  
-  
+
+
 
 runscript( _OptList, NonOptList ) ->
   error( {script_and_summary_expected, NonOptList} ).

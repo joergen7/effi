@@ -59,15 +59,15 @@ when is_atom( Lang ),
 
   % get interpreter
   Interpreter = apply( Lang, interpreter, [] ),
-  
+
   % get prefix
   Prefix = apply( Lang, prefix, [] ),
-  
+
   % get suffix
   Suffix = apply( Lang, suffix, [] ),
-  
+
   % complement script
-  Script1 = [Prefix, $\n, Script, $\n, Suffix, $\n],
+  ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
   Port = open_port( {spawn, Interpreter},
@@ -77,6 +77,6 @@ when is_atom( Lang ),
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
-  true = port_command( Port, Script1 ),
+  true = port_command( Port, ActScript ),
 
-  Port.
+  {Port, ActScript}.

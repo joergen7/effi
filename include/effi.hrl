@@ -29,7 +29,7 @@
 
 -spec create_port( Lang, Script, Dir, OutList, ParamMap, TypeMap ) -> Port
 when Lang     :: atom(),
-     Script   :: iodata(), 
+     Script   :: iodata(),
      Dir      :: string(),
      OutList  :: [string()],
      ParamMap :: #{string() => string() | [string()]},
@@ -38,7 +38,7 @@ when Lang     :: atom(),
 
 -spec run( Lang, Script, Dir, OutList, ParamMap, TypeMap ) -> Result
 when Lang     :: atom(),
-     Script   :: iodata(), 
+     Script   :: iodata(),
      Dir      :: string(),
      OutList  :: [string()],
      ParamMap :: #{string() => string() | [string()]},
@@ -52,9 +52,5 @@ when Port      :: port(),
      ResultAcc :: #{string() => [string()]},
      OutAcc    :: [binary()],
      Result    :: result().
-				      
--spec parse_assoc( AssocStr ) -> ResultMap
-when AssocStr  :: string() | binary(),
-     ResultMap :: #{string => [string()]}.
-				       
+
 

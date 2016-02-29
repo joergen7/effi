@@ -1,5 +1,5 @@
 all: .rebar/effi_18.2.1_plt
-	rebar update-deps co eu dialyze doc
+	rebar co eu dialyze
 
 clean:
 	rebar clean

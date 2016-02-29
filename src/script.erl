@@ -32,7 +32,7 @@
 %% Macros
 %% ------------------------------------------------------------
 
--define( SCRIPT_FILE, "script" ).
+-define( SCRIPT_FILE, "_script" ).
 -define( SCRIPT_MODE, 8#700 ).
 
 
@@ -68,34 +68,31 @@ when is_atom( Lang ),
 
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
-  
+
   % complement script with shebang
-  Script1 = [Shebang,$\n,Script],
+  ActScript = string:join( [Shebang,Script], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),
-  
+
   % compose script filename
   ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
 
-  io:format( "Storing data in ~s:~n~s~n", [ScriptFile, Script1] ),
 
-  
-  
+
   % create script file
-  file:write_file( ScriptFile, Script1 ),
-  
+  file:write_file( ScriptFile, ActScript ),
+
   % set file permissions to execute
   file:change_mode( ScriptFile, ?SCRIPT_MODE ),
-  
+
 
   % run ticket
   Port = open_port( {spawn, ScriptFile},
                     [exit_status,
                      stderr_to_stdout,
+                     binary,
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
-  io:format( "Done creating port.~n" ),
-
-  Port.
+  {Port, ActScript}.
