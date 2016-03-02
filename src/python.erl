@@ -63,7 +63,7 @@ dismissal( OutName, false ) ->
   ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\\\"\"+str(", OutName, ")+\"\\\"]}.\\n\")\n"];
 
 dismissal( OutName, true ) ->
-  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\\\"\"+\"\\\",\\\"\".join(map(str,", OutName, "))+\"\\\"]}.\\n\")\n"].
+  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),", OutName, "))+\"]}.\\n\")\n"].
 
 
 %% ------------------------------------------------------------

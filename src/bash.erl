@@ -69,7 +69,7 @@ dismissal( OutName, false ) ->
 
 dismissal( OutName, true ) ->
   ["TMP=`printf \",\\\"%s\\\"\" ${", OutName,
-   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{", OutName, "=>[$TMP]}.\"\n"].
+   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
 
 
 %% ------------------------------------------------------------
