@@ -59,7 +59,7 @@ assignment( ParamName, false, [Value] ) ->
   [ParamName, $=, quote( Value ), $\n];
 
 assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
+  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
 
 
 %% dismissal/2

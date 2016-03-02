@@ -322,6 +322,7 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
     % process succeeded
     {Port, {exit_status, 0}} ->
+
       {finished, ResultAcc, lists:reverse( OutAcc )};
 
     % process failed
