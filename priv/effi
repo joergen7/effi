@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-02-24" ).
+-define( BUILD, "2016-03-11" ).
 
 %% main/1
 %
@@ -42,7 +42,9 @@ main( CmdLine ) ->
             false ->
               case lists:member( cite, OptList ) of
                 true  -> print_bibtex_entry();
-                false -> runscript( OptList, NonOptList )
+                false ->
+                  [{dir, Dir}] = OptList,
+                  runscript( Dir, NonOptList )
               end
           end
       end;
@@ -52,7 +54,7 @@ main( CmdLine ) ->
 
 %% print_usage/0
 %
-print_usage() -> getopt:usage( opt_spec_list(), "effi", "<scriptfile> <summaryfile>" ).
+print_usage() -> getopt:usage( opt_spec_list(), "effi", "<requestfile> <summaryfile>" ).
 
 %% opt_spec_list/0
 %
@@ -61,15 +63,7 @@ opt_spec_list() ->
    {version,  $v, "version",  undefined,         "Show Effi version"},
    {help,     $h, "help",     undefined,         "Show command line options"},
    {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
-   {lang,     $l, "lang",     {atom, bash},      "Foreign language [range: bash, python, r]"},
-   {dir,      $d, "dir",      {string, "."},     "Working directory"},
-   {prefix,   $p, "prefix",   {integer, 0},      "Invocation prefix stored in summary file"},
-   {taskname, $t, "taskname", {string, "undef"}, "Task name to be stored in summary file"},
-   {singout,  $o, "singout",  string,            "Add singular output name [example: -o out]"},
-   {listout,  $O, "listout",  string,            "Add list output name [example: -O out]"},
-   {singin,   $i, "singin",   string,            "Bind singular input name [example: -i inp:a.txt]"},
-   {listin,   $I, "listin",   string,            "Bind list input name [example: -I inp:a.txt,b.txt]"},
-   {file,     $f, "file",     string,            "Declare input/output name to be a file [example: -f out]"}
+   {dir,      $d, "dir",      {string, "."},     "Working directory"}
   ].
 
 %% print_bibtex_entry/0
@@ -104,9 +98,7 @@ intro() ->
       "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
       "  ^^^^^  P qF  `     function's arguments, body and output values.",
       "",
-      "Copyright 2016 Jorgen Brandt <brandjoe@hu-berlin.de>",
-      "               Marc Bux      <bux@informatik.hu-berlin.de>",
-      "               Ulf Leser     <leser@informatik.hu-berlin.de>"
+      "Copyright 2016 Jorgen Brandt <brandjoe@hu-berlin.de>"
 
     ], "\n" ).
 
@@ -116,19 +108,23 @@ print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 
 %% runscript/2
 %
-runscript( OptList, [ScriptFile, SumFile] ) ->
+runscript( Dir, [RequestFile, SumFile] ) ->
 
   % read script from file
-  B = case file:read_file( ScriptFile ) of
-        {error, R1} -> error( {R1, read_file, ScriptFile} );
+  B = case file:read_file( RequestFile ) of
+        {error, R1} -> error( {R1, RequestFile} );
         {ok, X}     -> X
       end,
 
-  % convert binary to string
-  Script = binary_to_list( B ),
+  % parse line
+  {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
+  {Lam, Fa} = case erl_parse:parse_term( Tokens ) of
+                {error, Reason} -> error( Reason );
+                {ok, Y}         -> Y
+              end, 
 
   % run script
-  Summary = case effi:check_run( OptList, Script ) of
+  Summary = case effi:check_run( Lam, Fa, Dir ) of
 
               {failed, R2, MissingList} ->
                 error( {R2, MissingList} );
@@ -158,13 +154,13 @@ runscript( OptList, [ScriptFile, SumFile] ) ->
 
   % write summary
   case file:write_file( SumFile, io_lib:format( "~p~n", [Summary] ) ) of
-    {error, R4} -> error( {R4, write_file, SumFile} );
+    {error, R4} -> error( {R4, SumFile} );
     ok          -> ok
   end;
 
 
 
-runscript( _OptList, NonOptList ) ->
-  error( {script_and_summary_expected, NonOptList} ).
+runscript( _Dir, NonOptList ) ->
+  error( {request_and_summary_expected, NonOptList} ).
 
 

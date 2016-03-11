@@ -21,7 +21,7 @@
 
 -behaviour( interact ).
 
--include( "common.hrl" ).
+-include( "effi.hrl" ).
 
 %% ------------------------------------------------------------
 %% Callback exports
@@ -65,10 +65,10 @@ assignment( ParamName, true, ValueList ) ->
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[\\\"$", OutName, "\\\"]}.\"\n"];
+  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
 
 dismissal( OutName, true ) ->
-  ["TMP=`printf \",\\\"%s\\\"\" ${", OutName,
+  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
 
 

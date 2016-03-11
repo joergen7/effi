@@ -21,7 +21,7 @@
 
 -behaviour( script ).
 
--include( "common.hrl" ).
+-include( "effi.hrl" ).
 
 %% ------------------------------------------------------------
 %% Callback exports
@@ -60,10 +60,10 @@ assignment( ParamName, true, ValueList ) ->
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\\\"\"+str(", OutName, ")+\"\\\"]}.\\n\")\n"];
+  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[{str,\\\"\"+str(", OutName, ")+\"\\\"}]}.\\n\")\n"];
 
 dismissal( OutName, true ) ->
-  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),", OutName, "))+\"]}.\\n\")\n"].
+  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\"+\",\".join(map(lambda x: \"{str,\\\"%s\\\"}\"%(x),", OutName, "))+\"]}.\\n\")\n"].
 
 
 %% ------------------------------------------------------------

@@ -21,7 +21,7 @@
 
 -behaviour( interact ).
 
--include( "common.hrl" ).
+-include( "effi.hrl" ).
 
 %% ------------------------------------------------------------
 %% Callback exports
