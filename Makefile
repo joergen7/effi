@@ -1,8 +1,7 @@
-all: .rebar/effi_18.2.1_plt
-	rebar co eu dialyze
+all:
+	rebar3 compile
+	rebar3 eunit
+	rebar3 dialyzer
 
 clean:
-	rebar clean
-
-.rebar/effi_18.2.1_plt:
-	rebar get-deps build-plt
+	rebar3 clean
