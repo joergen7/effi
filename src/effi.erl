@@ -42,7 +42,7 @@ when Lang   :: atom(),
 %% Type definitions
 %% ------------------------------------------------------------
 
--type result()  :: {finished, #{string() => [string()]}, [binary()]}
+-type result()  :: {finished, #{atom() => term()}}
                  | {failed, atom(), _}.
 
 -type lam()     :: {lam, LamLine::pos_integer(), Name::string(),
@@ -61,16 +61,22 @@ when Lang   :: atom(),
 %% API export
 %% ------------------------------------------------------------
 
--export( [check_run/3] ).
+-export( [check_run/4] ).
 
 %% ------------------------------------------------------------
 %% API functions
 %% ------------------------------------------------------------
 
 
-%% check_run/2
+%% check_run/4
 %
-check_run( Lam, Fa, Dir ) ->
+-spec check_run( Lam, Fa, R, Dir ) -> result()
+when Lam :: lam(),
+     Fa  :: #{string() => [str()]},
+     R   :: pos_integer(),
+     Dir :: string().
+
+check_run( Lam, Fa, R, Dir ) ->
 
   % take start time
   Tstart = trunc( os:system_time()/1000000 ),
@@ -101,7 +107,7 @@ check_run( Lam, Fa, Dir ) ->
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
 
               % generate summary
-              {finished, get_summary( Lam, Fa, RMap, Out, Tstart, Tdur )}
+              {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur )}
           end
       end
   end.
@@ -109,12 +115,23 @@ check_run( Lam, Fa, Dir ) ->
 
 %% get_summary/5
 %
-get_summary( Lam, Fa, Ret, Out, Tstart, Tdur )
+-spec get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur ) -> #{atom() => term()}
+when Lam    :: lam(),
+     Fa     :: #{string => [str()]},
+     R      :: pos_integer(),
+     Ret    :: #{string() => [str()]},
+     Out    :: [binary()],
+     Tstart :: integer(),
+     Tdur   :: integer().
+
+get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur )
 when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
-     is_integer( Tstart ), Tstart >= 0, is_integer( Tdur ), Tdur >= 0 ->
+     is_integer( Tstart ), Tstart >= 0, is_integer( Tdur ), Tdur >= 0,
+     is_integer( R ), R > 0 ->
 
   #{lam      => Lam,
     arg      => Fa,
+    id       => R,
     ret      => Ret,
     tstart   => Tstart,
     tdur     => Tdur,
