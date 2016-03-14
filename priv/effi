@@ -118,13 +118,13 @@ runscript( Dir, [RequestFile, SumFile] ) ->
 
   % parse line
   {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
-  {Lam, Fa} = case erl_parse:parse_term( Tokens ) of
-                {error, Reason} -> error( Reason );
-                {ok, Y}         -> Y
-              end, 
+  {Lam, Fa, R} = case erl_parse:parse_term( Tokens ) of
+                   {error, Reason} -> error( Reason );
+                   {ok, Y}         -> Y
+                 end, 
 
   % run script
-  Summary = case effi:check_run( Lam, Fa, Dir ) of
+  Summary = case effi:check_run( Lam, Fa, R, Dir ) of
 
               {failed, R2, MissingList} ->
                 error( {R2, MissingList} );
@@ -153,7 +153,7 @@ runscript( Dir, [RequestFile, SumFile] ) ->
 
 
   % write summary
-  case file:write_file( SumFile, io_lib:format( "~p~n", [Summary] ) ) of
+  case file:write_file( SumFile, io_lib:format( "~p.~n", [Summary] ) ) of
     {error, R4} -> error( {R4, SumFile} );
     ok          -> ok
   end;
