@@ -140,7 +140,7 @@ runscript( Dir, [RequestFile, SumFile] ) ->
       	                           ok = io:format( "~4.B  ~s~n", [N, Line] ),
           	                   N+1
           	                 end,
-          	                 1, string:tokens( ActScript, "\n" ) ),
+          	                 1, re:split( ActScript, "\n" ) ),
 
                 % throw error
                 error( script_error );
