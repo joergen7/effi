@@ -126,9 +126,6 @@ runscript( Dir, [RequestFile, SumFile] ) ->
   % run script
   Summary = case effi:check_run( Lam, Fa, R, Dir ) of
 
-              {failed, R2, MissingList} ->
-                error( {R2, MissingList} );
-
               {failed, script_error, {ActScript, Out}}     ->
 
                 % print tool output
@@ -148,7 +145,11 @@ runscript( Dir, [RequestFile, SumFile] ) ->
                 % throw error
                 error( script_error );
 
-              {finished, Sum} -> Sum
+              {finished, Sum} -> Sum;
+
+              {failed, R2, MissingList} ->
+                error( {R2, MissingList} )
+
             end,
 
 

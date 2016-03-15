@@ -79,4 +79,4 @@ when is_atom( Lang ),
 
   true = port_command( Port, ActScript ),
 
-  {Port, ActScript}.
+  {Port, lists:flatten( ActScript )}.
