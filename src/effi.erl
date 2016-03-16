@@ -88,19 +88,19 @@ check_run( Lam, Fa, R, Dir ) ->
   PreMissingLst = check_if_file( Li, Fa, Dir ),
 
   case PreMissingLst of
-    [_|_] -> {failed, precond, PreMissingLst};
+    [_|_] -> {failed, R, precond, PreMissingLst};
     []    ->
 
       % run
       case run( Lam, Fa, Dir ) of
-        {failed, script_error, Data} -> {failed, script_error, Data};
+        {failed, script_error, Data} -> {failed, R, script_error, Data};
         {finished, RMap, Out}        ->
 
           % check post-conditions
           PostMissingLst = check_if_file( Lo, RMap, Dir ),
 
           case PostMissingLst of
-            [_|_] -> {failed, postcond, PostMissingLst};
+            [_|_] -> {failed, R, postcond, PostMissingLst};
             []    ->
 
               % take duration

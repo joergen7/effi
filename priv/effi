@@ -129,7 +129,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
   % run script
   Summary = case effi:check_run( Lam, Fa, R, Dir ) of
 
-              {failed, script_error, {ActScript, Out}}     ->
+              {failed, R, script_error, {ActScript, Out}}     ->
 
                 % print tool output
                 ok = lists:foreach( fun( Line ) ->
@@ -148,7 +148,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
                 % throw error
                 error( script_error );
 
-              {failed, R2, MissingList} ->
+              {failed, R, R2, MissingList} ->
                 error( {R2, MissingList} );
 
               {finished, Sum} -> 
