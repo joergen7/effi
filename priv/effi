@@ -20,7 +20,7 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -define( VSN, "0.1.0" ).
--define( BUILD, "2016-03-11" ).
+-define( BUILD, "2016-03-16" ).
 
 %% main/1
 %
@@ -43,8 +43,10 @@ main( CmdLine ) ->
               case lists:member( cite, OptList ) of
                 true  -> print_bibtex_entry();
                 false ->
-                  [{dir, Dir}] = OptList,
-                  runscript( Dir, NonOptList )
+                  % {Dir, Refactor} = get_opt_tuple( OptList ),
+                  {dir, Dir} = lists:keyfind( dir, 1, OptList ),
+                  {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
+                  runscript( Dir, Refactor, NonOptList )
               end
           end
       end;
@@ -63,7 +65,8 @@ opt_spec_list() ->
    {version,  $v, "version",  undefined,         "Show Effi version"},
    {help,     $h, "help",     undefined,         "Show command line options"},
    {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
-   {dir,      $d, "dir",      {string, "."},     "Working directory"}
+   {dir,      $d, "dir",      {string, "."},     "Working directory"},
+   {refactor, $r, "refactor", {boolean, false},  "Refactor output files"}
   ].
 
 %% print_bibtex_entry/0
@@ -106,9 +109,9 @@ intro() ->
 %
 print_vsn() -> io:format( "Effi version ~s build ~s~n", [?VSN, ?BUILD] ).
 
-%% runscript/2
+%% runscript/3
 %
-runscript( Dir, [RequestFile, SumFile] ) ->
+runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
 
   % read script from file
   B = case file:read_file( RequestFile ) of
@@ -145,10 +148,20 @@ runscript( Dir, [RequestFile, SumFile] ) ->
                 % throw error
                 error( script_error );
 
-              {finished, Sum} -> Sum;
-
               {failed, R2, MissingList} ->
-                error( {R2, MissingList} )
+                error( {R2, MissingList} );
+
+              {finished, Sum} -> 
+                case Refactor of
+                  false -> Sum;
+                  true  ->
+                    RMap = maps:get( ret, Sum ),
+                    {lam, _Line, _LamName, Sign, _Body} = Lam,
+                    {sign, Lo, _Li} = Sign,
+                    {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, Dir, [Dir], R ),
+                    ok = refactor:apply_refactoring( RefactorLst ),
+                    maps:put( ret, RMap1, Sum )
+                end
 
             end,
 
@@ -161,7 +174,5 @@ runscript( Dir, [RequestFile, SumFile] ) ->
 
 
 
-runscript( _Dir, NonOptList ) ->
+runscript( _Dir, _Refactor, NonOptList ) ->
   error( {request_and_summary_expected, NonOptList} ).
-
-
