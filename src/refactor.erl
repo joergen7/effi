@@ -71,7 +71,7 @@ apply_refactoring( {Existing, New} ) ->
     ok          -> ok
   end,
 
-  case file:make_symlink( Existing, New ) of
+  case file:make_symlink( filename:absname( Existing ), New ) of
     {error, R2} -> error( {R2, make_symlink, [Existing, New]} );
     ok          -> ok
   end.
