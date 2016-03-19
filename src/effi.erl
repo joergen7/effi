@@ -43,7 +43,7 @@ when Lang   :: atom(),
 %% ------------------------------------------------------------
 
 -type result()  :: {finished, #{atom() => term()}}
-                 | {failed, atom(), _}.
+                 | {failed, atom(), pos_integer(), term()}.
 
 -type lam()     :: {lam, LamLine::pos_integer(), Name::string(),
                          S::sign(), B::forbody()}.
@@ -88,19 +88,19 @@ check_run( Lam, Fa, R, Dir ) ->
   PreMissingLst = check_if_file( Li, Fa, Dir ),
 
   case PreMissingLst of
-    [_|_] -> {failed, R, precond, PreMissingLst};
+    [_|_] -> {failed, precond, R, PreMissingLst};
     []    ->
 
       % run
       case run( Lam, Fa, Dir ) of
-        {failed, script_error, Data} -> {failed, R, script_error, Data};
+        {failed, script_error, Data} -> {failed, script_error, R, Data};
         {finished, RMap, Out}        ->
 
           % check post-conditions
           PostMissingLst = check_if_file( Lo, RMap, Dir ),
 
           case PostMissingLst of
-            [_|_] -> {failed, R, postcond, PostMissingLst};
+            [_|_] -> {failed, postcond, R, PostMissingLst};
             []    ->
 
               % take duration
@@ -164,10 +164,12 @@ acc_file( {str, File}, Acc, Dir ) ->
     true  -> Acc
   end.
 
--spec run( Lam, Fa, Dir ) -> result()
-when Lam :: lam(),
-     Fa  :: #{string() => [str()]},
-     Dir :: string().
+-spec run( Lam, Fa, Dir ) -> Result
+when Lam    :: lam(),
+     Fa     :: #{string() => [str()]},
+     Dir    :: string(),
+     Result :: {finished, #{string() => [str()]}, [binary()]}
+             | {failed, script_error, {iolist(), [binary()]}}.
 
 
 %% run/3
@@ -235,7 +237,8 @@ when Port      :: port(),
      LineAcc   :: binary(),
      ResultAcc :: #{string() => [string()]},
      OutAcc    :: [binary()],
-     Result    :: result().
+     Result    :: {finished, #{string() => [str()]}, [binary()]}
+                | {failed, script_error, {iolist(), [binary()]}}.
 
 listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
