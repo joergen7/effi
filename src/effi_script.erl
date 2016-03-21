@@ -16,7 +16,7 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
--module( interact ).
+-module( effi_script ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( effi ).
@@ -27,16 +27,25 @@
 
 -include( "effi.hrl" ).
 
+
+%% ------------------------------------------------------------
+%% Macros
+%% ------------------------------------------------------------
+
+-define( SCRIPT_FILE, "_script" ).
+-define( SCRIPT_MODE, 8#700 ).
+
+
 %% ------------------------------------------------------------
 %% Callback definitions
 %% ------------------------------------------------------------
 
 -callback ffi_type() -> atom().
--callback interpreter() -> string().
--callback prefix() -> string().
--callback suffix() -> string().
 -callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iolist().
 -callback dismissal( OutName::string(), IsList::boolean() ) -> iolist().
+-callback shebang() -> string().
+-callback extension() -> string().
+
 
 %% ------------------------------------------------------------
 %% Callback function exports
@@ -57,26 +66,33 @@ when is_atom( Lang ),
      is_list( Script ),
      is_list( Dir ) ->
 
-  % get interpreter
-  Interpreter = apply( Lang, interpreter, [] ),
+  % get shebang
+  Shebang = apply( Lang, shebang, [] ),
 
-  % get prefix
-  Prefix = apply( Lang, prefix, [] ),
+  % complement script with shebang
+  ActScript = string:join( [Shebang,Script], "\n" ),
 
-  % get suffix
-  Suffix = apply( Lang, suffix, [] ),
+  % get file extension
+  Ext = apply( Lang, extension, [] ),
 
-  % complement script
-  ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
+  % compose script filename
+  ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
+
+
+
+  % create script file
+  file:write_file( ScriptFile, ActScript ),
+
+  % set file permissions to execute
+  file:change_mode( ScriptFile, ?SCRIPT_MODE ),
+
 
   % run ticket
-  Port = open_port( {spawn, Interpreter},
+  Port = open_port( {spawn, ScriptFile},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
-
-  true = port_command( Port, ActScript ),
 
   {Port, ActScript}.

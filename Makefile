@@ -1,7 +1,8 @@
 all:
 	rebar3 compile
-	rebar3 eunit
-	rebar3 dialyzer
+
+dev:
+	rebar3 do escriptize, eunit dialyzer, cover
 
 clean:
 	rebar3 clean

@@ -19,7 +19,7 @@
 -module( python ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( script ).
+-behaviour( effi_script ).
 
 -include( "effi.hrl" ).
 
@@ -36,7 +36,7 @@
 
 %% ffi_type/0
 %
-ffi_type() -> script.
+ffi_type() -> effi_script.
 
 
 %% shebang/0

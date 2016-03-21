@@ -19,7 +19,7 @@
 -module( bash ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( interact ).
+-behaviour( effi_interact ).
 
 -include( "effi.hrl" ).
 
@@ -36,7 +36,7 @@
 
 %% ffi_type/0
 %
-ffi_type() -> interact.
+ffi_type() -> effi_interact.
 
 
 %% interpreter/0
