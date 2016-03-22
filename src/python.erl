@@ -46,7 +46,7 @@ shebang() -> "#!/usr/bin/env python".
 
 preprocess( Script ) ->
   Ret = "if True ->\n "++re:replace( Script, "\\n", "\n " ),
-  io:format( "~s", Ret ),
+  io:format( "~s", [Ret] ),
   Ret.
 
 
