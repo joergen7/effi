@@ -45,6 +45,7 @@
 -callback dismissal( OutName::string(), IsList::boolean() ) -> iolist().
 -callback shebang() -> string().
 -callback extension() -> string().
+-callback preprocess( Script::iolist() ) -> iolist().
 
 
 %% ------------------------------------------------------------
@@ -69,8 +70,11 @@ when is_atom( Lang ),
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
 
+  % preprocess script
+  Script1 = apply( Lang, preprocess, [Script] ),
+
   % complement script with shebang
-  ActScript = string:join( [Shebang,Script], "\n" ),
+  ActScript = string:join( [Shebang,Script1], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),

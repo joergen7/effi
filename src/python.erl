@@ -27,7 +27,7 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0] ).
+-export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0, preprocess/1] ).
 
 
 %% ------------------------------------------------------------
@@ -42,6 +42,12 @@ ffi_type() -> effi_script.
 %% shebang/0
 %
 shebang() -> "#!/usr/bin/env python".
+
+
+preprocess( Script ) ->
+  Ret = "if True ->\n "++re:replace( Script, "\\n", "\n " ),
+  io:format( "~s", Ret ),
+  Ret.
 
 
 %% extension/0
