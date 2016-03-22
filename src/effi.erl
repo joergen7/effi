@@ -36,9 +36,9 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang, Script, Dir ) -> {port(), string()}
+-callback create_port( Lang, Script, Dir ) -> {port(), iodata()}
 when Lang   :: atom(),
-     Script :: string(),
+     Script :: iodata(),
      Dir    :: string().
 
 %% ------------------------------------------------------------
@@ -376,10 +376,12 @@ when is_tuple( Lam ), is_map( Fa ), is_list( Dir ) ->
              end,
              Lo ),
 
-  Script1 = string:join( [Prefix, Script, Suffix], "\n" ),
+  Script1 = apply( Lang, preprocess, [Script] ),
+
+  Script2 = string:join( [Prefix, Script1, Suffix], "\n" ),
 
   % run script
-  {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script1, Dir] ).
+  {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script2, Dir] ).
 
 
 

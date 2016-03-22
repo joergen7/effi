@@ -27,7 +27,7 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3, dismissal/2] ).
+-export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3, dismissal/2, preprocess/1] ).
 
 
 %% ------------------------------------------------------------
@@ -72,6 +72,7 @@ dismissal( OutName, true ) ->
   ["cat(\"", ?MSG, OutName, ":[\",paste(\"\\\"\",", OutName,
   ",\"\\\"\",collapse=\"", ",\",sep=\"\"),\"]\\n\",sep=\"\")\n"].
 
+preprocess( Script ) -> Script.
 
 %% ------------------------------------------------------------
 %% Internal functions

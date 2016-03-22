@@ -35,8 +35,10 @@
 -callback interpreter() -> string().
 -callback prefix() -> string().
 -callback suffix() -> string().
--callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iolist().
--callback dismissal( OutName::string(), IsList::boolean() ) -> iolist().
+-callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
+-callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
+-callback preprocess( Script::iodata() ) -> iodata().
+
 
 %% ------------------------------------------------------------
 %% Callback function exports

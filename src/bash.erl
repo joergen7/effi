@@ -27,7 +27,7 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3, dismissal/2] ).
+-export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3, dismissal/2, preprocess/1] ).
 
 
 %% ------------------------------------------------------------
@@ -71,6 +71,7 @@ dismissal( OutName, true ) ->
   ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
 
+preprocess( Script ) -> Script.
 
 %% ------------------------------------------------------------
 %% Internal functions

@@ -41,11 +41,11 @@
 %% ------------------------------------------------------------
 
 -callback ffi_type() -> atom().
--callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iolist().
--callback dismissal( OutName::string(), IsList::boolean() ) -> iolist().
+-callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
+-callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
 -callback shebang() -> string().
 -callback extension() -> string().
--callback preprocess( Script::iolist() ) -> iolist().
+-callback preprocess( Script::iodata() ) -> iodata().
 
 
 %% ------------------------------------------------------------
@@ -70,19 +70,14 @@ when is_atom( Lang ),
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
 
-  % preprocess script
-  Script1 = apply( Lang, preprocess, [Script] ),
-
   % complement script with shebang
-  ActScript = string:join( [Shebang,Script1], "\n" ),
+  ActScript = string:join( [Shebang,Script], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),
 
   % compose script filename
   ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
-
-
 
   % create script file
   file:write_file( ScriptFile, ActScript ),
