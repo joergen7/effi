@@ -87,7 +87,7 @@ main( CmdLine ) ->
               print_usage();
             false ->
               case lists:member( cite, OptList ) of
-                true  -> print_bibtex_entry();
+                true  -> print_bibtex();
                 false ->
                   % {Dir, Refactor} = get_opt_tuple( OptList ),
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
@@ -166,9 +166,9 @@ get_optspec_lst() ->
 
 %% print_bibtex_entry/0
 %
-print_bibtex_entry() -> io:format( "~n~s~n~n", [get_bibtex()] ).
+print_bibtex() -> io:format( "~n~s~n~n", [get_bibtex()] ).
 
-%% bibtex_entry/0
+%% get_bibtex/0
 %
 get_bibtex() ->
   string:join( ["@InProceedings{Brandt2015,",
@@ -202,7 +202,7 @@ get_banner() ->
 
 %% print_vsn/0
 %
-print_vsn() -> io:format( "Effi version ~s build ~s~n", [get_vsn(), ?BUILD] ).
+print_vsn() -> io:format( "~s~n", [get_vsn()] ).
 
 get_vsn() ->
   {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
