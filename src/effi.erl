@@ -36,9 +36,9 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang, Script, Dir ) -> {port(), iodata()}
+-callback create_port( Lang, Script, Dir ) -> {port(), string()}
 when Lang   :: atom(),
-     Script :: iodata(),
+     Script :: string(),
      Dir    :: string().
 
 %% ------------------------------------------------------------

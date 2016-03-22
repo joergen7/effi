@@ -41,11 +41,11 @@
 %% ------------------------------------------------------------
 
 -callback ffi_type() -> atom().
--callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
--callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
+-callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> string().
+-callback dismissal( OutName::string(), IsList::boolean() ) -> string().
 -callback shebang() -> string().
 -callback extension() -> string().
--callback preprocess( Script::iodata() ) -> iodata().
+-callback preprocess( Script::string() ) -> string().
 
 
 %% ------------------------------------------------------------
@@ -71,7 +71,7 @@ when is_atom( Lang ),
   Shebang = apply( Lang, shebang, [] ),
 
   % complement script with shebang
-  ActScript = string:join( [Shebang,Script], "\n" ),
+  ActScript = string:join( [Shebang, Script], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),
