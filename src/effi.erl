@@ -89,7 +89,6 @@ main( CmdLine ) ->
               case lists:member( cite, OptList ) of
                 true  -> print_bibtex();
                 false ->
-                  % {Dir, Refactor} = get_opt_tuple( OptList ),
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
                   {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
                   runscript( Dir, Refactor, NonOptList )
