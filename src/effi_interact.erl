@@ -72,6 +72,8 @@ when is_atom( Lang ),
   % complement script
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
+  io:format( "opening port ...~n" ),
+
   % run ticket
   Port = open_port( {spawn, Interpreter},
                     [exit_status,
@@ -80,6 +82,10 @@ when is_atom( Lang ),
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
+  io:format( "piping in content ...~n" ),
+
   true = port_command( Port, ActScript ),
+
+  io:format( "seems to have worked.~n" ),
 
   {Port, ActScript}.

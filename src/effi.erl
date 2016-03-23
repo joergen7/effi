@@ -402,6 +402,8 @@ when is_tuple( Lam ),
 
   Script2 = io_lib:format( "~s~n~s~n~s~n~s~n", [LibPath, Assign, Script1, Suffix] ),
 
+  io:format( "calling create_port with~n~s~n", [Script2] ),
+
   % run script
   {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script2, Dir] ).
 
