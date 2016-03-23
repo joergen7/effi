@@ -231,7 +231,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
                  end, 
 
   % run script
-  Summary = case effi:check_run( Lam, Fa, R, Dir ) of
+  Summary = case effi:check_run( Lam, Fa, R, Dir, #{} ) of
 
               {failed, script_error, R, {ActScript, Out}}     ->
 
