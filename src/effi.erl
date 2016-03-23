@@ -376,7 +376,7 @@ when is_tuple( Lam ),
   FfiType = apply( Lang, ffi_type, [] ),
 
   % include lib paths
-  LibPath = [[apply( Lang, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap )],
+  LibPath = [[apply( Lang, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap, [] )],
 
   % collect assignments
   Assign = lists:map(
@@ -488,7 +488,7 @@ greet_bash_test_() ->
   Lam      = {lam, 12, "greet", Sign, Body},
   Fa       = #{"person" => [{str, "Jorgen"}]},
 
-  {finished, ResultMap, _} = run( Lam, Fa, Dir ),
+  {finished, ResultMap, _} = run( Lam, Fa, Dir, #{} ),
 
   Result = maps:get( "out", ResultMap ),
 
