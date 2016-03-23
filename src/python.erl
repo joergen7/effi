@@ -27,7 +27,8 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0, preprocess/1] ).
+-export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0,
+          preprocess/1, libpath/1] ).
 
 
 %% ------------------------------------------------------------
@@ -45,6 +46,9 @@ shebang() -> "#!/usr/bin/env python".
 
 preprocess( Script ) ->
   "if True:\n "++re:replace( Script, "\\n", "\n " ).
+
+libpath( Path ) ->
+  ["sys.path.append(\"", Path, "\")"].
 
 %% extension/0
 %

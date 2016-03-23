@@ -38,6 +38,7 @@
 -callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
 -callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
 -callback preprocess( Script::iodata() ) -> iodata().
+-callback libpath( Path::string() ) -> string().
 
 
 %% ------------------------------------------------------------
@@ -71,8 +72,6 @@ when is_atom( Lang ),
   % complement script
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
-  io:format( "~s~n", [ActScript] ),
-
   % run ticket
   Port = open_port( {spawn, Interpreter},
                     [exit_status,
@@ -82,5 +81,7 @@ when is_atom( Lang ),
                      {line, ?BUF_SIZE}] ),
 
   true = port_command( Port, ActScript ),
+
+  io:format( "~s~n", [ActScript] ),
 
   {Port, ActScript}.

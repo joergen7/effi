@@ -61,7 +61,7 @@ when Lang   :: atom(),
 %% API export
 %% ------------------------------------------------------------
 
--export( [check_run/4, main/1] ).
+-export( [check_run/5, main/1] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -99,15 +99,21 @@ main( CmdLine ) ->
       error( {Reason, Data} )
   end.
 
-%% check_run/4
+%% check_run/5
 %
--spec check_run( Lam, Fa, R, Dir ) -> result()
-when Lam :: lam(),
-     Fa  :: #{string() => [str()]},
-     R   :: pos_integer(),
-     Dir :: string().
+-spec check_run( Lam, Fa, R, Dir, LibMap ) -> result()
+when Lam    :: lam(),
+     Fa     :: #{string() => [str()]},
+     R      :: pos_integer(),
+     Dir    :: string(),
+     LibMap :: #{atom() => [string()]}.
 
-check_run( Lam, Fa, R, Dir ) ->
+check_run( Lam, Fa, R, Dir, LibMap )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_integer( R ), R > 0,
+     is_list( Dir ),
+     is_map( LibMap ) ->
 
   % take start time
   Tstart = trunc( os:system_time()/1000000 ),
@@ -123,7 +129,7 @@ check_run( Lam, Fa, R, Dir ) ->
     []    ->
 
       % run
-      case run( Lam, Fa, Dir ) of
+      case run( Lam, Fa, Dir, LibMap ) of
         {failed, script_error, Data} -> {failed, script_error, R, Data};
         {finished, RMap, Out}        ->
 
@@ -324,20 +330,25 @@ acc_file( {str, File}, Acc, Dir ) ->
     true  -> Acc
   end.
 
--spec run( Lam, Fa, Dir ) -> Result
+-spec run( Lam, Fa, Dir, LibMap ) -> Result
 when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      Dir    :: string(),
+     LibMap :: #{atom() => [string()]},
      Result :: {finished, #{string() => [str()]}, [binary()]}
              | {failed, script_error, {iolist(), [binary()]}}.
 
 
-%% run/3
+%% run/4
 %
-run( Lam, Fa, Dir ) ->
+run( Lam, Fa, Dir, LibMap )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_list( Dir ),
+     is_map( LibMap ) ->
 
   % create port
-  {Port, ActScript} = create_port( Lam, Fa, Dir ),
+  {Port, ActScript} = create_port( Lam, Fa, Dir, LibMap ),
 
   % receive result
   listen_port( Port, ActScript ).
@@ -345,13 +356,17 @@ run( Lam, Fa, Dir ) ->
 
 %% create_port/3
 %
--spec create_port( Lam, Fa, Dir ) -> {port(), string()}
-when Lam :: lam(),
-     Fa  :: #{string() => [str()]},
-     Dir :: string().
+-spec create_port( Lam, Fa, Dir, LibMap ) -> {port(), string()}
+when Lam    :: lam(),
+     Fa     :: #{string() => [str()]},
+     Dir    :: string(),
+     LibMap :: #{atom() => [string()]}.
 
-create_port( Lam, Fa, Dir )
-when is_tuple( Lam ), is_map( Fa ), is_list( Dir ) ->
+create_port( Lam, Fa, Dir, LibMap )
+when is_tuple( Lam ),
+     is_map( Fa ),
+     is_list( Dir ),
+     is_map( LibMap ) ->
 
   {lam, _Line, _LamName, Sign, Body} = Lam,
   {forbody, Lang, Script} = Body,
@@ -360,12 +375,15 @@ when is_tuple( Lam ), is_map( Fa ), is_list( Dir ) ->
   % get Foreign Function Interface type
   FfiType = apply( Lang, ffi_type, [] ),
 
+  % include lib paths
+  LibPath = [[apply( Lang, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap )],
+
   % collect assignments
-  Prefix = lists:map(
+  Assign = lists:map(
              fun( {param, {name, N, _Pf}, Pl} ) ->
                X = maps:get( N, Fa ),
                X1 = [S ||{str, S} <- X],
-               [apply( Lang, assignment, [N, Pl, X1] ),$\n]
+               [apply( Lang, assignment, [N, Pl, X1] ), $\n]
              end,
              Li ),
 
@@ -378,7 +396,7 @@ when is_tuple( Lam ), is_map( Fa ), is_list( Dir ) ->
 
   Script1 = apply( Lang, preprocess, [Script] ),
 
-  Script2 = io_lib:format( "~s~n~s~n~s~n", [Prefix, Script1, Suffix] ),
+  Script2 = io_lib:format( "~s~n~s~n~s~n~s~n", [LibPath, Assign, Script1, Suffix] ),
 
   % run script
   {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script2, Dir] ).
@@ -421,8 +439,6 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
-
-          io:format( "~s~n", [Line] ),
 
           % parse line
           {ok, Tokens, _} = erl_scan:string( binary_to_list( AssocStr ) ),

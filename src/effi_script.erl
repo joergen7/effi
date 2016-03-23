@@ -46,6 +46,7 @@
 -callback shebang() -> string().
 -callback extension() -> string().
 -callback preprocess( Script::string() ) -> string().
+-callback libpath( Path::string() ) -> string().
 
 
 %% ------------------------------------------------------------

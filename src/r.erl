@@ -28,12 +28,14 @@
 %% ------------------------------------------------------------
 
 -export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
-          dismissal/2, preprocess/1] ).
+          dismissal/2, preprocess/1, libpath/1] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
+
+libpath( Path ) -> [".libPaths(\"", Path, "\")"].
 
 %% ffi_type/0
 %
