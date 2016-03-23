@@ -82,6 +82,4 @@ when is_atom( Lang ),
 
   true = port_command( Port, ActScript ),
 
-  io:format( "~s~n", [ActScript] ),
-
   {Port, ActScript}.

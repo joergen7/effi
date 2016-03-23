@@ -44,6 +44,7 @@
 -callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> string().
 -callback dismissal( OutName::string(), IsList::boolean() ) -> string().
 -callback shebang() -> string().
+-callback import() -> string().
 -callback extension() -> string().
 -callback preprocess( Script::string() ) -> string().
 -callback libpath( Path::string() ) -> string().
@@ -71,8 +72,11 @@ when is_atom( Lang ),
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
 
+  % get import
+  Import = apply( Lang, import ),
+
   % complement script with shebang
-  ActScript = string:join( [Shebang, Script], "\n" ),
+  ActScript = string:join( [Shebang, Import, Script], "\n" ),
 
   % get file extension
   Ext = apply( Lang, extension, [] ),
