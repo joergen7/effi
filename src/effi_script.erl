@@ -73,7 +73,7 @@ when is_atom( Lang ),
   Shebang = apply( Lang, shebang, [] ),
 
   % get import
-  Import = apply( Lang, import ),
+  Import = apply( Lang, import, [] ),
 
   % complement script with shebang
   ActScript = string:join( [Shebang, Import, Script], "\n" ),
@@ -89,7 +89,6 @@ when is_atom( Lang ),
 
   % set file permissions to execute
   file:change_mode( ScriptFile, ?SCRIPT_MODE ),
-
 
   % run ticket
   Port = open_port( {spawn, ScriptFile},
