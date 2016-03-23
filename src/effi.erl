@@ -347,8 +347,12 @@ when is_tuple( Lam ),
      is_list( Dir ),
      is_map( LibMap ) ->
 
+  io:format( "entering run~ncreating port ...~n" ),
+
   % create port
   {Port, ActScript} = create_port( Lam, Fa, Dir, LibMap ),
+
+  io:format( "listening to port ...~n" ),
 
   % receive result
   listen_port( Port, ActScript ).
