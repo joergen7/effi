@@ -1,0 +1,9 @@
+{
+ {lam,1,"greet",
+      {sign,[{param,{name,"out",false},true}],
+            [{param,{name,"person",false},false}]},
+      {forbody,r,
+               "\n  out = c( paste( \"Hello\", person ), person )\n\n"}},
+ #{"person"=>[{str,"Jorgen"}]},
+ 1
+}.

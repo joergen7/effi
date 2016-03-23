@@ -71,6 +71,8 @@ when is_atom( Lang ),
   % complement script
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
+  io:format( "~s~n", [ActScript] ),
+
   % run ticket
   Port = open_port( {spawn, Interpreter},
                     [exit_status,

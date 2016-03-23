@@ -43,12 +43,8 @@ ffi_type() -> effi_script.
 %
 shebang() -> "#!/usr/bin/env python".
 
-
 preprocess( Script ) ->
-  Ret = "if True:\n "++re:replace( Script, "\\n", "\n " ),
-  io:format( "~s~n", [Ret] ),
-  Ret.
-
+  "if True:\n "++re:replace( Script, "\\n", "\n " ).
 
 %% extension/0
 %

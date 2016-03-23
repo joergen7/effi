@@ -27,7 +27,8 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3, dismissal/2, preprocess/1] ).
+-export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
+          dismissal/2, preprocess/1] ).
 
 
 %% ------------------------------------------------------------
@@ -66,11 +67,13 @@ assignment( ParamName, true, ValueList ) ->
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["cat(\"", ?MSG, OutName, ":[\",", OutName, ",\"]\\n\")\n"];
+  ["cat(\"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"\",", OutName,
+   ",\"\\\"}]}.\\n\",sep=\"\")\n"];
 
 dismissal( OutName, true ) ->
-  ["cat(\"", ?MSG, OutName, ":[\",paste(\"\\\"\",", OutName,
-  ",\"\\\"\",collapse=\"", ",\",sep=\"\"),\"]\\n\",sep=\"\")\n"].
+  ["cat(\"", ?MSG, "#{\\\"", OutName,
+   "\\\"=>[\",Reduce(function(x,y)paste(x,y,sep=\",\"),Map(function(x)paste(\"{str,\\\"\",x,\"\\\"}\",sep=\"\"),",
+   OutName, ")),\"]}.\\n\",sep=\"\")"].
 
 preprocess( Script ) -> Script.
 

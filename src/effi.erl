@@ -378,7 +378,7 @@ when is_tuple( Lam ), is_map( Fa ), is_list( Dir ) ->
 
   Script1 = apply( Lang, preprocess, [Script] ),
 
-  Script2 = string:join( [Prefix, Script1, Suffix], "\n" ),
+  Script2 = io_lib:format( "~s~n~s~n~s~n", [Prefix, Script1, Suffix] ),
 
   % run script
   {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script2, Dir] ).
@@ -421,6 +421,8 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
+
+          io:format( "~s~n", [Line] ),
 
           % parse line
           {ok, Tokens, _} = erl_scan:string( binary_to_list( AssocStr ) ),
