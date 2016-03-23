@@ -47,10 +47,7 @@ shebang() -> "#!/usr/bin/env python".
 import() -> "import sys".
 
 preprocess( Script ) ->
-  io:format( "[original]~n~s~n", [Script] ),
-  Script1 = "if True:\n "++re:replace( Script, "\\n", "\n " ),
-  io:format( "[updated]~n~s~n", [Script1] ),
-  Script1.
+  "if True:\n "++re:replace( Script, "\\n", "\n ", [{return, list}, global] ).
 
 libpath( Path ) ->
   ["sys.path.append(\"", Path, "\")"].

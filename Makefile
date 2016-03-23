@@ -8,4 +8,4 @@ clean:
 	rm -rf .rebar
 	rm -rf _build
 	rm -rf doc
-	rm rebar.lock
+	rm -f rebar.lock
