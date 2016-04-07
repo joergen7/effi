@@ -16,6 +16,51 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+
+
 -module( perl ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.0-snapshot" ).
+
+-behaviour( effi_interact ).
+
+-include( "effi.hrl" ).
+
+-export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
+          dismissal/2, preprocess/1, libpath/1] ).
+
+
+libpath( _Path ) -> error( unsupported ).
+ffi_type() -> effi_interact.
+interpreter() -> "perl".
+prefix() -> "".
+suffix() -> "".
+
+%% assignment/3
+%
+assignment( ParamName, false, [Value] ) ->
+  [ParamName, $=, quote( Value ), $\n];
+
+assignment( ParamName, true, ValueList ) ->
+  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
+
+
+%% dismissal/2
+%
+dismissal( OutName, false ) ->
+  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
+
+dismissal( OutName, true ) ->
+  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
+   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
+
+preprocess( Script ) -> Script.
+
+%% ------------------------------------------------------------
+%% Internal functions
+%% ------------------------------------------------------------
+
+%% quote/1
+%
+quote( S ) -> [$", S, $"].
