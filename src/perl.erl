@@ -23,19 +23,21 @@
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.0-snapshot" ).
 
--behaviour( effi_interact ).
+-behaviour( effi_script ).
 
 -include( "effi.hrl" ).
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
-          dismissal/2, preprocess/1, libpath/1] ).
+-export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0,
+          preprocess/1, libpath/1, import/0] ).
+
 
 
 libpath( _Path ) -> error( unsupported ).
-ffi_type() -> effi_interact.
-interpreter() -> "perl".
-prefix() -> "".
-suffix() -> "".
+ffi_type() -> effi_script.
+shebang() -> "#!/usr/bin/env perl".
+import() -> "".
+preprocess( Script ) -> Script.
+extension() -> ".pl".
 
 %% assignment/3
 %
@@ -55,7 +57,6 @@ dismissal( OutName, true ) ->
   ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
 
-preprocess( Script ) -> Script.
 
 %% ------------------------------------------------------------
 %% Internal functions
