@@ -225,13 +225,13 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
 
   % parse line
   {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
-  {Lam, Fa, R} = case erl_parse:parse_term( Tokens ) of
-                   {error, Reason} -> error( Reason );
-                   {ok, Y}         -> Y
-                 end, 
+  {Lam, Fa, R, LibMap} = case erl_parse:parse_term( Tokens ) of
+    {error, Reason} -> error( Reason );
+    {ok, Y}         -> Y
+  end, 
 
   % run script
-  Summary = case check_run( Lam, Fa, R, Dir, #{} ) of
+  Summary = case check_run( Lam, Fa, R, Dir, LibMap ) of
 
               {failed, script_error, R, {ActScript, Out}} ->
 
