@@ -231,9 +231,9 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
                  end, 
 
   % run script
-  Summary = case effi:check_run( Lam, Fa, R, Dir, #{} ) of
+  Summary = case check_run( Lam, Fa, R, Dir, #{} ) of
 
-              {failed, script_error, R, {ActScript, Out}}     ->
+              {failed, script_error, R, {ActScript, Out}} ->
 
                 % print tool output
                 io:format( "[out]~n" ),
@@ -250,11 +250,13 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
                              end,
                              1, re:split( ActScript, "\n" ) ),
 
-                % throw error
-                error( script_error );
+                #{state     => script_error,
+                  id        => R,
+                  actscript => lists:flatten( ActScript ),
+                  out => Out};
 
-              {failed, R2, R, MissingList} ->
-                error( {R2, MissingList} );
+              {failed, R2, R, MissingLst} ->
+                #{state => R2, id => R, missing => MissingLst};
 
               {finished, Sum} -> 
                 case Refactor of
@@ -274,7 +276,11 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
   % write summary
   case file:write_file( SumFile, io_lib:format( "~p.~n", [Summary] ) ) of
     {error, R4} -> error( {R4, SumFile} );
-    ok          -> ok
+    ok          ->
+      case maps:get( state, Summary ) of
+        ok -> ok;
+        _  -> error( {failed, maps:remove( actscript, maps:remove( out, Summary ) )} )
+      end
   end;
 
 
@@ -304,7 +310,8 @@ when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
     ret      => Ret,
     tstart   => Tstart,
     tdur     => Tdur,
-    out      => Out}.
+    out      => Out,
+    state    => ok}.
 
 
 
