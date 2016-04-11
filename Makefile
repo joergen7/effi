@@ -1,13 +1,11 @@
-SRC=bash effi effi_interact effi_script perl python r lib_refactor
-INC=effi
 PWD=$(shell pwd)
 
-all: _build/default/bin/effi
+all: compile
 
-install: _build/default/bin/effi
+install: compile
 	ln -sf $(PWD)/_build/default/bin/effi /usr/local/bin/effi
 
-_build/default/bin/effi: $(SRC:%=src/%.erl) $(INC:%=include/%.hrl)
+compile:
 	rebar3 escriptize
 
 dev:
