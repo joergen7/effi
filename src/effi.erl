@@ -268,8 +268,8 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
                     RMap = maps:get( ret, Sum ),
                     {lam, _Line, _LamName, Sign, _Body} = Lam,
                     {sign, Lo, _Li} = Sign,
-                    {RefactorLst, [], RMap1} = refactor:get_refactoring( Lo, RMap, Dir, [Dir], R ),
-                    ok = refactor:apply_refactoring( RefactorLst ),
+                    {RefactorLst, [], RMap1} = lib_refactor:get_refactoring( Lo, RMap, Dir, [Dir], R ),
+                    ok = lib_refactor:apply_refactoring( RefactorLst ),
                     maps:put( ret, RMap1, Sum )
                 end
 

@@ -19,7 +19,7 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
--module( refactor ).
+-module( lib_refactor ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.0-snapshot" ).
 
