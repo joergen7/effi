@@ -45,7 +45,7 @@ assignment( ParamName, false, [Value] ) ->
   [$$, ParamName, $=, quote( Value ), ";\n"];
 
 assignment( ParamName, true, ValueList ) ->
-  [$@, ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ");\n"].
+  [$@, ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], "," ), ");\n"].
 
 
 %% dismissal/2
@@ -54,8 +54,8 @@ dismissal( OutName, false ) ->
   ["print \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\\n\";\n"];
 
 dismissal( OutName, true ) ->
-  ["$TMP=sprintf \",{str,\\\"%s\\\"}\",@", OutName,
-   ";\n$TMP=substr $TMP,1;\nprint \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\\n\";\n"].
+  ["$TMP=join(\",\",map{\"{str,\\\"$_\\\"}\"}@", OutName, ");\n",
+   "print \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\\n\";\n"].
 
 
 %% ------------------------------------------------------------
