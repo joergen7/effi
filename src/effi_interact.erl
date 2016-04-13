@@ -21,7 +21,7 @@
 
 -module( effi_interact ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.0-snapshot" ).
+-vsn( "0.1.0-release" ).
 
 -behaviour( effi ).
 
