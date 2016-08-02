@@ -146,8 +146,12 @@ when is_tuple( Lam ),
               % take duration
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
 
+              InputSizeMap = gather_file_size( Li, Fa, Dir ),
+              OutputSizeMap = gather_file_size( Lo, Fa, Dir ),
+
               % generate summary
-              {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur )}
+              {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur,
+                                      InputSizeMap, OutputSizeMap )}
           end
       end
   end.
@@ -293,19 +297,23 @@ runscript( _Dir, _Refactor, NonOptList ) ->
 
 %% get_summary/5
 %
--spec get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur ) -> #{atom() => term()}
+-spec get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap ) -> #{atom() => term()}
 when Lam    :: lam(),
      Fa     :: #{string => [str()]},
      R      :: pos_integer(),
      Ret    :: #{string() => [str()]},
      Out    :: [binary()],
      Tstart :: integer(),
-     Tdur   :: integer().
+     Tdur   :: integer(),
+     InSizeMap :: #{string() => pos_integer()},
+     OutSizeMap :: #{string() => pos_integer()}.
 
-get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur )
+get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap )
 when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
      is_integer( Tstart ), Tstart >= 0, is_integer( Tdur ), Tdur >= 0,
-     is_integer( R ), R > 0 ->
+     is_integer( R ), R > 0,
+     is_map( InSizeMap ),
+     is_map( OutSizeMap ) ->
 
   #{lam      => Lam,
     arg      => Fa,
@@ -314,10 +322,24 @@ when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
     tstart   => Tstart,
     tdur     => Tdur,
     out      => Out,
-    state    => ok}.
+    state    => ok,
+    out_size_map => OutSizeMap,
+    in_size_map  => InSizeMap}.
 
 
+gather_file_size( ParamLst, Fa, Dir ) ->
 
+  E = fun( File, AccIn ) ->
+        AccIn#{ File => filelib:file_size( [Dir, $/, File] ) }
+      end,
+
+  F = fun( {param, {name, _, false}, _}, AccIn ) -> AccIn;
+         ( {param, {name, N, true}, _}, AccIn ) ->
+        #{ N := FileLst } = Fa,
+        lists:foldl( E, AccIn, FileLst )
+      end,
+
+  lists:foldl( F, #{}, ParamLst ).
 
 check_if_file( ParamLst, Fa, Dir ) ->
   lists:foldl( fun( Param, Acc ) -> acc_missing( Param, Acc, Fa, Dir ) end, [],
