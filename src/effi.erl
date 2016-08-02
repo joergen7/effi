@@ -336,7 +336,7 @@ gather_file_size( ParamLst, Fa, Dir ) ->
   F = fun( {param, {name, _, false}, _}, AccIn ) -> AccIn;
          ( {param, {name, N, true}, _}, AccIn ) ->
         #{ N := FileLst } = Fa,
-        lists:foldl( E, AccIn, FileLst )
+        lists:foldl( E, AccIn, [F || {str, F} <- FileLst] )
       end,
 
   lists:foldl( F, #{}, ParamLst ).
