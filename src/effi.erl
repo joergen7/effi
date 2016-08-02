@@ -147,7 +147,7 @@ when is_tuple( Lam ),
               Tdur = trunc( os:system_time()/1000000 )-Tstart,
 
               InputSizeMap = gather_file_size( Li, Fa, Dir ),
-              OutputSizeMap = gather_file_size( Lo, Fa, Dir ),
+              OutputSizeMap = gather_file_size( Lo, RMap, Dir ),
 
               % generate summary
               {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur,
