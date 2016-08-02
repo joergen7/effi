@@ -330,7 +330,7 @@ when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
 gather_file_size( ParamLst, Fa, Dir ) ->
 
   E = fun( File, AccIn ) ->
-        AccIn#{ File => filelib:file_size( [Dir, $/, File] ) }
+        AccIn#{ list_to_binary( File ) => filelib:file_size( [Dir, $/, File] ) }
       end,
 
   F = fun( {param, {name, _, false}, _}, AccIn ) -> AccIn;
