@@ -235,7 +235,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
   {Lam, Fa, R, LibMap} = case erl_parse:parse_term( Tokens ) of
     {error, Reason} -> error( Reason );
     {ok, Y}         -> Y
-  end, 
+  end,
 
   % run script
   Summary = case check_run( Lam, Fa, R, Dir, LibMap ) of
@@ -403,35 +403,36 @@ when is_tuple( Lam ),
   {lam, _Line, _LamName, Sign, Body} = Lam,
   {forbody, Lang, Script} = Body,
   {sign, Lo, Li} = Sign,
+  Mod = list_to_existing_atom("effi_" ++ atom_to_list(Lang)),
 
   % get Foreign Function Interface type
-  FfiType = apply( Lang, ffi_type, [] ),
+  FfiType = apply( Mod, ffi_type, [] ),
 
   % include lib paths
-  LibPath = [[apply( Lang, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap, [] )],
+  LibPath = [[apply( Mod, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap, [] )],
 
   % collect assignments
   Assign = lists:map(
              fun( {param, {name, N, _Pf}, Pl} ) ->
                X = maps:get( N, Fa ),
                X1 = [S ||{str, S} <- X],
-               [apply( Lang, assignment, [N, Pl, X1] ), $\n]
+               [apply( Mod, assignment, [N, Pl, X1] ), $\n]
              end,
              Li ),
 
   % collect dismissals
   Suffix = lists:map(
              fun( {param, {name, N, _Pf}, Pl} ) ->
-               [apply( Lang, dismissal, [N, Pl] ), $\n]
+               [apply( Mod, dismissal, [N, Pl] ), $\n]
              end,
              Lo ),
 
-  Script1 = apply( Lang, preprocess, [Script] ),
+  Script1 = apply( Mod, preprocess, [Script] ),
 
   Script2 = io_lib:format( "~s~n~s~n~s~n~s~n", [LibPath, Assign, Script1, Suffix] ),
 
   % run script
-  {_Port, _ActScript} = apply( FfiType, create_port, [Lang, Script2, Dir] ).
+  {_Port, _ActScript} = apply( FfiType, create_port, [Mod, Script2, Dir] ).
 
 
 

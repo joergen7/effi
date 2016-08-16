@@ -19,7 +19,7 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
--module( r ).
+-module( effi_bash ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.1-snapshot" ).
 
@@ -39,7 +39,7 @@
 %% Callback functions
 %% ------------------------------------------------------------
 
-libpath( Path ) -> [".libPaths(\"", Path, "\")"].
+libpath( _Path ) -> error( unsupported ).
 
 %% ffi_type/0
 %
@@ -48,17 +48,16 @@ ffi_type() -> effi_interact.
 
 %% interpreter/0
 %
-interpreter() -> "Rscript --vanilla -".
+interpreter() -> "bash".
 
 
 %% prefix/0
-%
-prefix() -> "".
+prefix() -> "set -eu -o pipefail".
 
 
 %% suffix/0
 %
-suffix() -> "q()".
+suffix() -> "exit".
 
 
 %% assignment/3
@@ -67,19 +66,17 @@ assignment( ParamName, false, [Value] ) ->
   [ParamName, $=, quote( Value ), $\n];
 
 assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=c(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
+  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
 
 
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["cat(\"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"\",", OutName,
-   ",\"\\\"}]}.\\n\",sep=\"\")\n"];
+  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
 
 dismissal( OutName, true ) ->
-  ["cat(\"", ?MSG, "#{\\\"", OutName,
-   "\\\"=>[\",Reduce(function(x,y)paste(x,y,sep=\",\"),Map(function(x)paste(\"{str,\\\"\",x,\"\\\"}\",sep=\"\"),",
-   OutName, ")),\"]}.\\n\",sep=\"\")"].
+  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
+   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
 
 preprocess( Script ) -> Script.
 

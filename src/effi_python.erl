@@ -19,11 +19,11 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
--module( bash ).
+-module( effi_python ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.1-snapshot" ).
 
--behaviour( effi_interact ).
+-behaviour( effi_script ).
 
 -include( "effi.hrl" ).
 
@@ -31,34 +31,34 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
-          dismissal/2, preprocess/1, libpath/1] ).
+-export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0,
+          preprocess/1, libpath/1, import/0] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-libpath( _Path ) -> error( unsupported ).
-
 %% ffi_type/0
 %
-ffi_type() -> effi_interact.
+ffi_type() -> effi_script.
 
 
-%% interpreter/0
+%% shebang/0
 %
-interpreter() -> "bash".
+shebang() -> "#!/usr/bin/env python".
 
+import() -> "import sys".
 
-%% prefix/0
-prefix() -> "set -eu -o pipefail".
+preprocess( Script ) ->
+  "if True:\n "++re:replace( Script, "\\n", "\n ", [{return, list}, global] ).
 
+libpath( Path ) ->
+  ["sys.path.append(\"", Path, "\")"].
 
-%% suffix/0
+%% extension/0
 %
-suffix() -> "exit".
-
+extension() -> ".py".
 
 %% assignment/3
 %
@@ -66,19 +66,17 @@ assignment( ParamName, false, [Value] ) ->
   [ParamName, $=, quote( Value ), $\n];
 
 assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
+  [ParamName, "=[", string:join( [quote( Value ) || Value <- ValueList], "," ), "]\n"].
 
 
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
+  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[{str,\\\"\"+str(", OutName, ")+\"\\\"}]}.\\n\")\n"];
 
 dismissal( OutName, true ) ->
-  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
-   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
+  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\"+\",\".join(map(lambda x: \"{str,\\\"%s\\\"}\"%(x),", OutName, "))+\"]}.\\n\")\n"].
 
-preprocess( Script ) -> Script.
 
 %% ------------------------------------------------------------
 %% Internal functions
@@ -86,4 +84,4 @@ preprocess( Script ) -> Script.
 
 %% quote/1
 %
-quote( S ) -> [$", S, $"].
+quote( S ) -> [$', S, $'].
