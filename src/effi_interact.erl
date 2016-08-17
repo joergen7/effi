@@ -58,20 +58,20 @@
 
 %% create_port/3
 %
-create_port( Lang, Script, Dir )
+create_port( Mod, Script, Dir )
 
-when is_atom( Lang ),
+when is_atom( Mod ),
      is_list( Script ),
      is_list( Dir ) ->
 
   % get interpreter
-  Interpreter = apply( Lang, interpreter, [] ),
+  Interpreter = apply( Mod, interpreter, [] ),
 
   % get prefix
-  Prefix = apply( Lang, prefix, [] ),
+  Prefix = apply( Mod, prefix, [] ),
 
   % get suffix
-  Suffix = apply( Lang, suffix, [] ),
+  Suffix = apply( Mod, suffix, [] ),
 
   % complement script
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),

@@ -19,44 +19,69 @@
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
--module( perl ).
+-module( effi_r ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 -vsn( "0.1.1-snapshot" ).
 
--behaviour( effi_script ).
+-behaviour( effi_interact ).
 
 -include( "effi.hrl" ).
 
--export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0,
-          preprocess/1, libpath/1, import/0] ).
+%% ------------------------------------------------------------
+%% Callback exports
+%% ------------------------------------------------------------
+
+-export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
+          dismissal/2, preprocess/1, libpath/1] ).
 
 
+%% ------------------------------------------------------------
+%% Callback functions
+%% ------------------------------------------------------------
 
-libpath( _Path ) -> error( unsupported ).
-ffi_type() -> effi_script.
-shebang() -> "#!/usr/bin/env perl".
-import() -> "".
-preprocess( Script ) -> Script.
-extension() -> ".pl".
+libpath( Path ) -> [".libPaths(\"", Path, "\")"].
+
+%% ffi_type/0
+%
+ffi_type() -> effi_interact.
+
+
+%% interpreter/0
+%
+interpreter() -> "Rscript --vanilla -".
+
+
+%% prefix/0
+%
+prefix() -> "".
+
+
+%% suffix/0
+%
+suffix() -> "q()".
+
 
 %% assignment/3
 %
 assignment( ParamName, false, [Value] ) ->
-  [$$, ParamName, $=, quote( Value ), ";\n"];
+  [ParamName, $=, quote( Value ), $\n];
 
 assignment( ParamName, true, ValueList ) ->
-  [$@, ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], "," ), ");\n"].
+  [ParamName, "=c(", string:join( [quote( Value ) || Value <- ValueList], "," ), ")\n"].
 
 
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["print \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\\n\";\n"];
+  ["cat(\"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"\",", OutName,
+   ",\"\\\"}]}.\\n\",sep=\"\")\n"];
 
 dismissal( OutName, true ) ->
-  ["$TMP=join(\",\",map{\"{str,\\\"$_\\\"}\"}@", OutName, ");\n",
-   "print \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\\n\";\n"].
+  ["cat(\"", ?MSG, "#{\\\"", OutName,
+   "\\\"=>[\",Reduce(function(x,y)paste(x,y,sep=\",\"),Map(function(x)paste(\"{str,\\\"\",x,\"\\\"}\",sep=\"\"),",
+   OutName, ")),\"]}.\\n\",sep=\"\")"].
 
+preprocess( Script ) -> Script.
 
 %% ------------------------------------------------------------
 %% Internal functions
