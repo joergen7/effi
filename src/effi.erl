@@ -403,7 +403,7 @@ when is_tuple( Lam ),
   {lam, _Line, _LamName, Sign, Body} = Lam,
   {forbody, Lang, Script} = Body,
   {sign, Lo, Li} = Sign,
-  Mod = list_to_existing_atom("effi_" ++ atom_to_list(Lang)),
+  Mod = list_to_atom("effi_" ++ atom_to_list(Lang)),
 
   % get Foreign Function Interface type
   FfiType = apply( Mod, ffi_type, [] ),
