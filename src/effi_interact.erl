@@ -72,7 +72,7 @@ when is_atom( Mod ),
     % generate a name for the invocation profile file by hashing the contents of the script
     OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
     % set the output file of kickstart to be in Dir 
-    OutfileArgument = string:concat("-l ", filename:join(Dir, OutfileName))
+    OutfileArgument = string:concat("-l ", filename:join(Dir, OutfileName)),
     % profiler call which to which the actual application is passed
     Profiler = string:concat("pegasus-kickstart ", OutfileArgument),
     string:join([Profiler, Interpreter], " ");
