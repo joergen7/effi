@@ -67,6 +67,18 @@ when is_atom( Mod ),
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
 
+  % get instrumentation wrapper
+  ProfiledInterpreter = if ?PROFILING == true -> 
+    % generate a name for the invocation profile file by hashing the contents of the script
+    OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
+    % set the output file of kickstart to be in Dir 
+    OutfileArgument = string:concat("-l ", filename:join(Dir, OutfileName))
+    % profiler call which to which the actual application is passed
+    Profiler = string:concat("pegasus-kickstart ", OutfileArgument),
+    string:join([Profiler, Interpreter], " ");
+    true -> ""
+  end,
+
   % get prefix
   Prefix = apply( Mod, prefix, [] ),
 
@@ -77,7 +89,7 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Port = open_port( {spawn, Interpreter},
+  Port = open_port( {spawn, case ?PROFILING of true -> ProfiledInterpreter; false -> Interpreter end},
                     [exit_status,
                      stderr_to_stdout,
                      binary,

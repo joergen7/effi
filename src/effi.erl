@@ -522,9 +522,10 @@ greet_bash_test_() ->
   Fa       = #{"person" => [{str, "Jorgen"}]},
 
   {finished, ResultMap, _} = run( Lam, Fa, Dir, #{} ),
-
+  
+  %?_assertEqual( [{str, "Hello Jorgen"}], [{str, string:concat("Hello ", "Jorgen")}] ).
+    
   Result = maps:get( "out", ResultMap ),
-
   ?_assertEqual( [{str, "Hello Jorgen"}], Result ).
 
 -endif.
