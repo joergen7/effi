@@ -74,7 +74,8 @@ when is_atom( Mod ),
     % set the output file of kickstart to be in Dir 
     OutfileArgument = string:concat("-l ", filename:join(Dir, OutfileName)),
     % profiler call which to which the actual application is passed
-    Profiler = string:concat("pegasus-kickstart ", OutfileArgument),
+    % connect the controlled process' stdin, stdout, and stderr to the default file descriptors 
+    Profiler = string:concat("pegasus-kickstart -o - -i - -e - ", OutfileArgument),
     string:join([Profiler, Interpreter], " ");
     true -> ""
   end,
