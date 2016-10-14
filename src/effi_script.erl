@@ -58,20 +58,21 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/3] ).
+-export( [create_port/4] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/3
+%% create_port/4
 %
-create_port( Lang, Script, Dir )
+create_port( Lang, Script, Dir, Prof )
 
 when is_atom( Lang ),
      is_list( Script ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_tuple(Prof) ->
 
   % get shebang
   Shebang = apply( Lang, shebang, [] ),

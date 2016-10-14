@@ -39,10 +39,11 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang, Script, Dir ) -> {port(), string()}
+-callback create_port( Lang, Script, Dir, DoProfiling ) -> {port(), string()}
 when Lang   :: atom(),
      Script :: string(),
-     Dir    :: string().
+     Dir    :: string(),
+     DoProfiling :: boolean().
 
 %% ------------------------------------------------------------
 %% Type definitions
@@ -59,12 +60,14 @@ when Lang   :: atom(),
 -type forbody() :: {forbody, L::lang(), S::string()}.
 -type lang()    :: bash | python | r.
 -type str()     :: {str, S::string()}.
+% whether to enable profiling and where to write the results to
+-type profilingsettings() :: {profiling, Enabled::boolean(), OutFile::string()}.
 
 %% ------------------------------------------------------------
 %% API export
 %% ------------------------------------------------------------
 
--export( [check_run/5, main/1] ).
+-export( [check_run/6, main/1] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -94,7 +97,9 @@ main( CmdLine ) ->
                 false ->
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
                   {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
-                  runscript( Dir, Refactor, NonOptList )
+                  {profiling, DoProfiling} = lists:keyfind( profiling, 1, OptList ),
+                  ProfilingSettings = get_profiling_settings(DoProfiling, NonOptList),
+                  runscript( Dir, Refactor, ProfilingSettings, NonOptList )
               end
           end
       end;
@@ -102,21 +107,23 @@ main( CmdLine ) ->
       error( {Reason, Data} )
   end.
 
-%% check_run/5
+%% check_run/6
 %
--spec check_run( Lam, Fa, R, Dir, LibMap ) -> result()
+-spec check_run( Lam, Fa, R, Dir, LibMap, Prof ) -> result()
 when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      R      :: pos_integer(),
      Dir    :: string(),
-     LibMap :: #{atom() => [string()]}.
+     LibMap :: #{atom() => [string()]},
+     Prof :: profilingsettings().
 
-check_run( Lam, Fa, R, Dir, LibMap )
+check_run( Lam, Fa, R, Dir, LibMap, Prof )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_integer( R ), R > 0,
      is_list( Dir ),
-     is_map( LibMap ) ->
+     is_map( LibMap ),
+     is_tuple(Prof) ->
 
   % take start time
   Tstart = trunc( os:system_time()/1000000 ),
@@ -132,7 +139,7 @@ when is_tuple( Lam ),
     []    ->
 
       % run
-      case run( Lam, Fa, Dir, LibMap ) of
+      case run( Lam, Fa, Dir, LibMap, Prof ) of
         {failed, script_error, Data} -> {failed, script_error, R, Data};
         {finished, RMap, Out}        ->
 
@@ -173,7 +180,8 @@ get_optspec_lst() ->
    {help,     $h, "help",     undefined,         "Show command line options"},
    {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
    {dir,      $d, "dir",      {string, "."},     "Working directory"},
-   {refactor, $r, "refactor", {boolean, false},  "Refactor output files"}
+   {refactor, $r, "refactor", {boolean, false},  "Refactor output files"},
+   {profiling,$p, "profiling",{boolean, false},  "Profile the process using the Pegasus Kickstart tool."}
   ].
 
 %% print_bibtex_entry/0
@@ -220,9 +228,9 @@ get_vsn() ->
   {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
   Vsn.
 
-%% runscript/3
+%% runscript/4
 %
-runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
+runscript( Dir, Refactor, ProfilingSetting, [RequestFile, SumFile] ) ->
 
   % read script from file
   B = case file:read_file( RequestFile ) of
@@ -238,7 +246,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
   end,
 
   % run script
-  Summary = case check_run( Lam, Fa, R, Dir, LibMap ) of
+  Summary = case check_run( Lam, Fa, R, Dir, LibMap, ProfilingSetting ) of
 
               {failed, script_error, R, {ActScript, Out}} ->
 
@@ -292,7 +300,7 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
 
 
 
-runscript( _Dir, _Refactor, NonOptList ) ->
+runscript( _Dir, _Refactor, _DoProfiling, NonOptList ) ->
   error( {request_and_summary_expected, NonOptList} ).
 
 %% get_summary/5
@@ -362,43 +370,47 @@ acc_file( {str, File}, Acc, Dir ) ->
     true  -> Acc
   end.
 
--spec run( Lam, Fa, Dir, LibMap ) -> Result
+-spec run( Lam, Fa, Dir, LibMap, Prof ) -> Result
 when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      Dir    :: string(),
      LibMap :: #{atom() => [string()]},
+     Prof :: profilingsettings(),
      Result :: {finished, #{string() => [str()]}, [binary()]}
              | {failed, script_error, {iolist(), [binary()]}}.
 
 
-%% run/4
+%% run/5
 %
-run( Lam, Fa, Dir, LibMap )
+run( Lam, Fa, Dir, LibMap, Prof )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_list( Dir ),
-     is_map( LibMap ) ->
+     is_map( LibMap ),
+     is_tuple(Prof) ->
 
   % create port
-  {Port, ActScript} = create_port( Lam, Fa, Dir, LibMap ),
+  {Port, ActScript} = create_port( Lam, Fa, Dir, LibMap, Prof ),
 
   % receive result
   listen_port( Port, ActScript ).
 
 
-%% create_port/3
+%% create_port/5
 %
--spec create_port( Lam, Fa, Dir, LibMap ) -> {port(), string()}
+-spec create_port( Lam, Fa, Dir, LibMap, Prof ) -> {port(), string()}
 when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      Dir    :: string(),
-     LibMap :: #{atom() => [string()]}.
+     LibMap :: #{atom() => [string()]},
+     Prof :: profilingsettings().
 
-create_port( Lam, Fa, Dir, LibMap )
+create_port( Lam, Fa, Dir, LibMap, Prof )
 when is_tuple( Lam ),
      is_map( Fa ),
      is_list( Dir ),
-     is_map( LibMap ) ->
+     is_map( LibMap ),
+     is_tuple(Prof) ->
 
   {lam, _Line, _LamName, Sign, Body} = Lam,
   {forbody, Lang, Script} = Body,
@@ -432,7 +444,7 @@ when is_tuple( Lam ),
   Script2 = io_lib:format( "~s~n~s~n~s~n~s~n", [LibPath, Assign, Script1, Suffix] ),
 
   % run script
-  {_Port, _ActScript} = apply( FfiType, create_port, [Mod, Script2, Dir] ).
+  {_Port, _ActScript} = apply( FfiType, create_port, [Mod, Script2, Dir, Prof] ).
 
 
 
@@ -503,6 +515,24 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
   end.
 
+%% profiling_settings/1
+% 
+-spec get_profiling_settings( DoProfiling, NonOptList ) -> ProfilingSettings
+when 
+  DoProfiling :: boolean(),
+  NonOptList :: [],
+  ProfilingSettings :: profilingsettings().
+
+get_profiling_settings( DoProfiling, NonOptList ) ->
+  if 
+    DoProfiling ->
+      [RequestFile, _] = NonOptList,
+      ProfileFileName = string:concat(RequestFile, "_profile.xml"),
+      io:fwrite(ProfileFileName),
+      {profiling, true, ProfileFileName};
+    true ->
+      {profiling, false, ""}
+  end.
 
 %% =============================================================================
 %% Unit Tests
@@ -520,8 +550,8 @@ greet_bash_test_() ->
   Body     = {forbody, bash, Script},
   Lam      = {lam, 12, "greet", Sign, Body},
   Fa       = #{"person" => [{str, "Jorgen"}]},
-
-  {finished, ResultMap, _} = run( Lam, Fa, Dir, #{} ),
+  Prof     = get_profiling_settings(false, ["requestfile", "summaryfile"]),
+  {finished, ResultMap, _} = run( Lam, Fa, Dir, #{}, Prof ),
     
   Result = maps:get( "out", ResultMap ),
   ?_assertEqual( [{str, "Hello Jorgen"}], Result ).

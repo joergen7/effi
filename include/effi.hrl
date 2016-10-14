@@ -18,4 +18,3 @@
 
 -define( BUF_SIZE, 1024 ).
 -define( MSG, "<MSG>" ).
--define( PROFILING, true).

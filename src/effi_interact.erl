@@ -49,32 +49,34 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/3] ).
+-export( [create_port/4] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/3
+%% create_port/4
 %
-create_port( Mod, Script, Dir )
+create_port( Mod, Script, Dir, Prof )
 
 when is_atom( Mod ),
      is_list( Script ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_tuple( Prof ) ->
 
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
 
+  {profiling, DoProfiling, ProfileFileName} = Prof,
   % get instrumentation wrapper
-  ProfiledInterpreter = if ?PROFILING == true -> 
+  ProfiledInterpreter = if DoProfiling == true -> 
     % generate a name for the invocation profile file by hashing the contents of the script
-    OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
+    % OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
     % set the output file of kickstart to be in Dir 
-    OutfileArgument = string:concat("-l ", filename:join(Dir, OutfileName)),
+    OutfileArgument = string:concat("-l ", filename:join(Dir, ProfileFileName)),
     % profiler call which to which the actual application is passed
-    % connect the controlled process' stdin, stdout, and stderr to the default file descriptors 
+    % connect the profiled process' stdin, stdout, and stderr to the default file descriptors 
     Profiler = string:concat("pegasus-kickstart -o - -i - -e - ", OutfileArgument),
     string:join([Profiler, Interpreter], " ");
     true -> ""
@@ -90,7 +92,7 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Port = open_port( {spawn, case ?PROFILING of true -> ProfiledInterpreter; false -> Interpreter end},
+  Port = open_port( {spawn, case DoProfiling of true -> ProfiledInterpreter; false -> Interpreter end},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
