@@ -19,4 +19,4 @@
 -define( BUF_SIZE, 1024 ).
 -define( MSG, "<MSG>" ).
 -define( BUILD, "2016-10-17" ).
--define( VSN, "0.1.1-release" ).
+-define( VSN, "0.1.2-snapshot" ).
