@@ -39,11 +39,11 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Lang, Script, Dir, DoProfiling ) -> {port(), string()}
+-callback create_port( Lang, Script, Dir, Prof ) -> {port(), string()}
 when Lang   :: atom(),
      Script :: string(),
      Dir    :: string(),
-     DoProfiling :: boolean().
+     Prof :: effi_profiling:profilingsettings().
 
 %% ------------------------------------------------------------
 %% Type definitions
@@ -60,14 +60,12 @@ when Lang   :: atom(),
 -type forbody() :: {forbody, L::lang(), S::string()}.
 -type lang()    :: bash | python | r.
 -type str()     :: {str, S::string()}.
-% whether to enable profiling and where to write the results to
--type profilingsettings() :: {profiling, Enabled::boolean(), OutFile::string()}.
 
 %% ------------------------------------------------------------
 %% API export
 %% ------------------------------------------------------------
 
--export( [check_run/6, main/1] ).
+-export( [check_run/6, main/1, get_optspec_lst/0] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -98,7 +96,7 @@ main( CmdLine ) ->
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
                   {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
                   {profiling, DoProfiling} = lists:keyfind( profiling, 1, OptList ),
-                  ProfilingSettings = get_profiling_settings(DoProfiling, NonOptList),
+                  ProfilingSettings = effi_profiling:get_profiling_settings(DoProfiling, NonOptList),
                   runscript( Dir, Refactor, ProfilingSettings, NonOptList )
               end
           end
@@ -115,7 +113,7 @@ when Lam    :: lam(),
      R      :: pos_integer(),
      Dir    :: string(),
      LibMap :: #{atom() => [string()]},
-     Prof :: profilingsettings().
+     Prof :: effi_profiling:profilingsettings().
 
 check_run( Lam, Fa, R, Dir, LibMap, Prof )
 when is_tuple( Lam ),
@@ -181,7 +179,8 @@ get_optspec_lst() ->
    {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
    {dir,      $d, "dir",      {string, "."},     "Working directory"},
    {refactor, $r, "refactor", {boolean, false},  "Refactor output files"},
-   {profiling,$p, "profiling",{boolean, false},  "Profile the process using the Pegasus Kickstart tool."}
+   {profiling, $p, "profiling", {boolean, false}, "Profile the process using the Pegasus Kickstart tool"},
+   {profile_file, $x, "profile-out", {string, "<summaryfile>_profile.xml"}, "Output file for profiling results"}
   ].
 
 %% print_bibtex_entry/0
@@ -375,7 +374,7 @@ when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      Dir    :: string(),
      LibMap :: #{atom() => [string()]},
-     Prof :: profilingsettings(),
+     Prof :: effi_profiling:profilingsettings(),
      Result :: {finished, #{string() => [str()]}, [binary()]}
              | {failed, script_error, {iolist(), [binary()]}}.
 
@@ -403,7 +402,7 @@ when Lam    :: lam(),
      Fa     :: #{string() => [str()]},
      Dir    :: string(),
      LibMap :: #{atom() => [string()]},
-     Prof :: profilingsettings().
+     Prof :: effi_profiling:profilingsettings().
 
 create_port( Lam, Fa, Dir, LibMap, Prof )
 when is_tuple( Lam ),
@@ -515,25 +514,6 @@ listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 
   end.
 
-%% profiling_settings/1
-% 
--spec get_profiling_settings( DoProfiling, NonOptList ) -> ProfilingSettings
-when 
-  DoProfiling :: boolean(),
-  NonOptList :: [],
-  ProfilingSettings :: profilingsettings().
-
-get_profiling_settings( DoProfiling, NonOptList ) ->
-  if 
-    DoProfiling ->
-      [RequestFile, _] = NonOptList,
-      ProfileFileName = string:concat(RequestFile, "_profile.xml"),
-      io:fwrite(ProfileFileName),
-      {profiling, true, ProfileFileName};
-    true ->
-      {profiling, false, ""}
-  end.
-
 %% =============================================================================
 %% Unit Tests
 %% =============================================================================
@@ -550,7 +530,7 @@ greet_bash_test_() ->
   Body     = {forbody, bash, Script},
   Lam      = {lam, 12, "greet", Sign, Body},
   Fa       = #{"person" => [{str, "Jorgen"}]},
-  Prof     = get_profiling_settings(false, ["requestfile", "summaryfile"]),
+  Prof     = effi_profiling:get_profiling_settings(false, ["requestfile", "summaryfile"]),
   {finished, ResultMap, _} = run( Lam, Fa, Dir, #{}, Prof ),
     
   Result = maps:get( "out", ResultMap ),

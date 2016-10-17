@@ -68,18 +68,18 @@ when is_atom( Mod ),
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
 
-  {profiling, DoProfiling, ProfileFileName} = Prof,
   % get instrumentation wrapper
-  ProfiledInterpreter = if DoProfiling == true -> 
+  ProfiledInterpreter = case effi_profiling:do_profiling( Prof ) of true -> 
     % generate a name for the invocation profile file by hashing the contents of the script
     % OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
     % set the output file of kickstart to be in Dir 
-    OutfileArgument = string:concat("-l ", filename:join(Dir, ProfileFileName)),
+    {profiling, _, ProfileFileName} = Prof,
+    OutfileArgument = string:concat( "-l ", filename:join(Dir, ProfileFileName) ),
     % profiler call which to which the actual application is passed
     % connect the profiled process' stdin, stdout, and stderr to the default file descriptors 
-    Profiler = string:concat("pegasus-kickstart -o - -i - -e - ", OutfileArgument),
-    string:join([Profiler, Interpreter], " ");
-    true -> ""
+    Profiler = string:concat( "pegasus-kickstart -o - -i - -e - ", OutfileArgument ),
+    string:join( [Profiler, Interpreter], " " );
+    false -> ""
   end,
 
   % get prefix
@@ -92,7 +92,7 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Port = open_port( {spawn, case DoProfiling of true -> ProfiledInterpreter; false -> Interpreter end},
+  Port = open_port( {spawn, case effi_profiling:do_profiling(Prof) of true -> ProfiledInterpreter; false -> Interpreter end},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
