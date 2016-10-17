@@ -21,9 +21,6 @@
 
 -module( effi ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
-
--define( BUILD, "2016-03-24" ).
 
 %% ------------------------------------------------------------
 %% Includes
@@ -214,11 +211,8 @@ get_banner() ->
 
 %% print_vsn/0
 %
-print_vsn() -> io:format( "~s~n", [get_vsn()] ).
+print_vsn() -> io:format( "~s~n", [?VSN] ).
 
-get_vsn() ->
-  {vsn, Vsn} = lists:keyfind( vsn, 1, module_info( attributes ) ),
-  Vsn.
 
 %% runscript/3
 %
