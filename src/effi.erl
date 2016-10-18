@@ -165,6 +165,8 @@ when is_tuple( Lam ),
 		            {error, _R1} -> <<>>;
 			          {ok, X}     -> X
 			        end,
+              % delete the profiling file
+              file:delete( effi_profiling:out_file( Prof ) ),
 
               % generate summary
               {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur,
