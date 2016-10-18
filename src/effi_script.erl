@@ -90,8 +90,8 @@ when is_atom( Lang ),
   Ext = apply( Lang, extension, [] ),
 
   % get the call to the dynamic instrumentation wrapper, e.g. pegasus-kickstart /path/to/script.py
-  ProfilingWrapper = effi_profiling:wrapper_call( Prof ),
-
+  ProfilingWrapper = string:concat( effi_profiling:wrapper_call( Prof ), " " ),
+  
   % compose script filename
   ScriptFile = lists:flatten( [ProfilingWrapper, Dir, $/, ?SCRIPT_FILE, Ext] ),
 
