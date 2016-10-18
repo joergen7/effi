@@ -42,7 +42,6 @@
 -define( SCRIPT_FILE, "_script" ).
 -define( SCRIPT_MODE, 8#700 ).
 
-
 %% ------------------------------------------------------------
 %% Callback definitions
 %% ------------------------------------------------------------
@@ -93,7 +92,7 @@ when is_atom( Lang ),
   ProfilingWrapper = string:concat( effi_profiling:wrapper_call( Prof ), " " ),
   
   % compose script filename
-  ScriptFile = lists:flatten( [ProfilingWrapper, Dir, $/, ?SCRIPT_FILE, Ext] ),
+  ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
 
   % create script file
   file:write_file( ScriptFile, ActScript ),
@@ -102,7 +101,7 @@ when is_atom( Lang ),
   file:change_mode( ScriptFile, ?SCRIPT_MODE ),
 
   % run ticket
-  Port = open_port( {spawn, ScriptFile},
+  Port = open_port( {spawn, string:join([ProfilingWrapper, ScriptFile], " ")},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
