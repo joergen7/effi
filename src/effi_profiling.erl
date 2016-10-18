@@ -57,7 +57,7 @@
 
 -export( [get_profiling_settings_from_commandline_args/2, get_profiling_settings/2, 
           is_on/1, out_file/1, 
-          wrapper_call/1] ).
+          wrapper_call/1, effi_arguments_for/1 ] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -65,6 +65,7 @@
 
 %% @doc Gives the prefix needed to wrap a foreign language command with the pegasus-kickstart profiling tool.
 %% If profiling is off, returns an empty string.
+%% e.g. {profiling, true, "./path/to/out.xml"} => "pegasus-kickstart -o - -l ./path/to/out.xml"
 -spec wrapper_call( Prof ) -> string()
 when Prof :: profilingsettings().
 
@@ -80,9 +81,38 @@ when is_tuple( Prof ) ->
         string:concat( "pegasus-kickstart -o - -i - -e - ", OutfileArgument )
   end.
 
+%% effi_arguments_for/1
+%% @doc generates the command line arguments for a given profiling setting, 
+%% e.g. {profiling, true, "./example.xml"} => "--profiling --profile-out ./example.xml" 
+%% This does the opposite of {@link get_profiling_settings_from_commandline_args/2}.
+-spec effi_arguments_for( ProfilingSettings ) -> string()
+when ProfilingSettings :: profilingsettings().
+
+effi_arguments_for( {profiling, DoProfiling, Filename} ) ->
+  case DoProfiling of
+    false -> "";
+    true ->
+      % Get the effi command line switch for profiling
+      {profiling, _, ProfSwitchName, _, _} = lists:keyfind( profiling, 1, effi:get_optspec_lst() ),
+      ProfArg = string:concat("--", ProfSwitchName),
+
+      ProfOutArg = case out_file_name_fallback( Filename, none ) of
+        % the name is the default, not specifying it will have the same effect
+        {refactored, _} -> "";
+        % the name is sensible (not the default)
+        {unchanged, _} -> 
+          % Get the effi command line parameter for profile output file
+          {profile_file, _, ProfOutName, _, _} = lists:keyfind( profile_file, 1, effi:get_optspec_lst() ),
+          string:join(["--", ProfOutName, " ", Filename], "")
+      end,
+
+      string:join( [ProfArg, ProfOutArg], " " )
+  end.
+  
 %% get_profiling_settings_from_commandline_args/2
 %% @doc Generate a profiling settings data structure, based on the command line arguments passed to effi.
 %% Parses the values of the --profiling and --profile-out parameters.
+%% This does the opposite of {@link effi_arguments_for/1}.
 -spec get_profiling_settings_from_commandline_args( OptList, NonOptList ) -> ProfilingSettings
 when 
   OptList :: [],
@@ -99,21 +129,36 @@ when is_list(OptList),
       {dir, Dir} = lists:keyfind( dir, 1, OptList ),
       % the profile file parameter
       {profile_file, OutFileName} = lists:keyfind( profile_file, 1, OptList ),
-      % get the default for the profile file parameter
-      {profile_file, _short, _long, {string, DefaultOutName}, _desc} = lists:keyfind( profile_file, 1, effi:get_optspec_lst()),
-      % if the default name is given then generate a sensible one, otherwise use it as is
-      ProfileFileName = case OutFileName == DefaultOutName of
-        true ->
-          [RequestFile, _] = NonOptList,
-          filename:join(Dir, string:concat(RequestFile, "_profile.xml"));
-        false ->
-          OutFileName
-      end,
+      [RequestFile, _] = NonOptList,
+      {_changed, ProfileFileName} = out_file_name_fallback( OutFileName, filename:join( Dir, filename:basename( RequestFile ) ) ),
       get_profiling_settings( true, ProfileFileName );
     true ->
       get_profiling_settings( false, "" )
   end.
 
+%% out_file_name_fallback/2
+%% @doc checks whether the given file name equals the command line arguments default file name
+%% and generates one based on a given base file name: e.g., the name of the request file, by 
+%% appending the suffix _profile.xml. If the given name is not the default, leaves it unchanged.
+%% e.g., ("&lt;requestfile&gt;_profile.xml", "./path/to/request_file") => {refactored, "./path/to/request_file_profile.xml"}
+%% e.g., ("./path/to/profile.xml", "./path/to/request_file") => {unchanged, "./path/to/profile.xml"}
+-spec out_file_name_fallback( OutFileName, BaseFileName ) -> {atom(), string()}
+when 
+  OutFileName :: string(),
+  BaseFileName :: string().
+
+out_file_name_fallback( OutFileName, BaseFileName ) ->
+  % get the default for the profile file parameter
+  {profile_file, _short, _long, {string, DefaultOutName}, _desc} = lists:keyfind( profile_file, 1, effi:get_optspec_lst()),
+  % if the default name is given then generate one, otherwise use it as is
+  case OutFileName == DefaultOutName of
+    true ->
+      {refactored, string:concat(BaseFileName, "_profile.xml")};
+    false ->
+      {unchanged, OutFileName}
+  end.
+
+%% get_profiling_settings/2
 %% @doc Generates a profiling settings data structure, by explicitly setting 
 %% profiling to true or false and specifying the profile output name
 -spec get_profiling_settings( DoProfiling, OutFileName ) -> ProfilingSettings
@@ -169,7 +214,7 @@ from_command_line_default_out_name_test_() ->
 
   CmdLine = "--profiling --dir workingdir// request.txt summary.txt",
   {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
-  Prof = get_profiling_settings_from_commandline_args(OptList, NonOptList),
+  Prof = get_profiling_settings_from_commandline_args( OptList, NonOptList ),
   
   [
     ?_assertEqual( true, is_on(Prof) ),
@@ -187,5 +232,17 @@ from_command_line_test_() ->
     ?_assertEqual( true, is_on(Prof) ),
     ?_assertEqual( "profile.xml", out_file(Prof) )
   ].
+
+%% @hidden
+effi_arguments_for_test_() ->
+  ?_assertEqual( "--profiling --profile-out ./example.xml", effi_arguments_for({profiling, true, "./example.xml"}) ).
+
+%% @hidden
+out_file_name_fallback_test_() ->
+  [
+    ?_assertEqual({refactored, "./path/to/request_file_profile.xml"}, out_file_name_fallback("<requestfile>_profile.xml", "./path/to/request_file")), 
+    ?_assertEqual({unchanged, "./path/to/profile.xml"}, out_file_name_fallback("./path/to/profile.xml", "./path/to/request_file"))
+  ].
+
 
 -endif.

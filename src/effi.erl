@@ -161,10 +161,10 @@ when is_tuple( Lam ),
               OutputSizeMap = gather_file_size( Lo, RMap, Dir ),
 
               % read the contents of the generated profiling file
-			  ProfilingResult = case file:read_file( effi_profiling:out_file( Prof ) ) of
-		        {error, R1} -> <<>>;
-			    {ok, X}     -> X
-			  end,
+			        ProfilingResult = case file:read_file( effi_profiling:out_file( Prof ) ) of
+		            {error, _R1} -> <<>>;
+			          {ok, X}     -> X
+			        end,
 
               % generate summary
               {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur,

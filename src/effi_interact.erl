@@ -17,7 +17,7 @@
 %% limitations under the License.
 
 %% @doc Prototype for interactively interpreted languages, (e.g., Python).
-%% As opposed to executing scripts directly ({@see effi_script}).
+%% As opposed to executing scripts directly ({@link effi_script}).
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
