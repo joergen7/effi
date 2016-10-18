@@ -16,6 +16,9 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc Implements foreign language calls implemented as an executable file,
+%% as opposed to executing a script using an interpreter explicitly (see {@link effi_interact}).  
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
@@ -86,8 +89,11 @@ when is_atom( Lang ),
   % get file extension
   Ext = apply( Lang, extension, [] ),
 
+  % get the call to the dynamic instrumentation wrapper, e.g. pegasus-kickstart /path/to/script.py
+  ProfilingWrapper = effi_profiling:wrapper_call( Prof, Dir ),
+
   % compose script filename
-  ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
+  ScriptFile = lists:flatten( [ProfilingWrapper, Dir, $/, ?SCRIPT_FILE, Ext] ),
 
   % create script file
   file:write_file( ScriptFile, ActScript ),

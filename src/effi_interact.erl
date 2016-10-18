@@ -16,6 +16,9 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc Prototype for interactively interpreted languages, (e.g., Python).
+%% As opposed to executing scripts directly ({@see effi_script}).
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
@@ -68,20 +71,9 @@ when is_atom( Mod ),
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
 
-  % get instrumentation wrapper
-  ProfiledInterpreter = case effi_profiling:do_profiling( Prof ) of true -> 
-    % generate a name for the invocation profile file by hashing the contents of the script
-    % OutfileName = string:concat(integer_to_list(erlang:phash2(Script)), "_profile.xml"),
-    % set the output file of kickstart to be in Dir 
-    {profiling, _, ProfileFileName} = Prof,
-    OutfileArgument = string:concat( "-l ", filename:join(Dir, ProfileFileName) ),
-    % profiler call which to which the actual application is passed
-    % connect the profiled process' stdin, stdout, and stderr to the default file descriptors 
-    Profiler = string:concat( "pegasus-kickstart -o - -i - -e - ", OutfileArgument ),
-    string:join( [Profiler, Interpreter], " " );
-    false -> ""
-  end,
-
+  % get dynamic instrumentation wrapper
+  ProfilingWrapper = effi_profiling:wrapper_call( Prof, Dir ),
+    
   % get prefix
   Prefix = apply( Mod, prefix, [] ),
 
@@ -92,7 +84,11 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Port = open_port( {spawn, case effi_profiling:do_profiling(Prof) of true -> ProfiledInterpreter; false -> Interpreter end},
+  Command = case effi_profiling:is_on( Prof ) of 
+    true -> string:join( [ProfilingWrapper, Interpreter], " " ); 
+    false -> Interpreter 
+  end,
+  Port = open_port( {spawn, Command},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
