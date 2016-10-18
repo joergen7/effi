@@ -72,7 +72,7 @@ when is_atom( Mod ),
   Interpreter = apply( Mod, interpreter, [] ),
 
   % get dynamic instrumentation wrapper
-  ProfilingWrapper = effi_profiling:wrapper_call( Prof, Dir ),
+  ProfilingWrapper = effi_profiling:wrapper_call( Prof ),
     
   % get prefix
   Prefix = apply( Mod, prefix, [] ),

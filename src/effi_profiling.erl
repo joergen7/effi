@@ -46,32 +46,35 @@
 %% ------------------------------------------------------------
 
 % whether to enable profiling and where to write the results to
--type profilingsettings() :: {profiling, Enabled::boolean(), OutFile::string()}.
+-type profilingsettings() :: {profiling, 
+  Enabled::boolean(),  % whether to instrument processes 
+  OutFile::string()    % where to write the profiling results (pegasus-kickstart generates an XML file)
+}.
 
 %% ------------------------------------------------------------
 %% API export
 %% ------------------------------------------------------------
 
--export( [get_profiling_settings_from_commandline_args/2, get_profiling_settings/2, is_on/1, wrapper_call/2] ).
+-export( [get_profiling_settings_from_commandline_args/2, get_profiling_settings/2, 
+          is_on/1, out_file/1, 
+          wrapper_call/1] ).
 
 %% ------------------------------------------------------------
 %% API functions
 %% ------------------------------------------------------------
 
 %% @doc Gives the prefix needed to wrap a foreign language command with the pegasus-kickstart profiling tool.
--spec wrapper_call( Prof, Dir ) -> string()
-when Prof :: profilingsettings(),
-     Dir  :: string().
+%% If profiling is off, returns an empty string.
+-spec wrapper_call( Prof ) -> string()
+when Prof :: profilingsettings().
 
-wrapper_call( Prof, Dir )
-when is_tuple( Prof ),
-     is_list( Dir ) ->
+wrapper_call( Prof ) 
+when is_tuple( Prof ) ->
   case is_on( Prof ) of 
       false -> "";
       true ->
         % set the output file of kickstart to be in Dir 
-        {profiling, _, ProfileFileName} = Prof,
-        OutfileArgument = string:concat( "-l ", filename:join(Dir, ProfileFileName) ),
+        OutfileArgument = string:concat( "-l ", out_file( Prof ) ),
         % profiler call which to which the actual application is passed
         % connect the profiled process' stdin, stdout, and stderr to the default file descriptors 
         string:concat( "pegasus-kickstart -o - -i - -e - ", OutfileArgument )
@@ -92,18 +95,23 @@ when is_list(OptList),
   {profiling, DoProfiling} = lists:keyfind( profiling, 1, OptList ),
   if 
     DoProfiling ->
+      % working directory of effi instantiation
+      {dir, Dir} = lists:keyfind( dir, 1, OptList ),
+      % the profile file parameter
       {profile_file, OutFileName} = lists:keyfind( profile_file, 1, OptList ),
+      % get the default for the profile file parameter
       {profile_file, _short, _long, {string, DefaultOutName}, _desc} = lists:keyfind( profile_file, 1, effi:get_optspec_lst()),
+      % if the default name is given then generate a sensible one, otherwise use it as is
       ProfileFileName = case OutFileName == DefaultOutName of
         true ->
           [RequestFile, _] = NonOptList,
-          string:concat(RequestFile, "_profile.xml");
+          filename:join(Dir, string:concat(RequestFile, "_profile.xml"));
         false ->
           OutFileName
       end,
-      {profiling, true, ProfileFileName};
+      get_profiling_settings( true, ProfileFileName );
     true ->
-      {profiling, false, ""}
+      get_profiling_settings( false, "" )
   end.
 
 %% @doc Generates a profiling settings data structure, by explicitly setting 
@@ -127,11 +135,18 @@ when is_atom( DoProfiling ),
 %% is_on/1
 %% @doc Extract whether profiling is on or off from the profiling settings data structure
 -spec is_on( ProfilingSettings ) -> boolean() 
-when
-  ProfilingSettings :: profilingsettings().
+when ProfilingSettings :: profilingsettings().
 
 is_on( {profiling, DoProfiling, _Filename } ) ->
   DoProfiling.
+
+%% out_file/1
+%% @doc Extract the name of the profiling results file.
+-spec out_file( ProfilingSettings ) -> string()
+when ProfilingSettings :: profilingsettings().
+
+out_file( {profiling, _DoProfiling, Filename } ) -> 
+  Filename.
 
 %% =============================================================================
 %% Unit Tests
@@ -143,24 +158,22 @@ is_on( {profiling, DoProfiling, _Filename } ) ->
 from_explicit_test_() ->
 
   Prof = get_profiling_settings( true, "profile.xml" ),
-  {profiling, _, OutFileName} = Prof,
   
   [
     ?_assertEqual( true, is_on(Prof) ),
-    ?_assertEqual( "profile.xml", OutFileName )
+    ?_assertEqual( "profile.xml", out_file(Prof) )
   ].
 
 %% @hidden
 from_command_line_default_out_name_test_() ->
 
-  CmdLine = "--profiling request.txt summary.txt",
+  CmdLine = "--profiling --dir workingdir// request.txt summary.txt",
   {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
   Prof = get_profiling_settings_from_commandline_args(OptList, NonOptList),
-  {profiling, _, OutFileName} = Prof,
   
   [
     ?_assertEqual( true, is_on(Prof) ),
-    ?_assertEqual( "request.txt_profile.xml", OutFileName )
+    ?_assertEqual( "workingdir/request.txt_profile.xml", out_file(Prof) )
   ].
 
 %% @hidden
@@ -169,11 +182,10 @@ from_command_line_test_() ->
   CmdLine = "--profiling --profile-out profile.xml request.txt summary.txt",
   {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
   Prof = get_profiling_settings_from_commandline_args(OptList, NonOptList),
-  {profiling, _, OutFileName} = Prof,
   
   [
     ?_assertEqual( true, is_on(Prof) ),
-    ?_assertEqual( "profile.xml", OutFileName )
+    ?_assertEqual( "profile.xml", out_file(Prof) )
   ].
 
 -endif.

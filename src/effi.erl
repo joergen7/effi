@@ -160,9 +160,15 @@ when is_tuple( Lam ),
               InputSizeMap = gather_file_size( Li, Fa, Dir ),
               OutputSizeMap = gather_file_size( Lo, RMap, Dir ),
 
+              % read the contents of the generated profiling file
+			  ProfilingResult = case file:read_file( effi_profiling:out_file( Prof ) ) of
+		        {error, R1} -> <<>>;
+			    {ok, X}     -> X
+			  end,
+
               % generate summary
               {finished, get_summary( Lam, Fa, R, RMap, Out, Tstart, Tdur,
-                                      InputSizeMap, OutputSizeMap, "<invocation duration=\"10\">ProfilingResults</invocation>" )}
+                                      InputSizeMap, OutputSizeMap, ProfilingResult )}
           end
       end
   end.
@@ -308,7 +314,8 @@ runscript( _Dir, _Refactor, _DoProfiling, NonOptList ) ->
   error( {request_and_summary_expected, NonOptList} ).
 
 %% get_summary/10
-%
+%% @doc takes information about an invocation and returns it as a map.
+%% If the atom none is given for ProfilingResults, the results map will not contain 
 -spec get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap, ProfilingResults ) -> #{atom() => term()}
 when Lam    :: lam(),
      Fa     :: #{string => [str()]},
@@ -319,7 +326,7 @@ when Lam    :: lam(),
      Tdur   :: integer(),
      InSizeMap :: #{string() => pos_integer()},
      OutSizeMap :: #{string() => pos_integer()},
-     ProfilingResults :: string() | none.
+     ProfilingResults :: binary().
 
 get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap, ProfilingResults )
 when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
@@ -328,7 +335,7 @@ when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
      is_map( InSizeMap ),
      is_map( OutSizeMap ) ->
 
-  BaseMap = #{lam      => Lam,
+  #{lam      => Lam,
     arg      => Fa,
     id       => R,
     ret      => Ret,
@@ -337,13 +344,8 @@ when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
     out      => Out,
     state    => ok,
     out_size_map => OutSizeMap,
-    in_size_map  => InSizeMap},
-
-  if 
-    ProfilingResults == none -> BaseMap;
-    true -> BaseMap#{profiling_results => ProfilingResults}
-  end.
-
+    in_size_map  => InSizeMap,
+    profiling_results => ProfilingResults}.
 
 gather_file_size( ParamLst, Fa, Dir ) ->
 
