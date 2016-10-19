@@ -16,6 +16,9 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc Implements foreign language calls implemented as an executable file,
+%% as opposed to executing a script using an interpreter explicitly (see {@link effi_interact}).  
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
@@ -39,7 +42,6 @@
 -define( SCRIPT_FILE, "_script" ).
 -define( SCRIPT_MODE, 8#700 ).
 
-
 %% ------------------------------------------------------------
 %% Callback definitions
 %% ------------------------------------------------------------
@@ -58,20 +60,21 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/3] ).
+-export( [create_port/4] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/3
+%% create_port/4
 %
-create_port( Lang, Script, Dir )
+create_port( Lang, Script, Dir, Prof )
 
 when is_atom( Lang ),
      is_list( Script ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_tuple(Prof) ->
 
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
@@ -85,6 +88,9 @@ when is_atom( Lang ),
   % get file extension
   Ext = apply( Lang, extension, [] ),
 
+  % get the call to the dynamic instrumentation wrapper, e.g. pegasus-kickstart /path/to/script.py
+  ProfilingWrapper = string:concat( effi_profiling:wrapper_call( Prof ), " " ),
+  
   % compose script filename
   ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
 
@@ -95,7 +101,7 @@ when is_atom( Lang ),
   file:change_mode( ScriptFile, ?SCRIPT_MODE ),
 
   % run ticket
-  Port = open_port( {spawn, ScriptFile},
+  Port = open_port( {spawn, string:join([ProfilingWrapper, ScriptFile], " ")},
                     [exit_status,
                      stderr_to_stdout,
                      binary,

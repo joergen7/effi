@@ -16,6 +16,9 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
+%% @doc Prototype for interactively interpreted languages, (e.g., Python).
+%% As opposed to executing scripts directly ({@link effi_script}).
+
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
 
@@ -49,24 +52,28 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/3] ).
+-export( [create_port/4] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/3
+%% create_port/4
 %
-create_port( Mod, Script, Dir )
+create_port( Mod, Script, Dir, Prof )
 
 when is_atom( Mod ),
      is_list( Script ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_tuple( Prof ) ->
 
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
 
+  % get dynamic instrumentation wrapper
+  ProfilingWrapper = effi_profiling:wrapper_call( Prof ),
+    
   % get prefix
   Prefix = apply( Mod, prefix, [] ),
 
@@ -77,7 +84,11 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Port = open_port( {spawn, Interpreter},
+  Command = case effi_profiling:is_on( Prof ) of 
+    true -> string:join( [ProfilingWrapper, Interpreter], " " ); 
+    false -> Interpreter 
+  end,
+  Port = open_port( {spawn, Command},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
