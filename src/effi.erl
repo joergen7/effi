@@ -100,8 +100,7 @@ main( CmdLine ) ->
                 false ->
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
                   {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
-                  Prof = effi_profiling:get_profiling_settings_from_commandline_args(OptList, NonOptList),
-                  runscript( Dir, Refactor, Prof, NonOptList )
+                  runscript( Dir, Refactor, NonOptList )
               end
           end
       end;
@@ -183,8 +182,6 @@ get_optspec_lst() ->
    {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
    {dir,      $d, "dir",      {string, "."},     "Working directory"},
    {refactor, $r, "refactor", {boolean, false},  "Refactor output files"},
-   {profiling, $p, "profiling", {boolean, false}, "Profile the process using the Pegasus Kickstart tool"},
-   {profile_file, $x, "profile-out", {string, "<requestfile>_profile.xml"}, "Output file for profiling results"}
   ].
 
 %% ------------------------------------------------------------
@@ -237,8 +234,14 @@ print_vsn() -> io:format( "~s~n", [?VSN] ).
 
 
 %% runscript/4
-%% @doc Parses a request file, processes it using {@link check_run/6} and writes a summary to a file.
-runscript( Dir, Refactor, ProfilingSetting, [RequestFile, SumFile] ) ->
+%% @doc Parses a request file, processes it using {@link check_run/6} and writes
+%% a summary to a file.
+-spec runscript( Dir, Refactor, FilePair ) -> ok
+when Dir              :: string(),
+     Refactor         :: boolean(),
+     FilePair         :: [string()].
+
+runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
 
   % read script from file
   B = case file:read_file( RequestFile ) of
@@ -246,7 +249,7 @@ runscript( Dir, Refactor, ProfilingSetting, [RequestFile, SumFile] ) ->
         {ok, X}     -> X
       end,
 
-  % parse line
+  % parse request
   {ok, Tokens, _} = erl_scan:string( binary_to_list( B ) ),
   {Lam, Fa, R, LibMap} = case erl_parse:parse_term( Tokens ) of
     {error, Reason} -> error( Reason );

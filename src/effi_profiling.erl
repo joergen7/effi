@@ -29,7 +29,6 @@
 
 -module( effi_profiling ).
 -author( "Carl Witt <wittcarx@informatik.hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
 
 %% ------------------------------------------------------------
 %% Includes
