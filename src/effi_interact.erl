@@ -52,7 +52,7 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/4] ).
+-export( [create_port/3] ).
 
 
 %% ------------------------------------------------------------
@@ -61,18 +61,14 @@
 
 %% create_port/4
 %
-create_port( Mod, Script, Dir, Prof )
+create_port( Mod, Script, Dir )
 
 when is_atom( Mod ),
      is_list( Script ),
-     is_list( Dir ),
-     is_tuple( Prof ) ->
+     is_list( Dir ) ->
 
   % get interpreter
   Interpreter = apply( Mod, interpreter, [] ),
-
-  % get dynamic instrumentation wrapper
-  ProfilingWrapper = effi_profiling:wrapper_call( Prof ),
     
   % get prefix
   Prefix = apply( Mod, prefix, [] ),
@@ -84,11 +80,7 @@ when is_atom( Mod ),
   ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
 
   % run ticket
-  Command = case effi_profiling:is_on( Prof ) of 
-    true -> string:join( [ProfilingWrapper, Interpreter], " " ); 
-    false -> Interpreter 
-  end,
-  Port = open_port( {spawn, Command},
+  Port = open_port( {spawn, Interpreter},
                     [exit_status,
                      stderr_to_stdout,
                      binary,

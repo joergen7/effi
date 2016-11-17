@@ -60,21 +60,20 @@
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/4] ).
+-export( [create_port/3] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/4
+%% create_port/3
 %
-create_port( Lang, Script, Dir, Prof )
+create_port( Lang, Script, Dir )
 
 when is_atom( Lang ),
      is_list( Script ),
-     is_list( Dir ),
-     is_tuple(Prof) ->
+     is_list( Dir ) ->
 
   % get shebang
   Shebang = apply( Lang, shebang, [] ),
@@ -88,9 +87,6 @@ when is_atom( Lang ),
   % get file extension
   Ext = apply( Lang, extension, [] ),
 
-  % get the call to the dynamic instrumentation wrapper, e.g. pegasus-kickstart /path/to/script.py
-  ProfilingWrapper = string:concat( effi_profiling:wrapper_call( Prof ), " " ),
-  
   % compose script filename
   ScriptFile = lists:flatten( [Dir, $/, ?SCRIPT_FILE, Ext] ),
 
@@ -101,7 +97,7 @@ when is_atom( Lang ),
   file:change_mode( ScriptFile, ?SCRIPT_MODE ),
 
   % run ticket
-  Port = open_port( {spawn, string:join([ProfilingWrapper, ScriptFile], " ")},
+  Port = open_port( {spawn, ScriptFile},
                     [exit_status,
                      stderr_to_stdout,
                      binary,

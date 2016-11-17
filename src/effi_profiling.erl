@@ -209,39 +209,39 @@ from_explicit_test_() ->
   ].
 
 %% @hidden
-from_command_line_default_out_name_test_() ->
+% from_command_line_default_out_name_test_() ->
 
-  CmdLine = "--profiling --dir workingdir// request.txt summary.txt",
-  {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
-  Prof = get_profiling_settings_from_commandline_args( OptList, NonOptList ),
+%   CmdLine = "--profiling --dir workingdir// request.txt summary.txt",
+%   {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
+%   Prof = get_profiling_settings_from_commandline_args( OptList, NonOptList ),
   
-  [
-    ?_assertEqual( true, is_on(Prof) ),
-    ?_assertEqual( "workingdir/request.txt_profile.xml", out_file(Prof) )
-  ].
+%   [
+%     ?_assertEqual( true, is_on(Prof) ),
+%     ?_assertEqual( "workingdir/request.txt_profile.xml", out_file(Prof) )
+%   ].
 
 %% @hidden
-from_command_line_test_() ->
+% from_command_line_test_() ->
 
-  CmdLine = "--profiling --profile-out profile.xml request.txt summary.txt",
-  {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
-  Prof = get_profiling_settings_from_commandline_args(OptList, NonOptList),
+%   CmdLine = "--profiling --profile-out profile.xml request.txt summary.txt",
+%   {ok, {OptList, NonOptList}} = getopt:parse( effi:get_optspec_lst(), CmdLine ),
+%   Prof = get_profiling_settings_from_commandline_args(OptList, NonOptList),
   
-  [
-    ?_assertEqual( true, is_on(Prof) ),
-    ?_assertEqual( "profile.xml", out_file(Prof) )
-  ].
+%   [
+%     ?_assertEqual( true, is_on(Prof) ),
+%     ?_assertEqual( "profile.xml", out_file(Prof) )
+%   ].
 
 %% @hidden
-effi_arguments_for_test_() ->
-  ?_assertEqual( "--profiling --profile-out ./example.xml", effi_arguments_for({profiling, true, "./example.xml"}) ).
+% effi_arguments_for_test_() ->
+%   ?_assertEqual( "--profiling --profile-out ./example.xml", effi_arguments_for({profiling, true, "./example.xml"}) ).
 
 %% @hidden
-out_file_name_fallback_test_() ->
-  [
-    ?_assertEqual({refactored, "./path/to/request_file_profile.xml"}, out_file_name_fallback("<requestfile>_profile.xml", "./path/to/request_file")), 
-    ?_assertEqual({unchanged, "./path/to/profile.xml"}, out_file_name_fallback("./path/to/profile.xml", "./path/to/request_file"))
-  ].
+% out_file_name_fallback_test_() ->
+%   [
+%     ?_assertEqual({refactored, "./path/to/request_file_profile.xml"}, out_file_name_fallback("<requestfile>_profile.xml", "./path/to/request_file")), 
+%     ?_assertEqual({unchanged, "./path/to/profile.xml"}, out_file_name_fallback("./path/to/profile.xml", "./path/to/request_file"))
+%   ].
 
 
 -endif.
