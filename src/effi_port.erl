@@ -16,17 +16,10 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @doc Prototype for interactively interpreted languages, (e.g., Python).
-%% As opposed to executing scripts directly ({@link effi_script}).
-
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
-
--module( effi_interact ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
-
--behaviour( effi ).
+-module( effi_script ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 %% ------------------------------------------------------------
 %% Includes
@@ -34,50 +27,55 @@
 
 -include( "effi.hrl" ).
 
+
 %% ------------------------------------------------------------
-%% Callback definitions
+%% Macros
 %% ------------------------------------------------------------
 
--callback ffi_type() -> atom().
--callback interpreter() -> string().
--callback prefix() -> string().
--callback suffix() -> string().
--callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
--callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
--callback preprocess( Script::iodata() ) -> iodata().
--callback libpath( Path::string() ) -> string().
+-define( SCRIPT_FILE, "_script" ).
+-define( SCRIPT_MODE, 8#700 ).
 
 
 %% ------------------------------------------------------------
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/3] ).
+-export( [create_script_port/3, create_interact_port/3] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/4
+%% create_port/3
 %
-create_port( Mod, Script, Dir )
-
-when is_atom( Mod ),
-     is_list( Script ),
+create_script_port( Script, Interpreter, Dir )
+when is_binary( Script ),
+     is_list( Interpreter ),
      is_list( Dir ) ->
 
-  % get interpreter
-  Interpreter = apply( Mod, interpreter, [] ),
-    
-  % get prefix
-  Prefix = apply( Mod, prefix, [] ),
+  % compose script file
+  ScriptFile = string:join( [Dir, ?SCRIPT_FILE], "/" ),
 
-  % get suffix
-  Suffix = apply( Mod, suffix, [] ),
+  % compose script filename
+  Call = string:join( [Interpreter, ScriptFile], " " ),
 
-  % complement script
-  ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
+  % create script file
+  file:write_file( ScriptFile, Script ),
+
+  % run ticket
+  open_port( {spawn, Call},
+             [exit_status,
+             stderr_to_stdout,
+             binary,
+             {cd, Dir},
+             {line, ?BUF_SIZE}] ).
+
+
+create_interact_port( Script, Interpreter, Dir )
+when is_binary( Script ),
+     is_list( Interpreter ),
+     is_list( Dir ) ->
 
   % run ticket
   Port = open_port( {spawn, Interpreter},
@@ -87,6 +85,7 @@ when is_atom( Mod ),
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
+  % pipe in program
   true = port_command( Port, ActScript ),
 
-  {Port, ActScript}.
+  Port.

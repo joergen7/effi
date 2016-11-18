@@ -20,7 +20,8 @@
 %% The create_port callback defined here is an abstract way to execute child 
 %% processes in foreign languages. 
 %% There are two foreign language interfaces, both implementing this callback,
-%% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g., Bash, R).
+%% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
+%% Bash, R).
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 %% @author Carl Witt <wittcarx@informatik.hu-berlin.de>
@@ -39,31 +40,6 @@
 -ifdef( TEST ).
 -include_lib( "eunit/include/eunit.hrl" ).
 -endif.
-
-%% ------------------------------------------------------------
-%% Callback definitions
-%% ------------------------------------------------------------
-
--callback create_port( Lang, Script, Dir ) -> {port(), string()}
-when Lang   :: atom(),
-     Script :: string(),
-     Dir    :: string().
-
-%% ------------------------------------------------------------
-%% Type definitions
-%% ------------------------------------------------------------
-
--type result()  :: {finished, #{atom() => term()}}
-                 | {failed, atom(), pos_integer(), term()}.
-
--type lam()     :: {lam, LamLine::pos_integer(), Name::string(),
-                         S::sign(), B::forbody()}.
--type sign()    :: {sign, Lo::[param()], Li::[param()]}.
--type param()   :: {param, M::name(), Pl::boolean()}.
--type name()    :: {name, N::string(), Pf::boolean()}.
--type forbody() :: {forbody, L::lang(), S::string()}.
--type lang()    :: bash | python | r.
--type str()     :: {str, S::string()}.
 
 %% ------------------------------------------------------------
 %% API export
@@ -86,7 +62,7 @@ main( [] ) ->
 
 main( CmdLine ) ->
   case getopt:parse( get_optspec_lst(), CmdLine ) of
-    {ok, {OptList, NonOptList}} ->
+    {ok, {OptList, [RequestFile, SumFile]}} ->
       case lists:member( version, OptList ) of
         true  -> print_vsn();
         false ->
@@ -100,10 +76,12 @@ main( CmdLine ) ->
                 false ->
                   {dir, Dir} = lists:keyfind( dir, 1, OptList ),
                   {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
-                  runscript( Dir, Refactor, NonOptList )
+                  run_script( Dir, Refactor, RequestFile, SumFile )
               end
           end
       end;
+    {ok, {OptList, NonOptList}} ->
+      error( {request_and_summary_expected, NonOptList} );
     {error, {Reason, Data}} ->
       error( {Reason, Data} )
   end.
@@ -217,15 +195,16 @@ get_banner() ->
 print_vsn() -> io:format( "~s~n", [?VSN] ).
 
 
-%% runscript/3
+%% run_script/4
 %% @doc Parses a request file, processes it using {@link check_run/6} and writes
 %% a summary to a file.
--spec runscript( Dir, Refactor, FilePair ) -> ok
+-spec runscript( Dir, Refactor, RequestFile, SumFile ) -> ok
 when Dir              :: string(),
      Refactor         :: boolean(),
-     FilePair         :: [string()].
+     RequestFile      :: string(),
+     SumFile          :: string().
 
-runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
+run_script( Dir, Refactor, RequestFile, SumFile ) ->
 
   % read script from file
   B = case file:read_file( RequestFile ) of
@@ -244,59 +223,8 @@ runscript( Dir, Refactor, [RequestFile, SumFile] ) ->
   case file:write_file( SumFile, cf_protcl:encode( Reply ) ) of
     {error, R4} -> error( {R4, SumFile} );
     ok          -> ok
-  end;
+  end.
 
-
-
-runscript( _Dir, _Refactor, NonOptList ) ->
-  error( {request_and_summary_expected, NonOptList} ).
-
-%% get_summary/9
-%% @doc takes information about an invocation and returns it as a map.
-%% If the atom none is given for ProfilingResults, the results map will not
-%% contain .
--spec get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap ) -> #{atom() => term()}
-when Lam    :: lam(),
-     Fa     :: #{string => [str()]},
-     R      :: pos_integer(),
-     Ret    :: #{string() => [str()]},
-     Out    :: [binary()],
-     Tstart :: integer(),
-     Tdur   :: integer(),
-     InSizeMap :: #{string() => pos_integer()},
-     OutSizeMap :: #{string() => pos_integer()}.
-
-get_summary( Lam, Fa, R, Ret, Out, Tstart, Tdur, InSizeMap, OutSizeMap )
-when is_tuple( Lam ), is_map( Fa ), is_map( Ret ), is_list( Out ),
-     is_integer( Tstart ), Tstart >= 0, is_integer( Tdur ), Tdur >= 0,
-     is_integer( R ), R > 0,
-     is_map( InSizeMap ),
-     is_map( OutSizeMap ) ->
-
-  #{lam      => Lam,
-    arg      => Fa,
-    id       => R,
-    ret      => Ret,
-    tstart   => Tstart,
-    tdur     => Tdur,
-    out      => Out,
-    state    => ok,
-    out_size_map => OutSizeMap,
-    in_size_map  => InSizeMap}.
-
-gather_file_size( ParamLst, Fa, Dir ) ->
-
-  E = fun( File, AccIn ) ->
-        AccIn#{ list_to_binary( File ) => filelib:file_size( [Dir, $/, File] ) }
-      end,
-
-  F = fun( {param, {name, _, false}, _}, AccIn ) -> AccIn;
-         ( {param, {name, N, true}, _}, AccIn ) ->
-        #{ N := FileLst } = Fa,
-        lists:foldl( E, AccIn, [F || {str, F} <- FileLst] )
-      end,
-
-  lists:foldl( F, #{}, ParamLst ).
 
 check_if_file( ParamLst, Fa, Dir ) ->
   lists:foldl( fun( Param, Acc ) -> acc_missing( Param, Acc, Fa, Dir ) end, [],
@@ -319,76 +247,54 @@ acc_file( {str, File}, Acc, Dir ) ->
     true  -> Acc
   end.
 
+%% run/4
+%% @doc Creates a port and listens to it, i.e., collects and parses the output
+%% from the stdout. Returns a tuple containing a status message (e.g., finished,
+%% failed) a result map and the program output.
+
 -spec run( Submit, Dir ) -> Result
 when Submit :: #submit{},
      Dir    :: string(),
      Result :: #reply_ok{} | reply_error{}.
 
+run( Submit=#submit{ lang=Lang }, Dir )
+when is_list( Dir ) ->
 
-%% run/4
-%% @doc Creates a port using {@link create_port/5} and listens to it, i.e.,
-%% collects and parses the output from the stdout. Returns a tuple containing a
-%% status message (e.g., finished, failed) a result map and the program output.
-run( Submit, Dir ) when is_list( Dir ) ->
+  % the module to call, depends on the language, e.g., effi_python
+  Mod = list_to_atom( "effi_"++atom_to_list( Lang ) ),
 
-  % create port
-  {Port, ActScript} = create_port( Submit, Dir ),
+  % get Foreign Function Interface type
+  FfiType = Mod:ffi_type(),
+
+  % collect assignments
+  Assign = lists:map(
+             fun( #{ is_list := Pl, name := N } ) ->
+               X = maps:get( N, Fa ),
+               X1 = [S ||{str, S} <- X],
+               [Mod:assignment( N, Pl, X1 ), $\n]
+             end,
+             InVars ),
+
+  % collect dismissals
+  Suffix = lists:map(
+             fun( #{ is_list := Pl, name := N } ) ->
+               [Mod:dismissal( N, Pl ), $\n]
+             end,
+             OutVars ),
+
+  Script1 = Mod:preprocess( Script ),
+
+  Script2 = io_lib:format( "~s~n~s~n~s~n", [Assign, Script1, Suffix] ),
+
+  % run script
+  {Port, ActScript} = FfiType:create_port( Mod, Script2, Dir ).
 
   % receive result
   listen_port( Submit, Port, ActScript ).
 
-
-%% create_port/5
-%% @doc This is a wrapper for the language specific port creation function.
-%% Hands over the name of the language module (e.g., effi_python), the script
-%% to execute, the working directory and the profiling options to the language
-%% specific create_port/4 function.
--spec create_port( Submit, Dir ) -> {port(), string()}
-when Submit :: #submit{},
-     Dir    :: string().
-
-create_port( Submit, Dir ) when is_list( Dir ) ->
-
-  {lam, _Line, _LamName, Sign, Body} = Lam,
-  {forbody, Lang, Script} = Body,
-  {sign, Lo, Li} = Sign,
-
-  % the module to call, depends on the language, e.g., effi_python
-  Mod = list_to_atom("effi_" ++ atom_to_list(Lang)),
-
-  % get Foreign Function Interface type
-  FfiType = apply( Mod, ffi_type, [] ),
-
-  % include lib paths
-  LibPath = [[apply( Mod, libpath, [P] ), $\n] || P <- maps:get( Lang, LibMap, [] )],
-
-  % collect assignments
-  Assign = lists:map(
-             fun( {param, {name, N, _Pf}, Pl} ) ->
-               X = maps:get( N, Fa ),
-               X1 = [S ||{str, S} <- X],
-               [apply( Mod, assignment, [N, Pl, X1] ), $\n]
-             end,
-             Li ),
-
-  % collect dismissals
-  Suffix = lists:map(
-             fun( {param, {name, N, _Pf}, Pl} ) ->
-               [apply( Mod, dismissal, [N, Pl] ), $\n]
-             end,
-             Lo ),
-
-  Script1 = apply( Mod, preprocess, [Script] ),
-
-  Script2 = io_lib:format( "~s~n~s~n~s~n~s~n", [LibPath, Assign, Script1, Suffix] ),
-
-  % run script
-  {_Port, _ActScript} = apply( FfiType, create_port, [Mod, Script2, Dir] ).
-
-
-
 %% listen_port/2
-%% @doc Processes the output of the child process (in a foreign language) and builds a result map from it.
+%% @doc Processes the output of the child process (in a foreign language) and
+%% builds a result map from it.
 listen_port( Port, ActScript ) ->
   listen_port( Port, ActScript, <<>>, #{}, [] ).
 
