@@ -45,7 +45,7 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [check_run/5, main/1, get_optspec_lst/0] ).
+-export( [check_run/5, main/1] ).
 
 %% ------------------------------------------------------------
 %% API functions
@@ -198,7 +198,7 @@ print_vsn() -> io:format( "~s~n", [?VSN] ).
 %% run_script/4
 %% @doc Parses a request file, processes it using {@link check_run/6} and writes
 %% a summary to a file.
--spec runscript( Dir, Refactor, RequestFile, SumFile ) -> ok
+-spec run_script( Dir, Refactor, RequestFile, SumFile ) -> ok
 when Dir              :: string(),
      Refactor         :: boolean(),
      RequestFile      :: string(),
@@ -263,9 +263,6 @@ when is_list( Dir ) ->
   % the module to call, depends on the language, e.g., effi_python
   Mod = list_to_atom( "effi_"++atom_to_list( Lang ) ),
 
-  % get Foreign Function Interface type
-  FfiType = Mod:ffi_type(),
-
   % collect assignments
   Assign = lists:map(
              fun( #{ is_list := Pl, name := N } ) ->
@@ -276,39 +273,42 @@ when is_list( Dir ) ->
              InVars ),
 
   % collect dismissals
-  Suffix = lists:map(
-             fun( #{ is_list := Pl, name := N } ) ->
-               [Mod:dismissal( N, Pl ), $\n]
-             end,
-             OutVars ),
+  Dismiss = lists:map(
+              fun( #{ is_list := Pl, name := N } ) ->
+                [Mod:dismissal( N, Pl ), $\n]
+              end,
+              OutVars ),
 
-  Script1 = Mod:preprocess( Script ),
+  Script1 = Mod:process( Script ),
+  Prefix = Mod:prefix(),
+  Suffix = Mod:suffix(),
 
-  Script2 = io_lib:format( "~s~n~s~n~s~n", [Assign, Script1, Suffix] ),
+  ActScript = <<Prefix/binary, Assign/binary, Script1/binary, Dismiss/binary,
+                Suffix/binary>>
 
   % run script
-  {Port, ActScript} = FfiType:create_port( Mod, Script2, Dir ).
+  Port = Mod:create_port( ActScript, Dir ).
 
   % receive result
-  listen_port( Submit, Port, ActScript ).
+  listen_port( Port, Submit, ActScript ).
 
 %% listen_port/2
 %% @doc Processes the output of the child process (in a foreign language) and
 %% builds a result map from it.
-listen_port( Port, ActScript ) ->
-  listen_port( Port, ActScript, <<>>, #{}, [] ).
+listen_port( Port, Submit, Script ) ->
+  listen_port( Port, Submit, Script, <<>>, #{}, [] ).
 
 
 %% listen_port/5
 %
--spec listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) -> Result
+-spec listen_port( Port, Submit, Script, LineAcc, ResultAcc, OutAcc ) -> Result
 when Port      :: port(),
-     ActScript :: iolist(),
+     Submit    :: #submit{},
+     Script    :: binary(),
      LineAcc   :: binary(),
      ResultAcc :: #{string() => [string()]},
      OutAcc    :: [binary()],
-     Result    :: {finished, #{string() => [str()]}, [binary()]}
-                | {failed, script_error, {iolist(), [binary()]}}.
+     Result    :: #reply_ok{} | #reply_error{}.
 
 listen_port( Port, ActScript, LineAcc, ResultAcc, OutAcc ) ->
 

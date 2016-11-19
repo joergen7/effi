@@ -49,10 +49,10 @@
 
 %% create_port/3
 %
-create_script_port( Script, Interpreter, Dir )
+create_script_port( Script, Dir, Interpreter )
 when is_binary( Script ),
-     is_list( Interpreter ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_list( Interpreter ) ->
 
   % compose script file
   ScriptFile = string:join( [Dir, ?SCRIPT_FILE], "/" ),
@@ -72,10 +72,10 @@ when is_binary( Script ),
              {line, ?BUF_SIZE}] ).
 
 
-create_interact_port( Script, Interpreter, Dir )
+create_interact_port( Script, Dir, Interpreter )
 when is_binary( Script ),
-     is_list( Interpreter ),
-     is_list( Dir ) ->
+     is_list( Dir ),
+     is_list( Interpreter ) ->
 
   % run ticket
   Port = open_port( {spawn, Interpreter},

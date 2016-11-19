@@ -21,9 +21,8 @@
 
 -module( effi_bash ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
 
--behaviour( effi_interact ).
+-behaviour( effi_lang ).
 
 
 -include( "effi.hrl" ).
@@ -32,59 +31,41 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
-          dismissal/2, preprocess/1, libpath/1] ).
+-export( [create_port/2, assignment/3, dismissal/2, process/1, prefix/0,
+          suffix/0] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-libpath( _Path ) -> error( unsupported ).
 
-%% ffi_type/0
-%
-ffi_type() -> effi_interact.
+create_port( Script, Dir ) ->
+  create_interact_port( Script, Dir, "bash" ).
 
 
-%% interpreter/0
-%
-interpreter() -> "bash".
-
-
-%% prefix/0
 prefix() -> "set -eu -o pipefail".
 
 
-%% suffix/0
-%
 suffix() -> "exit".
 
 
-%% assignment/3
-%
 assignment( ParamName, false, [Value] ) ->
-  [ParamName, $=, quote( Value ), $\n];
+  <<ParamName/binary, $=, $" Value/binary, $" , $\n>>;
 
 assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
+  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueList], " " ) ),
+  <<ParamName/binary, "=(", X/binary, ")\n">>.
 
 
-%% dismissal/2
-%
 dismissal( OutName, false ) ->
-  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
+  <<"echo \"", ?MSG, "#{\\\"", OutName/binary, "\\\"=>[{str,\\\"$",
+    OutName/binary, "\\\"}]}.\"\n">>;
 
 dismissal( OutName, true ) ->
-  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
-   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
+  <<"TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName/binary,
+    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName/binary,
+    "\\\"=>[$TMP]}.\"\n">>.
 
-preprocess( Script ) -> Script.
+process( Script ) -> list_to_binary( re:replace( Script, "\\r", "" ) ).
 
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
-
-%% quote/1
-%
-quote( S ) -> [$", S, $"].

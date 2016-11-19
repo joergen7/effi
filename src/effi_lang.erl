@@ -25,8 +25,24 @@
 %% Callback definitions
 %% ------------------------------------------------------------
 
--callback create_port( Script, Interpreter, Dir ) -> {port(), string()}
-when Script      :: binary(),
-     Interpreter :: string(),
-     Dir         :: string().
+-callback create_port( Script, Dir ) -> port()
+when Script :: binary(),
+     Dir    :: string().
      
+
+-callback assignment( InVar, IsList, Values ) -> binary()
+when InVar  :: binary(),
+     IsList :: boolean(),
+     Values :: [binary()].
+
+-callback dismissal( OutVar, isList ) -> binary()
+when OutVar :: binary(),
+     IsList :: boolean().
+
+-callback process( Script ) -> binary()
+when Script :: binary().
+
+-callback prefix() -> binary().
+
+-callback suffix() -> binary().
+
