@@ -18,31 +18,21 @@
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
--module( effi ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-module( effi_lang ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 %% ------------------------------------------------------------
 %% Callback definitions
 %% ------------------------------------------------------------
-
--callback create_port( Script, Dir ) -> port()
-when Script :: binary(),
-     Dir    :: string().
-     
 
 -callback assignment( InVar, IsList, Values ) -> binary()
 when InVar  :: binary(),
      IsList :: boolean(),
      Values :: [binary()].
 
--callback dismissal( OutVar, isList ) -> binary()
-when OutVar :: binary(),
-     IsList :: boolean().
-
--callback process( Script ) -> binary()
-when Script :: binary().
-
+-callback create_port( Script::binary(), Dir::string() ) -> port().
+-callback dismissal( OutVar::binary(), IsList::boolean() ) -> binary().
 -callback prefix() -> binary().
-
+-callback process( Script::binary() ) -> binary().
 -callback suffix() -> binary().
 

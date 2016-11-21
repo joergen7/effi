@@ -18,7 +18,7 @@
 
 %% @author Jörgen Brandt <brandjoe@hu-berlin.de>
 
--module( effi_script ).
+-module( effi_port ).
 -author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 %% ------------------------------------------------------------
@@ -86,6 +86,6 @@ when is_binary( Script ),
                      {line, ?BUF_SIZE}] ),
 
   % pipe in program
-  true = port_command( Port, ActScript ),
+  true = port_command( Port, Script ),
 
   Port.

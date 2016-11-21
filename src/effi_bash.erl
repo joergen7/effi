@@ -20,7 +20,7 @@
 
 
 -module( effi_bash ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( effi_lang ).
 
@@ -41,17 +41,17 @@
 
 
 create_port( Script, Dir ) ->
-  create_interact_port( Script, Dir, "bash" ).
+  effi_port:create_interact_port( Script, Dir, "bash" ).
 
 
-prefix() -> "set -eu -o pipefail".
+prefix() -> <<"set -eu -o pipefail">>.
 
 
-suffix() -> "exit".
+suffix() -> <<"exit">>.
 
 
 assignment( ParamName, false, [Value] ) ->
-  <<ParamName/binary, $=, $" Value/binary, $" , $\n>>;
+  <<ParamName/binary, $=, $", Value/binary, $" , $\n>>;
 
 assignment( ParamName, true, ValueList ) ->
   X = list_to_binary( string:join( [[$", V, $"] || V <- ValueList], " " ) ),
@@ -59,13 +59,13 @@ assignment( ParamName, true, ValueList ) ->
 
 
 dismissal( OutName, false ) ->
-  <<"echo \"", ?MSG, "#{\\\"", OutName/binary, "\\\"=>[{str,\\\"$",
-    OutName/binary, "\\\"}]}.\"\n">>;
+  <<"echo \"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"$", OutName/binary,
+    "\\\"]}.\"\n">>;
 
 dismissal( OutName, true ) ->
-  <<"TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName/binary,
-    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName/binary,
-    "\\\"=>[$TMP]}.\"\n">>.
+  <<"TMP=`printf \",\\\"%s\\\"\" ${", OutName/binary,
+    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "{\\\"", OutName/binary,
+    "\\\":[$TMP]}.\"\n">>.
 
-process( Script ) -> list_to_binary( re:replace( Script, "\\r", "" ) ).
+process( Script ) -> binary:replace( Script, <<$\r>>, <<"">>, [global] ).
 
