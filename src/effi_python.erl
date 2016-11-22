@@ -77,7 +77,7 @@ when is_binary( OutName ) ->
 dismissal( OutName, true )
 when is_binary( OutName ) ->
   <<"print(\"", ?MSG, "{\\\"", OutName/binary,
-    "\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),", % TODO
+    "\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
     OutName/binary, "))+\"]}.\\n\")\n">>.
 
 
