@@ -317,7 +317,7 @@ when is_list( Dir ) ->
   Port = Mod:create_port( ActScript, Dir ),
 
   % receive result
-  listen_port( Port, Submit, ActScript, <<>>, #{}, [] ).
+  listen_port( Port, Submit, ActScript, <<>>, #{}, <<>> ).
 
 
 %% listen_port/6
@@ -329,7 +329,7 @@ when Port      :: port(),
      ActScript :: binary(),
      LineAcc   :: binary(),
      ResultAcc :: #{binary() => [binary()]},
-     OutAcc    :: [binary()],
+     OutAcc    :: binary(),
      Result    :: #reply_ok{} | #reply_error{}.
 
 listen_port( Port, Submit=#submit{ id       = Id,
