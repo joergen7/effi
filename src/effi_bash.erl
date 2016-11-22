@@ -16,11 +16,11 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( effi_bash ).
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 -behaviour( effi_lang ).
 
@@ -40,7 +40,9 @@
 %% ------------------------------------------------------------
 
 
-create_port( Script, Dir ) ->
+create_port( Script, Dir )
+when is_binary( Script ),
+     is_list( Dir ) ->
   effi_port:create_interact_port( Script, Dir, "bash" ).
 
 
@@ -49,20 +51,24 @@ prefix() -> <<"set -eu -o pipefail">>.
 
 suffix() -> <<"exit">>.
 
+assignment( Name, false, [Value] )
+when is_binary( Name ),
+     is_binary( Value ) ->
+  <<Name/binary, $=, $", Value/binary, $" , $\n>>;
 
-assignment( ParamName, false, [Value] ) ->
-  <<ParamName/binary, $=, $", Value/binary, $" , $\n>>;
+assignment( Name, true, ValueLst )
+when is_binary( Name ),
+     is_list( ValueLst ) ->
+  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], " " ) ),
+  <<Name/binary, "=(", X/binary, ")\n">>.
 
-assignment( ParamName, true, ValueList ) ->
-  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueList], " " ) ),
-  <<ParamName/binary, "=(", X/binary, ")\n">>.
-
-
-dismissal( OutName, false ) ->
+dismissal( OutName, false )
+when is_binary( OutName ) ->
   <<"echo \"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"$", OutName/binary,
     "\\\"]}.\"\n">>;
 
-dismissal( OutName, true ) ->
+dismissal( OutName, true )
+when is_binary( OutName ) ->
   <<"TMP=`printf \",\\\"%s\\\"\" ${", OutName/binary,
     "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "{\\\"", OutName/binary,
     "\\\":[$TMP]}.\"\n">>.

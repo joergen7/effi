@@ -16,10 +16,10 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
 -module( effi_port ).
--author( "Jörgen Brandt <brandjoe@hu-berlin.de>" ).
+-author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
 %% ------------------------------------------------------------
 %% Includes
@@ -49,6 +49,11 @@
 
 %% create_port/3
 %
+-spec create_script_port( Script, Dir, Interpreter ) -> port()
+when Script      :: binary(),
+     Dir         :: string(),
+     Interpreter :: string().
+
 create_script_port( Script, Dir, Interpreter )
 when is_binary( Script ),
      is_list( Dir ),
@@ -71,6 +76,11 @@ when is_binary( Script ),
              {cd, Dir},
              {line, ?BUF_SIZE}] ).
 
+
+-spec create_interact_port( Script, Dir, Interpreter ) -> port()
+when Script      :: binary(),
+     Dir         :: string(),
+     Interpreter :: string().
 
 create_interact_port( Script, Dir, Interpreter )
 when is_binary( Script ),

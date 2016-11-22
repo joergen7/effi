@@ -190,7 +190,7 @@ get_banner() ->
       "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
       "  ^^^^^  P qF  `     function's arguments, body and output values.",
       "",
-      "Copyright 2016 Jörgen Brandt <brandjoe@hu-berlin.de>"
+      "Copyright 2016 Jorgen Brandt <brandjoe@hu-berlin.de>"
 
     ], "\n" ).
 
@@ -246,24 +246,25 @@ run_script( Dir, Refactor, RequestFile, SumFile ) ->
   end.
 
 
-check_if_file( ParamLst, Fa, Dir ) ->
-  lists:foldl( fun( Param, Acc ) -> acc_missing( Param, Acc, Fa, Dir ) end, [],
-               ParamLst ).
+check_if_file( VarLst, ArgMap, Dir ) ->
+  lists:foldl( fun( Var, Acc ) -> acc_missing( Var, Acc, ArgMap, Dir ) end, [],
+               VarLst ).
 
-acc_missing( {param, {name, _N, false}, _IsLst}, Acc, _Fa, _Dir ) ->
+acc_missing( #{ is_file := false }, Acc, _ArgMap, _Dir ) ->
   Acc;
 
-acc_missing( {param, {name, N, true}, _IsLst}, Acc, Fa, Dir ) ->
-      lists:foldl( fun( File, AccIn ) ->
-                     acc_file( File, AccIn, Dir )
-                   end,
-                   Acc,
-                   maps:get( N, Fa ) ).
+acc_missing( #{ name := N, is_file := true }, Acc, ArgMap, Dir ) ->
+  #{ N := V } = ArgMap,
+  lists:foldl( fun( File, AccIn ) ->
+                 acc_file( File, AccIn, Dir )
+               end,
+               Acc, V ).
 
-acc_file( {str, File}, Acc, Dir ) ->
+acc_file( B, Acc, Dir ) ->
+  File = binary_to_list( B ),
   AbsSrc = string:join( [Dir, File], "/" ),
   case filelib:is_regular( AbsSrc ) of
-    false -> [File|Acc];
+    false -> [B|Acc];
     true  -> Acc
   end.
 
@@ -375,11 +376,11 @@ listen_port( Port, Submit=#submit{ id       = Id,
     % process failed
     {Port, {exit_status, _}} ->
 
-      #reply_error{ id       = Id,
-                    app_line = AppLine,
-                    lam_name = LamName,
-                    script   = ActScript,
-                    output   = lists:reverse( OutAcc ) };
+      #reply_error{ id         = Id,
+                    app_line   = AppLine,
+                    lam_name   = LamName,
+                    act_script = ActScript,
+                    output     = lists:reverse( OutAcc ) };
 
     % if nothing matches, raise error
     Msg ->

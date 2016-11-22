@@ -16,14 +16,13 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( effi_python ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
 
--behaviour( effi_script ).
+-behaviour( effi_lang ).
 
 -include( "effi.hrl" ).
 
@@ -31,57 +30,52 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, assignment/3, dismissal/2, shebang/0, extension/0,
-          preprocess/1, libpath/1, import/0] ).
+-export( [create_port/2, assignment/3, dismissal/2, process/1, prefix/0,
+          suffix/0] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% ffi_type/0
-%
-ffi_type() -> effi_script.
+create_port( Script, Dir )
+when is_binary( Script ),
+     is_list( Dir ) ->
+  effi_port:create_script_port( Script, Dir, "python" ).
 
+prefix() -> <<"import sys">>.
+suffix() -> <<"">>.
 
-%% shebang/0
-%
-shebang() -> "#!/usr/bin/env python".
+process( Script )
+when is_binary( Script ) ->
+  B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
+  B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
+  <<"if True:\n ", B2/binary>>.
 
-import() -> "import sys".
-
-preprocess( Script ) ->
-  "if True:\n "++re:replace( Script, "\\n", "\n ", [{return, list}, global] ).
-
-libpath( Path ) ->
-  ["sys.path.append(\"", Path, "\")"].
-
-%% extension/0
-%
-extension() -> ".py".
 
 %% assignment/3
 %
-assignment( ParamName, false, [Value] ) ->
-  [ParamName, $=, quote( Value ), $\n];
+assignment( Name, false, [Value] )
+when is_binary( Name ),
+     is_binary( Value ) ->
+  <<Name/binary, $=, $", Value/binary, $", $\n>>;
 
-assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=[", string:join( [quote( Value ) || Value <- ValueList], "," ), "]\n"].
+assignment( Name, true, ValueLst )
+when is_binary( Name ),
+     is_list( ValueLst ) ->
+  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], "," ) ),
+  <<Name/binary, $=, $[, X, $], $\n>>.
 
 
 %% dismissal/2
 %
 dismissal( OutName, false ) ->
-  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[{str,\\\"\"+str(", OutName, ")+\"\\\"}]}.\\n\")\n"];
+  <<"print(\"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"\"+str(",
+    OutName/binary, ")+\"\\\"]}.\\n\")\n">>;
 
 dismissal( OutName, true ) ->
-  ["print(\"", ?MSG, "#{\\\"", OutName, "\\\"=>", "[\"+\",\".join(map(lambda x: \"{str,\\\"%s\\\"}\"%(x),", OutName, "))+\"]}.\\n\")\n"].
+  <<"print(\"", ?MSG, "{\\\"", OutName/binary,
+    "\\\":[\"+\",\".join(map(lambda x: \"{str,\\\"%s\\\"}\"%(x),", % TODO
+    OutName/binary, "))+\"]}.\\n\")\n">>.
 
 
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
-
-%% quote/1
-%
-quote( S ) -> [$', S, $'].
