@@ -64,7 +64,7 @@ assignment( Name, true, ValueLst )
 when is_binary( Name ),
      is_list( ValueLst ) ->
   X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], "," ) ),
-  <<Name/binary, $=, $[, X, $], $\n>>.
+  <<Name/binary, $=, $[, X/binary, $], $\n>>.
 
 
 %% dismissal/2

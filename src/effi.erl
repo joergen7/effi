@@ -111,7 +111,7 @@ check_run( Submit=#submit{ id       = Id,
     [_|_] ->
       Msg1 = list_to_binary(
               io_lib:format( "Pre-condition not met: ~s",
-                             [string:join( PreMissingLst, ", " )] ) ),
+                             [string:join( [binary_to_list( M ) || M <- PreMissingLst], ", " )] ) ),
       #reply_error{ id=Id, app_line=AppLine, lam_name=LamName, output=Msg1 };
     [] ->
 
@@ -129,7 +129,7 @@ check_run( Submit=#submit{ id       = Id,
             [_|_] ->
               Msg2 = list_to_binary(
                        io_lib:format( "Post-condition not met: ~s",
-                                      [string:join( PostMissingLst, ", " )] ) ),
+                                      [string:join( [binary_to_list( M ) || M <- PostMissingLst], ", " )] ) ),
 
               #reply_error{ id=Id, app_line=AppLine, lam_name=LamName,
                             output=Msg2 };
