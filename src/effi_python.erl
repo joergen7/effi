@@ -69,13 +69,15 @@ when is_binary( Name ),
 
 %% dismissal/2
 %
-dismissal( OutName, false ) ->
+dismissal( OutName, false )
+when is_binary( OutName ) ->
   <<"print(\"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"\"+str(",
     OutName/binary, ")+\"\\\"]}.\\n\")\n">>;
 
-dismissal( OutName, true ) ->
+dismissal( OutName, true )
+when is_binary( OutName ) ->
   <<"print(\"", ?MSG, "{\\\"", OutName/binary,
-    "\\\":[\"+\",\".join(map(lambda x: \"{str,\\\"%s\\\"}\"%(x),", % TODO
+    "\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),", % TODO
     OutName/binary, "))+\"]}.\\n\")\n">>.
 
 

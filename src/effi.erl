@@ -380,7 +380,7 @@ listen_port( Port, Submit=#submit{ id       = Id,
                     app_line   = AppLine,
                     lam_name   = LamName,
                     act_script = ActScript,
-                    output     = lists:reverse( OutAcc ) };
+                    output     = list_to_binary( lists:reverse( OutAcc ) ) };
 
     % if nothing matches, raise error
     Msg ->
