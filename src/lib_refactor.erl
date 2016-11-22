@@ -92,7 +92,7 @@ apply_refactoring( {Existing, New} ) ->
 -spec acc_refactoring( Var, {RefactorLst1, MissingLst1, ArgMap1}, ArgMap0,
                        DestDir, SrcDirLst, Id ) ->
   {RefactorLst2, MissingLst2, ArgMap2}
-when Var          :: #{ is_file := boolean(), is_list := boolean(), name := binary() },
+when Var          :: #{ atom() => true | false | binary() },
      RefactorLst1 :: [{binary(), binary()}],
      MissingLst1  :: [binary()],
      ArgMap1      :: #{binary() => [binary()]},
