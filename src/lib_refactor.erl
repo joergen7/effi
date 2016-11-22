@@ -149,7 +149,8 @@ acc_file( Filename, AccIn={RefactorLst, MissingLst, FileLst}, DestDir, [H|T], Id
       Basename = binary_to_list( filename:basename( Filename ) ),
       DestName = string:join( [binary_to_list( Id ), Basename], "_" ),
       AbsDest = string:join( [DestDir, DestName], "/" ),
-      {[{AbsSrc, AbsDest}|RefactorLst], MissingLst, [DestName|FileLst]}
+      {[{list_to_binary( AbsSrc ), list_to_binary( AbsDest )}|RefactorLst],
+       MissingLst, [list_to_binary( DestName )|FileLst]}
   end.
 
 

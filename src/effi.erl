@@ -233,6 +233,7 @@ run_script( Dir, Refactor, RequestFile, SumFile ) ->
           #submit{ id=Id, out_vars=OutVars } = Submit,
           {RefactorLst, [], ResultMap1} = lib_refactor:get_refactoring( OutVars,
             ResultMap, Dir, [Dir], Id ),
+          io:format( "~p~n", [ResultMap1] ), % TODO: remove this line
           ok = lib_refactor:apply_refactoring( RefactorLst ),
           Reply#reply_ok{ result_map=ResultMap1 }
       end;
@@ -364,7 +365,7 @@ listen_port( Port, Submit=#submit{ id       = Id,
         _ ->
 
           % continue
-          listen_port( Port, Submit, ActScript, <<>>, ResultAcc, [Line|OutAcc] )
+          listen_port( Port, Submit, ActScript, <<>>, ResultAcc, <<OutAcc/binary, Line/binary>> )
 
       end;
 
@@ -380,7 +381,7 @@ listen_port( Port, Submit=#submit{ id       = Id,
                     app_line   = AppLine,
                     lam_name   = LamName,
                     act_script = ActScript,
-                    output     = list_to_binary( lists:reverse( OutAcc ) ) };
+                    output     = OutAcc };
 
     % if nothing matches, raise error
     Msg ->
