@@ -63,7 +63,8 @@ main( [] ) ->
 
 main( CmdLine ) ->
   case getopt:parse( get_optspec_lst(), CmdLine ) of
-    {ok, {OptList, [RequestFile, SumFile]}} ->
+    {error, {Reason, Data}}     -> error( {Reason, Data} );
+    {ok, {OptList, NonOptList}} ->
       case lists:member( version, OptList ) of
         true  -> print_vsn();
         false ->
@@ -75,16 +76,17 @@ main( CmdLine ) ->
               case lists:member( cite, OptList ) of
                 true  -> print_bibtex();
                 false ->
-                  {dir, Dir} = lists:keyfind( dir, 1, OptList ),
-                  {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
-                  run_script( Dir, Refactor, RequestFile, SumFile )
+                  case NonOptList of
+                    [RequestFile, SumFile] ->
+                      {dir, Dir} = lists:keyfind( dir, 1, OptList ),
+                      {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
+                      run_script( Dir, Refactor, RequestFile, SumFile );
+                    _ ->
+                      error( {request_and_summary_expected, NonOptList} )
+                  end
               end
           end
-      end;
-    {ok, {_OptList, NonOptList}} ->
-      error( {request_and_summary_expected, NonOptList} );
-    {error, {Reason, Data}} ->
-      error( {Reason, Data} )
+      end
   end.
 
 %% check_run/2
@@ -196,7 +198,7 @@ get_banner() ->
 
 %% print_vsn/0
 %
-print_vsn() -> io:format( "~s~n", [?VSN] ).
+print_vsn() -> io:format( "~s build ~s~n", [?VSN, ?BUILD] ).
 
 
 %% run_script/4
