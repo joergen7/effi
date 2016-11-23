@@ -16,12 +16,11 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( effi_perl ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
--vsn( "0.1.1-snapshot" ).
 
 -behaviour( effi_script ).
 

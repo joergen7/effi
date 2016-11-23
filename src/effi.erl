@@ -23,7 +23,7 @@
 %% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
 %% Bash, R).
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 %% @author Carl Witt <wittcarx@informatik.hu-berlin.de>
 
 
