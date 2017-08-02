@@ -16,16 +16,11 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @doc Prototype for interactively interpreted languages, (e.g., Python).
-%% As opposed to executing scripts directly ({@link effi_script}).
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
-
-
--module( effi_interact ).
+-module( effi_port ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( effi ).
 
 %% ------------------------------------------------------------
 %% Includes
@@ -33,67 +28,75 @@
 
 -include( "effi.hrl" ).
 
+
 %% ------------------------------------------------------------
-%% Callback definitions
+%% Macros
 %% ------------------------------------------------------------
 
--callback ffi_type() -> atom().
--callback interpreter() -> string().
--callback prefix() -> string().
--callback suffix() -> string().
--callback assignment( ParamName::string(), IsList::boolean(), Value::string() | [string()] ) -> iodata().
--callback dismissal( OutName::string(), IsList::boolean() ) -> iodata().
--callback preprocess( Script::iodata() ) -> iodata().
--callback libpath( Path::string() ) -> string().
+-define( SCRIPT_FILE, "_script" ).
+-define( SCRIPT_MODE, 8#700 ).
 
 
 %% ------------------------------------------------------------
 %% Callback function exports
 %% ------------------------------------------------------------
 
--export( [create_port/4] ).
+-export( [create_script_port/3, create_interact_port/3] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-%% create_port/4
+%% create_port/3
 %
-create_port( Mod, Script, Dir, Prof )
+-spec create_script_port( Script, Dir, Interpreter ) -> port()
+when Script      :: binary(),
+     Dir         :: string(),
+     Interpreter :: string().
 
-when is_atom( Mod ),
-     is_list( Script ),
+create_script_port( Script, Dir, Interpreter )
+when is_binary( Script ),
      is_list( Dir ),
-     is_tuple( Prof ) ->
+     is_list( Interpreter ) ->
 
-  % get interpreter
-  Interpreter = apply( Mod, interpreter, [] ),
+  % compose script file
+  ScriptFile = string:join( [Dir, ?SCRIPT_FILE], "/" ),
 
-  % get dynamic instrumentation wrapper
-  ProfilingWrapper = effi_profiling:wrapper_call( Prof ),
-    
-  % get prefix
-  Prefix = apply( Mod, prefix, [] ),
+  % compose script filename
+  Call = string:join( [Interpreter, ScriptFile], " " ),
 
-  % get suffix
-  Suffix = apply( Mod, suffix, [] ),
-
-  % complement script
-  ActScript = string:join( [Prefix, Script, Suffix, ""], "\n" ),
+  % create script file
+  file:write_file( ScriptFile, Script ),
 
   % run ticket
-  Command = case effi_profiling:is_on( Prof ) of 
-    true -> string:join( [ProfilingWrapper, Interpreter], " " ); 
-    false -> Interpreter 
-  end,
-  Port = open_port( {spawn, Command},
+  open_port( {spawn, Call},
+             [exit_status,
+             stderr_to_stdout,
+             binary,
+             {cd, Dir},
+             {line, ?BUF_SIZE}] ).
+
+
+-spec create_interact_port( Script, Dir, Interpreter ) -> port()
+when Script      :: binary(),
+     Dir         :: string(),
+     Interpreter :: string().
+
+create_interact_port( Script, Dir, Interpreter )
+when is_binary( Script ),
+     is_list( Dir ),
+     is_list( Interpreter ) ->
+
+  % run ticket
+  Port = open_port( {spawn, Interpreter},
                     [exit_status,
                      stderr_to_stdout,
                      binary,
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
-  true = port_command( Port, ActScript ),
+  % pipe in program
+  true = port_command( Port, Script ),
 
-  {Port, ActScript}.
+  Port.

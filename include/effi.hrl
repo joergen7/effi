@@ -16,7 +16,9 @@
 % See the License for the specific language governing permissions and
 % limitations under the License.
 
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
+
 -define( BUF_SIZE, 1024 ).
 -define( MSG, "<MSG>" ).
--define( BUILD, "2016-01-11" ).
--define( VSN, "0.1.2-release" ).
+-define( BUILD, "2017-08-02" ).
+-define( VSN, "0.1.3" ).

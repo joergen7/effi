@@ -16,13 +16,14 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 
-%% @author Jörgen Brandt <brandjoe@hu-berlin.de>
+%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
 
 
 -module( effi_bash ).
 -author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
--behaviour( effi_interact ).
+-behaviour( effi_lang ).
+
 
 -include( "effi.hrl" ).
 
@@ -30,59 +31,47 @@
 %% Callback exports
 %% ------------------------------------------------------------
 
--export( [ffi_type/0, interpreter/0, prefix/0, suffix/0, assignment/3,
-          dismissal/2, preprocess/1, libpath/1] ).
+-export( [create_port/2, assignment/3, dismissal/2, process/1, prefix/0,
+          suffix/0] ).
 
 
 %% ------------------------------------------------------------
 %% Callback functions
 %% ------------------------------------------------------------
 
-libpath( _Path ) -> error( unsupported ).
 
-%% ffi_type/0
-%
-ffi_type() -> effi_interact.
-
-
-%% interpreter/0
-%
-interpreter() -> "bash".
+create_port( Script, Dir )
+when is_binary( Script ),
+     is_list( Dir ) ->
+  effi_port:create_interact_port( Script, Dir, "bash" ).
 
 
-%% prefix/0
-prefix() -> "set -eu -o pipefail".
+prefix() -> <<"set -eu -o pipefail">>.
 
 
-%% suffix/0
-%
-suffix() -> "exit".
+suffix() -> <<"exit">>.
 
+assignment( Name, false, [Value] )
+when is_binary( Name ),
+     is_binary( Value ) ->
+  <<Name/binary, $=, $", Value/binary, $" , $\n>>;
 
-%% assignment/3
-%
-assignment( ParamName, false, [Value] ) ->
-  [ParamName, $=, quote( Value ), $\n];
+assignment( Name, true, ValueLst )
+when is_binary( Name ),
+     is_list( ValueLst ) ->
+  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], " " ) ),
+  <<Name/binary, "=(", X/binary, ")\n">>.
 
-assignment( ParamName, true, ValueList ) ->
-  [ParamName, "=(", string:join( [quote( Value ) || Value <- ValueList], " " ), ")\n"].
+dismissal( OutName, false )
+when is_binary( OutName ) ->
+  <<"echo \"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"$", OutName/binary,
+    "\\\"]}.\"\n">>;
 
+dismissal( OutName, true )
+when is_binary( OutName ) ->
+  <<"TMP=`printf \",\\\"%s\\\"\" ${", OutName/binary,
+    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "{\\\"", OutName/binary,
+    "\\\":[$TMP]}.\"\n">>.
 
-%% dismissal/2
-%
-dismissal( OutName, false ) ->
-  ["echo \"", ?MSG, "#{\\\"", OutName, "\\\"=>[{str,\\\"$", OutName, "\\\"}]}.\"\n"];
+process( Script ) -> binary:replace( Script, <<$\r>>, <<"">>, [global] ).
 
-dismissal( OutName, true ) ->
-  ["TMP=`printf \",{str,\\\"%s\\\"}\" ${", OutName,
-   "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "#{\\\"", OutName, "\\\"=>[$TMP]}.\"\n"].
-
-preprocess( Script ) -> Script.
-
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
-
-%% quote/1
-%
-quote( S ) -> [$", S, $"].
