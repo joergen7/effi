@@ -24,7 +24,6 @@
 %% Bash, R).
 
 %% @author Jorgen Brandt <brandjoe@hu-berlin.de>
-%% @author Carl Witt <wittcarx@informatik.hu-berlin.de>
 
 
 -module( effi ).
