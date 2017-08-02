@@ -1,7 +1,7 @@
 {application, effi,
  [
   {description, "Erlang Foreign Function Interface"},
-  {vsn, "0.1.2-snapshot"},
+  {vsn, "0.1.3"},
   {modules, [
              effi, effi_interact, effi_script, effi_bash, effi_python, effi_r,
              effi_perl, effi_profiling, lib_refactor
