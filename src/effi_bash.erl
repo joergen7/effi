@@ -1,8 +1,8 @@
 %% -*- erlang -*-
 %%
-%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%% Effi: Erlang Foreign Function Interface
 %%
-%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%% Copyright 2015-2017 Jörgen Brandt
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -15,63 +15,103 @@
 %% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
-
-%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
+%%
+%% -------------------------------------------------------------------
+%% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
+%% @version 0.1.4
+%% @copyright 2015-2017 Jörgen Brandt
+%%
+%%
+%% @end
+%% -------------------------------------------------------------------
 
 
 -module( effi_bash ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-behaviour( effi ).
 
--behaviour( effi_lang ).
-
+-export( [get_extended_script/4, run_extended_script/2] ).
 
 -include( "effi.hrl" ).
 
-%% ------------------------------------------------------------
-%% Callback exports
-%% ------------------------------------------------------------
+-spec get_extended_script(
+            ArgTypeLst     :: [#{ atom() => _ }],
+            RetTypeLst     :: [#{ atom() => _ }],
+            Script         :: binary(),
+            ArgBindLst     :: [#{ atom() => _ }] ) -> binary().
 
--export( [create_port/2, assignment/3, dismissal/2, process/1, prefix/0,
-          suffix/0] ).
+get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst )
+when is_list( ArgTypeLst ),
+     is_list( RetTypeLst ),
+     is_binary( Script ),
+     is_list( ArgBindLst ) ->
+
+  Bind =
+    fun( #{ arg_name := ArgName, value := Value }, B ) ->
+
+      % TODO: handle list values
+      % TODO: handle binary values
+
+      X = bind_singleton_string( ArgName, Value ),
+      <<B/binary, X/binary>>
+    end,
+
+  Echo =
+    fun( #{ arg_name := ArgName }, B ) ->
+
+      % TODO: handle list return values
+      % TODO: handle boolean return values
+
+      X = echo_singleton_string( ArgName ),
+      <<B/binary, X/binary>>
+    end,
 
 
-%% ------------------------------------------------------------
-%% Callback functions
-%% ------------------------------------------------------------
+  Preamble = <<"set -eu -o pipefail\n">>,
+
+  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
+
+  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+
+  <<Preamble/binary, "\n",
+    Binding/binary, "\n",
+    Script/binary, "\n",
+    Echoing/binary, "\n">>.
 
 
-create_port( Script, Dir )
-when is_binary( Script ),
+
+
+
+
+-spec run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+    {ok, binary(), [#{ atom() => _ }]}
+  | {error, binary()}.
+
+run_extended_script( ExtendedScript, Dir )
+when is_binary( ExtendedScript ),
      is_list( Dir ) ->
-  effi_port:create_interact_port( Script, Dir, "bash" ).
+
+  io:format( "~s", [ExtendedScript] ),
+
+  ScriptFile = string:join( [Dir, "__script__"], "/" ),
+
+  Call = "bash __script__",
+
+  file:write_file( ScriptFile, ExtendedScript ),
+
+  effi:create_port( Call, Dir ).
 
 
-prefix() -> <<"set -eu -o pipefail">>.
 
 
-suffix() -> <<"exit">>.
 
-assignment( Name, false, [Value] )
-when is_binary( Name ),
+bind_singleton_string( ArgName, Value )
+when is_binary( ArgName ),
      is_binary( Value ) ->
-  <<Name/binary, $=, $", Value/binary, $" , $\n>>;
 
-assignment( Name, true, ValueLst )
-when is_binary( Name ),
-     is_list( ValueLst ) ->
-  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], " " ) ),
-  <<Name/binary, "=(", X/binary, ")\n">>.
+  <<ArgName/binary, "='", Value/binary, "'\n">>.
 
-dismissal( OutName, false )
-when is_binary( OutName ) ->
-  <<"echo \"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"$", OutName/binary,
-    "\\\"]}.\"\n">>;
 
-dismissal( OutName, true )
-when is_binary( OutName ) ->
-  <<"TMP=`printf \",\\\"%s\\\"\" ${", OutName/binary,
-    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "{\\\"", OutName/binary,
-    "\\\":[$TMP]}.\"\n">>.
-
-process( Script ) -> binary:replace( Script, <<$\r>>, <<"">>, [global] ).
-
+echo_singleton_string( ArgName )
+when is_binary( ArgName ) ->
+  <<"echo \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
+    "\\\", \\\"value\\\": \\\"$", ArgName/binary, "\\\"}.\"\n">>.
