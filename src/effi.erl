@@ -41,6 +41,8 @@
 
 -export( [create_port/2, handle_request/2, main/1] ).
 
+-include( "effi.hrl" ).
+
 
 %% ------------------------------------------------------------
 %% Definitions
@@ -50,7 +52,6 @@
 -define( BUILD, "2017-12-28" ).
 -define( VSN, "0.1.4" ).
 -define( BUF_SIZE, 1024 ).
--define( MSG, "<MSG>" ).
 
 
 
@@ -255,7 +256,7 @@ create_port( Call, Dir ) ->
                      {cd, Dir},
                      {line, ?BUF_SIZE}] ),
 
-  listen_port( Port, , <<>>, <<>>, [] ).
+  listen_port( Port, <<>>, <<>>, [] ).
 
 
 
