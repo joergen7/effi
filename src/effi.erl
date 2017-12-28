@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% Effi: Erlang Foreign Function Interface
+%% Erlang foreign function interface.
 %%
 %% Copyright 2015-2017 Jörgen Brandt
 %%

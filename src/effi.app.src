@@ -1,6 +1,6 @@
 {application, effi,
  [
-  {description, "Erlang Foreign Function Interface"},
+  {description, "Erlang foreign function interface."},
   {vsn, "0.1.4"},
   {modules, [
              effi, effi_bash
