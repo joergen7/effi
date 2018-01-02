@@ -90,15 +90,14 @@ run_extended_script( ExtendedScript, Dir )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
-  io:format( "~s", [ExtendedScript] ),
-
   ScriptFile = string:join( [Dir, "__script__"], "/" ),
-
   Call = "bash __script__",
 
-  file:write_file( ScriptFile, ExtendedScript ),
+  ok = file:write_file( ScriptFile, ExtendedScript ),
 
-  effi:create_port( Call, Dir ).
+  Port = effi:create_port( Call, Dir ),
+
+  effi:listen_port( Port ).
 
 
 

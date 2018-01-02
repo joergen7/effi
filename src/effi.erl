@@ -39,7 +39,9 @@
 %% API export
 %% ------------------------------------------------------------
 
--export( [create_port/2, handle_request/2, main/1] ).
+-export( [create_port/2, listen_port/1] ).
+-export( [handle_request/2] ).
+-export( [main/1] ).
 
 -include( "effi.hrl" ).
 
@@ -222,12 +224,13 @@ handle_request( Request, Dir ) ->
 
       {ok, Output, RetBindLst} ->
         #{ status       => <<"ok">>,
-           output       => Output,
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->
-        #{ status => <<"error">>,
-           output => Output }
+        #{ status          => <<"error">>,
+           stage           => <<"run">>,
+           extended_script => ExtendedScript,
+           output          => Output }
 
     end,
 
@@ -236,7 +239,6 @@ handle_request( Request, Dir ) ->
 
   % create reply data structure
   #{ app_id          => AppId,
-     extended_script => ExtendedScript,
      stat            => #{ t_start  => integer_to_binary( TStart ),
                            duration => integer_to_binary( Duration ) },
      result          => Result }.
@@ -254,11 +256,12 @@ create_port( Call, Dir ) ->
                      stderr_to_stdout,
                      binary,
                      {cd, Dir},
-                     {line, ?BUF_SIZE}] ),
+                     {line, ?BUF_SIZE}] ).
 
+
+
+listen_port( Port ) ->
   listen_port( Port, <<>>, <<>>, [] ).
-
-
 
 listen_port( Port, LineAcc, Output, RetBindLst )
 when is_port( Port ),
