@@ -288,7 +288,7 @@ when is_port( Port ),
         <<?MSG, AssocStr/binary>> ->
 
           % parse line
-          RetBind = jsone:decode( AssocStr ),
+          RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
 
           % continue
           listen_port( Port, <<>>, Output, [RetBind|RetBindLst] );
