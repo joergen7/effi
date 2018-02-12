@@ -35,8 +35,6 @@
 % effi callbacks
 -export( [get_extended_script/4, run_extended_script/2] ).
 
--export( [echo_singleton_string/1, echo_string_list/1] ).
-
 
 %%====================================================================
 %% Includes
@@ -90,9 +88,15 @@ when is_list( ArgTypeLst ),
 
         false ->
           case ArgType of
+
             <<"Str">> ->
               X = echo_singleton_string( ArgName ),
+              <<B/binary, X/binary>>;
+
+            <<"Bool">> ->
+              X = echo_singleton_boolean( ArgName ),
               <<B/binary, X/binary>>
+
           end;
 
         true ->
@@ -157,9 +161,18 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-    <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-      "\\\",\\\"value\\\":\\\"\"+str(", ArgName/binary,
-      ")+\"\\\"}\\n\")\n">>.
+  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"\"+str(", ArgName/binary,
+    ")+\"\\\"}\\n\")\n">>.
+
+
+echo_singleton_boolean( ArgName )
+when is_binary( ArgName ) ->
+
+  <<"if ", ArgName/binary, ":\n  print(\"", ?MSG, "{\\\"arg_name\\\":\\\"",
+    ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\")\nelse:\n  print(\"",
+    ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"false\\\"}\\n\")\n">>.
 
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
