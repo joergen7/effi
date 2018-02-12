@@ -2,7 +2,7 @@
 %%
 %% Erlang foreign function interface.
 %%
-%% Copyright 2015-2017 Jörgen Brandt
+%% Copyright 2015-2018 Jörgen Brandt
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
 %% @version 0.1.4
-%% @copyright 2015-2017 Jörgen Brandt
+%% @copyright 2015-2018 Jörgen Brandt
 %%
 %% @doc The standalone application entry point is {@link main/1}. 
 %% The create_port callback defined here is an abstract way to execute child 
@@ -51,7 +51,6 @@
 %% ------------------------------------------------------------
 
 
--define( BUILD, "2017-12-28" ).
 -define( VSN, "0.1.4" ).
 -define( BUF_SIZE, 1024 ).
 
@@ -64,19 +63,19 @@
 %% ------------------------------------------------------------
 
 -callback get_extended_script(
-            ArgTypeLst     :: [#{ atom() => _ }],
-            RetTypeLst     :: [#{ atom() => _ }],
-            Script         :: binary(),
-            ArgBindLst     :: [#{ atom() => _ }] ) -> binary().
+            ArgTypeLst :: [#{ atom() => _ }],
+            RetTypeLst :: [#{ atom() => _ }],
+            Script     :: binary(),
+            ArgBindLst :: [#{ atom() => _ }] ) -> binary().
 
 -callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
 
-%% ------------------------------------------------------------
-%% API functions
-%% ------------------------------------------------------------
 
+%%====================================================================
+%% Escript main function
+%%====================================================================
 
 %% @doc Parses command line arguments and processes the request file.
 
@@ -175,7 +174,7 @@ get_banner() ->
       "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
       "  ^^^^^  P qF  `     function's arguments, body and output values.",
       "",
-      "Copyright 2015-2017 Jorgen Brandt <joergen.brandt@onlinehome.de>"
+      "Copyright 2015-2018 Jorgen Brandt <joergen.brandt@onlinehome.de>"
 
     ], "\n" ).
 
@@ -188,8 +187,7 @@ print_help() ->
 
 
 print_version() ->
-  io:format( "application: effi~nversion:     ~s~nbuild:       ~s~n",
-             [?VSN, ?BUILD] ).
+  io:format( "application: effi ~s~n", [?VSN] ).
 
 
 %% @doc Parses a request input file, processes it, and writes the reply output
@@ -206,10 +204,12 @@ handle_request( Request, Dir ) ->
 
   #{ arg_type_lst := ArgTypeLst,
      ret_type_lst := RetTypeLst,
-     script       := Script } = Lambda,
+     script       := Script,
+     lang         := Lang } = Lambda,
+
 
   % determine language module from lambda
-  LangMod = get_lang_mod( Lambda ),
+  LangMod = get_lang_mod( Lang ),
 
   % compute extended script
   ExtendedScript = LangMod:get_extended_script( ArgTypeLst, RetTypeLst, Script,
@@ -244,8 +244,11 @@ handle_request( Request, Dir ) ->
      result          => Result }.
 
 
+-spec get_lang_mod( B :: binary() ) -> atom().
 
-get_lang_mod( #{ lang := <<"Bash">> } ) -> effi_bash.
+get_lang_mod( <<"Bash">> )   -> effi_bash;
+get_lang_mod( <<"Python">> ) -> effi_python;
+get_lang_mod( _ )            -> error( lang_not_recognized ).
 
 
 
