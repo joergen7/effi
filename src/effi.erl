@@ -79,7 +79,7 @@
 
 %% @doc Parses command line arguments and processes the request file.
 
--spec main( ArgList::[string()] ) -> ok.
+-spec main( ArgList :: [string()] ) -> ok.
 
 main( CmdLine ) ->
 
@@ -222,7 +222,7 @@ handle_request( Request, Dir ) ->
   Result =
     case LangMod:run_extended_script( ExtendedScript, Dir ) of
 
-      {ok, Output, RetBindLst} ->
+      {ok, _Output, RetBindLst} ->
         #{ status       => <<"ok">>,
            ret_bind_lst => RetBindLst };
 
@@ -251,15 +251,20 @@ get_lang_mod( <<"Python">> ) -> effi_python;
 get_lang_mod( _ )            -> error( lang_not_recognized ).
 
 
+-spec create_port( Call, Dir ) -> port()
+when Call :: string(),
+     Dir  :: string().
 
-create_port( Call, Dir ) ->
+create_port( Call, Dir )
+when is_list( Call ),
+     is_list( Dir ) ->
 
-  Port = open_port( {spawn, Call},
-                    [exit_status,
-                     stderr_to_stdout,
-                     binary,
-                     {cd, Dir},
-                     {line, ?BUF_SIZE}] ).
+  open_port( {spawn, Call},
+             [exit_status,
+              stderr_to_stdout,
+              binary,
+              {cd, Dir},
+              {line, ?BUF_SIZE}] ).
 
 
 

@@ -28,13 +28,24 @@
 -module( effi_python ).
 -behaviour( effi ).
 
+%%====================================================================
+%% Exports
+%%====================================================================
+
+% effi callbacks
+-export( [get_extended_script/4, run_extended_script/2] ).
+
+
+%%====================================================================
+%% Effi callback function implementations
+%%====================================================================
 
 -spec get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
-        binary().
+        binary()
 when ArgTypeLst :: [#{ atom() => _ }],
      RetTypeLst :: [#{ atom() => _ }],
      Script     :: binary(),
-     ArgBindLst :: [#{ atom() => _ }]
+     ArgBindLst :: [#{ atom() => _ }].
 
 get_extended_script( _ArgTypeLst, _RetTypeLst, _Script, _ArgBindLst ) -> <<>>.
 
@@ -42,7 +53,7 @@ get_extended_script( _ArgTypeLst, _RetTypeLst, _Script, _ArgBindLst ) -> <<>>.
 -spec run_extended_script( ExtendedScript, Dir ) ->
           {ok, binary(), [#{ atom() => _ }]}
         | {error, binary()}
-  when ExtendedScript :: binary(),
-       Dir            :: string().
+when ExtendedScript :: binary(),
+     Dir            :: string().
 
 run_extended_script( _ExtendedScript, _Dir ) -> {error, <<"nyi">>}.
