@@ -35,7 +35,7 @@
 % effi callbacks
 -export( [get_extended_script/4, run_extended_script/2] ).
 
--export( [echo_singleton_string/1] ).
+-export( [echo_singleton_string/1, echo_string_list/1] ).
 
 
 %%====================================================================
@@ -67,8 +67,7 @@ when is_list( ArgTypeLst ),
       TypeInfo = effi:get_type_info( ArgName, ArgTypeLst ),
       #{ arg_type := ArgType, is_list := IsList } = TypeInfo,
 
-      % TODO: handle list values
-      % TODO: handle boolean values
+      % TODO: cases missing
       case IsList of
 
         false ->
@@ -86,12 +85,20 @@ when is_list( ArgTypeLst ),
 
       #{ arg_name := ArgName, arg_type := ArgType, is_list := IsList } = TypeInfo,
 
+      % TODO: cases missing
       case IsList of
 
         false ->
           case ArgType of
             <<"Str">> ->
               X = echo_singleton_string( ArgName ),
+              <<B/binary, X/binary>>
+          end;
+
+        true ->
+          case ArgType of
+            <<"Str">> ->
+              X = echo_string_list( ArgName ),
               <<B/binary, X/binary>>
           end
 
@@ -142,3 +149,13 @@ when is_binary( ArgName ) ->
     <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
       "\\\",\\\"value\\\":\\\"\"+str(", ArgName/binary,
       ")+\"\\\"}\\n\")\n">>.
+
+
+-spec echo_string_list( ArgName :: binary() ) -> binary().
+
+echo_string_list( ArgName )
+when is_binary( ArgName ) ->
+
+  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value:[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
+    ArgName/binary, "))+\"]}\\n\")\n">>.
