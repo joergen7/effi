@@ -49,7 +49,7 @@ when is_list( ArgTypeLst ),
     fun( #{ arg_name := ArgName, value := Value }, B ) ->
 
       % TODO: handle list values
-      % TODO: handle binary values
+      % TODO: handle boolean values
 
       X = bind_singleton_string( ArgName, Value ),
       <<B/binary, X/binary>>
@@ -101,7 +101,13 @@ when is_binary( ExtendedScript ),
 
 
 
+%%====================================================================
+%% Internal functions
+%%====================================================================
 
+-spec bind_singleton_string( ArgName, Value ) -> binary()
+when ArgName :: binary(),
+     Value   :: binary().
 
 bind_singleton_string( ArgName, Value )
 when is_binary( ArgName ),
@@ -110,7 +116,10 @@ when is_binary( ArgName ),
   <<ArgName/binary, "='", Value/binary, "'\n">>.
 
 
+-spec echo_singleton_string( ArgName :: binary() ) -> binary().
+
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
-  <<"echo \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
-    "\\\", \\\"value\\\": \\\"$", ArgName/binary, "\\\"}.\"\n">>.
+
+  <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.

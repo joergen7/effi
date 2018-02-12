@@ -35,32 +35,38 @@
 -module( effi ).
 
 
-%% ------------------------------------------------------------
-%% API export
-%% ------------------------------------------------------------
+%%====================================================================
+%% Exports
+%%====================================================================
 
--export( [create_port/2, listen_port/1] ).
+% handle_request function
 -export( [handle_request/2] ).
+
+% helper functions for implementing effi modules
+-export( [get_type_info/2, create_port/2, listen_port/1] ).
+
+% escript main functíon
 -export( [main/1] ).
+
+
+%%====================================================================
+%% Includes
+%%====================================================================
 
 -include( "effi.hrl" ).
 
 
-%% ------------------------------------------------------------
+%%====================================================================
 %% Definitions
-%% ------------------------------------------------------------
-
+%%====================================================================
 
 -define( VSN, "0.1.4" ).
 -define( BUF_SIZE, 1024 ).
 
 
-
-
-
-%% ------------------------------------------------------------
-%% Callback declarations
-%% ------------------------------------------------------------
+%%====================================================================
+%% Callbacks
+%%====================================================================
 
 -callback get_extended_script(
             ArgTypeLst :: [#{ atom() => _ }],
@@ -148,47 +154,9 @@ main( CmdLine ) ->
     throw:help    -> print_help()
   end.
 
-
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
-
-
-%% opt_spec_list/0
-%% @doc Returns the command line parameters that effi can parse, in a format that the getopt module understands. 
-get_optspec_lst() ->
-  [
-   {version,     $v, "version",     undefined,     "Show effi version."},
-   {help,        $h, "help",        undefined,     "Show command line options."},
-   {dir,         $d, "dir",         {string, "."}, "Working directory in which to look for input data and run the request."},
-   {input_file,  $i, "input_file",  string,        "Input file holding the effi request (must be specified)."},
-   {output_file, $o, "output_file", string,        "Output file into which to write the effi reply (must be specified)."}
-  ].
-
-
-get_banner() ->
-  string:join( [
-      "   ._,,,,  ,,_,=_",
-      "    W   `_@__#__     The Erlang Foreign Function Interface (Effi) allows the",
-      "   @P+#   F @F @     execution of functions defined in different programming",
-      "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
-      "  ^^^^^  P qF  `     function's arguments, body and output values.",
-      "",
-      "Copyright 2015-2018 Jorgen Brandt <joergen.brandt@onlinehome.de>"
-
-    ], "\n" ).
-
-
-print_help() ->
-  io:format( "~s~n~n", [get_banner()] ),
-  getopt:usage( get_optspec_lst(), "effi" ),
-  timer:sleep( 10 ),
-  io:format( "~nThe input_file and output_file arguments must be specified.~n~n" ).
-
-
-print_version() ->
-  io:format( "application: effi ~s~n", [?VSN] ).
-
+%%====================================================================
+%% API functions
+%%====================================================================
 
 %% @doc Parses a request input file, processes it, and writes the reply output
 %%      file.
@@ -244,11 +212,22 @@ handle_request( Request, Dir ) ->
      result          => Result }.
 
 
--spec get_lang_mod( B :: binary() ) -> atom().
+-spec get_type_info( ArgName, TypeLst ) -> #{ atom() => _ }
+when ArgName :: binary(),
+     TypeLst :: [#{ atom() => _ }].
 
-get_lang_mod( <<"Bash">> )   -> effi_bash;
-get_lang_mod( <<"Python">> ) -> effi_python;
-get_lang_mod( _ )            -> error( lang_not_recognized ).
+get_type_info( _ArgName, [] ) ->
+  error( type_undefined );
+
+get_type_info( ArgName, [H = #{ arg_name := N }|T] )
+when is_binary( ArgName ),
+     is_binary( N ),
+     is_list( T ) ->
+
+  case N of
+    ArgName -> H;
+    _       -> get_type_info( ArgName, T )
+  end.
 
 
 -spec create_port( Call, Dir ) -> port()
@@ -267,9 +246,67 @@ when is_list( Call ),
               {line, ?BUF_SIZE}] ).
 
 
+-spec listen_port( Port :: port() ) -> 
+          {ok, binary(), [#{atom() => binary()}]}
+        | {error, binary()}.
 
 listen_port( Port ) ->
   listen_port( Port, <<>>, <<>>, [] ).
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
+
+%% opt_spec_list/0
+%% @doc Returns the command line parameters that effi can parse, in a format that the getopt module understands. 
+get_optspec_lst() ->
+  [
+   {version,     $v, "version",     undefined,     "Show effi version."},
+   {help,        $h, "help",        undefined,     "Show command line options."},
+   {dir,         $d, "dir",         {string, "."}, "Working directory in which to look for input data and run the request."},
+   {input_file,  $i, "input_file",  string,        "Input file holding the effi request (must be specified)."},
+   {output_file, $o, "output_file", string,        "Output file into which to write the effi reply (must be specified)."}
+  ].
+
+
+get_banner() ->
+  string:join( [
+      "   ._,,,,  ,,_,=_",
+      "    W   `_@__#__     The Erlang Foreign Function Interface (Effi) allows the",
+      "   @P+#   F @F @     execution of functions defined in different programming",
+      "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
+      "  ^^^^^  P qF  `     function's arguments, body and output values.",
+      "",
+      "Copyright 2015-2018 Jorgen Brandt <joergen.brandt@onlinehome.de>"
+
+    ], "\n" ).
+
+
+print_help() ->
+  io:format( "~s~n~n", [get_banner()] ),
+  getopt:usage( get_optspec_lst(), "effi" ),
+  timer:sleep( 10 ),
+  io:format( "~nThe input_file and output_file arguments must be specified.~n~n" ).
+
+
+print_version() ->
+  io:format( "application: effi ~s~n", [?VSN] ).
+
+
+-spec get_lang_mod( B :: binary() ) -> atom().
+
+get_lang_mod( <<"Bash">> )   -> effi_bash;
+get_lang_mod( <<"Python">> ) -> effi_python;
+get_lang_mod( _ )            -> error( lang_not_recognized ).
+
+
+-spec listen_port( Port, LineAcc, Output, RetBindLst ) ->
+          {ok, binary(), [#{atom() => binary()}]}
+        | {error, binary()}
+when Port       :: port(),
+     LineAcc    :: binary(),
+     Output     :: binary(),
+     RetBindLst :: [#{atom() => binary()}].
 
 listen_port( Port, LineAcc, Output, RetBindLst )
 when is_port( Port ),
@@ -323,3 +360,6 @@ when is_port( Port ),
       error( {bad_msg, Msg} )
 
   end.
+
+
+
