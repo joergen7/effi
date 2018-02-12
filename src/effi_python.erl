@@ -168,5 +168,5 @@ echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
   <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value:[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
+    "\\\",\\\"value\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
     ArgName/binary, "))+\"]}\\n\")\n">>.
