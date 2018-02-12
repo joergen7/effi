@@ -123,7 +123,18 @@ when is_list( ArgTypeLst ),
 when ExtendedScript :: binary(),
      Dir            :: string().
 
-run_extended_script( _ExtendedScript, _Dir ) -> {error, <<"nyi">>}.
+run_extended_script( ExtendedScript, Dir )
+when is_binary( ExtendedScript ),
+     is_list( Dir ) ->
+
+  ScriptFile = string:join( [Dir, "__script__"], "/" ),
+  Call = "python __script__",
+
+  ok = file:write_file( ScriptFile, ExtendedScript ),
+
+  Port = effi:create_port( Call, Dir ),
+
+  effi:listen_port( Port ).
 
 
 %%====================================================================
