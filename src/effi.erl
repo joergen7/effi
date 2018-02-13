@@ -297,6 +297,7 @@ print_version() ->
 
 get_lang_mod( <<"Bash">> )            -> effi_bash;
 get_lang_mod( <<"Python">> )          -> effi_python;
+get_lang_mod( <<"Octave">> )          -> effi_octave;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 

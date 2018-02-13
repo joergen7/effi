@@ -90,8 +90,8 @@ run_extended_script( ExtendedScript, Dir )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
-  ScriptFile = string:join( [Dir, "__script__"], "/" ),
-  Call = "bash __script__",
+  ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
+  Call = "bash __script.sh",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 

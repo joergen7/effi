@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% Effi: Erlang Foreign Function Interface
+%% Erlang foreign function interface.
 %%
 %% Copyright 2015-2018 Jörgen Brandt
 %%
@@ -21,11 +21,18 @@
 %% @version 0.1.4
 %% @copyright 2015-2018 Jörgen Brandt
 %%
+%% @doc The standalone application entry point is {@link main/1}. 
+%% The create_port callback defined here is an abstract way to execute child 
+%% processes in foreign languages. 
+%% There are two foreign language interfaces, both implementing this callback,
+%% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
+%% Bash, R).
 %%
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_python ).
+-module( effi_octave ).
+
 -behaviour( effi ).
 
 %%====================================================================
@@ -35,6 +42,8 @@
 % effi callbacks
 -export( [get_extended_script/4, run_extended_script/2] ).
 
+-export( [bind_singleton_string/2,
+          echo_singleton_string/1, echo_singleton_boolean/1] ).
 
 %%====================================================================
 %% Includes
@@ -112,12 +121,8 @@ when is_list( ArgTypeLst ),
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
   Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
 
-  B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
-  B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
-  B3 = <<"if True:\n ", B2/binary>>,
-
   <<Binding/binary, "\n",
-    B3/binary, "\n",
+    Script/binary, "\n",
     Echoing/binary, "\n">>.
 
 
@@ -131,8 +136,8 @@ run_extended_script( ExtendedScript, Dir )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
-  ScriptFile = string:join( [Dir, "__script.py"], "/" ),
-  Call = "python __script.py",
+  ScriptFile = string:join( [Dir, "__script.m"], "/" ),
+  Call = "octave __script.m",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
@@ -161,16 +166,16 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"\"+str(", ArgName/binary,
-    ")+\"\\\"}\\n\")\n">>.
+  <<"display([\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"\",", ArgName/binary,
+    ",\"\\\"}\\n\"])\n">>.
 
 
 echo_singleton_boolean( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ", ArgName/binary, ":\n  print(\"", ?MSG, "{\\\"arg_name\\\":\\\"",
-    ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\")\nelse:\n  print(\"",
+  <<"if ", ArgName/binary, " display(\"", ?MSG, "{\\\"arg_name\\\":\\\"",
+    ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\") else display(\"",
     ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"false\\\"}\\n\")\n">>.
 
@@ -180,6 +185,5 @@ when is_binary( ArgName ) ->
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
-    ArgName/binary, "))+\"]}\\n\")\n">>.
+  error( nyi ).
+
