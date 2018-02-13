@@ -295,9 +295,9 @@ print_version() ->
 
 -spec get_lang_mod( B :: binary() ) -> atom().
 
-get_lang_mod( <<"Bash">> )   -> effi_bash;
-get_lang_mod( <<"Python">> ) -> effi_python;
-get_lang_mod( _ )            -> error( lang_not_recognized ).
+get_lang_mod( <<"Bash">> )            -> effi_bash;
+get_lang_mod( <<"Python">> )          -> effi_python;
+get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 
 -spec listen_port( Port, LineAcc, Output, RetBindLst ) ->
