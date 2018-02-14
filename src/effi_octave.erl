@@ -42,8 +42,6 @@
 % effi callbacks
 -export( [get_extended_script/4, run_extended_script/2] ).
 
--export( [bind_singleton_string/2,
-          echo_singleton_string/1, echo_singleton_boolean/1] ).
 
 %%====================================================================
 %% Includes
@@ -202,7 +200,7 @@ bind_boolean_list( ArgName, Value )
 when is_binary( ArgName ),
      is_list( Value ) ->
 
-  StrLst = map( fun binary_to_list/1, Value ),
+  StrLst = lists:map( fun binary_to_list/1, Value ),
   B = list_to_binary( "{"++string:join( StrLst, ", " )++"}" ),
   <<ArgName/binary, " = ", B/binary, ";\n">>.
 
@@ -215,7 +213,7 @@ bind_string_list( ArgName, Value )
 when is_binary( ArgName ),
      is_list( Value ) ->
 
-  StrLst = map( fun( V ) "'"++binary_to_list( V )++"'" end, Value ),
+  StrLst = ["'"++binary_to_list( V )++"'" || V <- Value],
   B = list_to_binary( "{"++string:join( StrLst, ", " )++"}" ),
   <<ArgName/binary, " = ", B/binary, ";\n">>.
 

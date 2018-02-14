@@ -42,8 +42,6 @@
 % effi callbacks
 -export( [get_extended_script/4, run_extended_script/2] ).
 
--export( [bind_singleton_string/2,
-          echo_singleton_string/1, echo_singleton_boolean/1] ).
 
 %%====================================================================
 %% Includes
@@ -62,11 +60,13 @@ when ArgTypeLst :: [#{ atom() => _ }],
      Script     :: binary(),
      ArgBindLst :: [#{ atom() => _ }].
 
-get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst )
+get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
+
   B = effi_octave:get_extended_script( ArgTypeLst,
                                        RetTypeLst,
                                        Script,
                                        ArgBindLst ),
+
   <<B/binary, "exit\n">>.
 
 
