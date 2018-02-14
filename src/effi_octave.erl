@@ -98,21 +98,27 @@ when is_list( ArgTypeLst ),
         false ->
           case ArgType of
 
-            <<"Str">> ->
-              X = echo_singleton_string( ArgName ),
-              <<B/binary, X/binary>>;
-
             <<"Bool">> ->
               X = echo_singleton_boolean( ArgName ),
+              <<B/binary, X/binary>>;
+
+            T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+              X = echo_singleton_string( ArgName ),
               <<B/binary, X/binary>>
 
           end;
 
         true ->
           case ArgType of
-            <<"Str">> ->
+
+            <<"Bool">> ->
+              X = echo_boolean_list( ArgName ),
+              <<B/binary, X/binary>>;
+
+            T when T =:= <<"Str">> orelse T =:= <<"File">> ->
               X = echo_string_list( ArgName ),
               <<B/binary, X/binary>>
+
           end
 
       end
@@ -168,16 +174,26 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"display( ['", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":\"', ", ArgName/binary, ", '\"}\\n'] )\n">>.
+  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'string' )\n",
+    "  error( '", ArgName/binary, " not a string' )\n",
+    "end\n",
+    "display( ['", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":\"', ", ArgName/binary, ", '\"}\\n'] )\n\n">>.
 
 
 echo_singleton_boolean( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ", ArgName/binary, " display( '", ?MSG, "{\"arg_name\":\"",
-    ArgName/binary, "\",\"value\":\"true\"}\\n' ) else display( '", ?MSG,
-    "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' ) end\n">>.
+  <<"if ~islogical( ", ArgName/binary, " )\n",
+    "  error( '", ArgName/binary, " not a logical' )\n",
+    "end\n",
+    "if ", ArgName/binary, "\n",
+    "  display( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":\"true\"}\\n' )\n",
+    "else\n",
+    "  display( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":\"false\"}\\n' )\n",
+    "end\n\n">>.
 
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
@@ -185,8 +201,48 @@ when is_binary( ArgName ) ->
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":[' )\nfor i = 1:length( ", ArgName/binary,
-    " )\n  if i ~= 1 printf( ',' ) end\n  printf( '%s', ",
-    ArgName/binary, "{ i } )\nend\nprintf( ']}\\n' )\n">>.
+  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'cell' )\n",
+    "  error( '", ArgName/binary, " not a cell' )\n",
+    "end\n",
+    "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
+    "  if ~strcmp( typeinfo( ", ArgName/binary, "{ i } ), 'string' )\n",
+    "    error( '", ArgName/binary, " contains non-string elements' )\n",
+    "  end\n",
+    "end\n",
+    "printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":[' )\n",
+    "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
+    "  if i ~= 1\n",
+    "    printf( ',' )\n",
+    "  end\n",
+    "  printf( '%s', ", ArgName/binary, "{ i } )\n",
+    "end\n",
+    "printf( ']}\\n' )\n\n">>.
+
+
+-spec echo_boolean_list( ArgName :: binary() ) -> binary().
+
+echo_boolean_list( ArgName ) ->
+
+  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'cell' )\n",
+    "  error( '", ArgName/binary, " not a cell' )\n",
+    "end\n",
+    "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
+    "  if ~islogical( ", ArgName/binary, "{ i } )\n",
+    "    error( '", ArgName/binary, " contains non-logical elements' )\n",
+    "  end\n",
+    "end\n",
+    "printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":[' )\n",
+    "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
+    "  if i ~= 1\n",
+    "    printf( ',' )\n",
+    "  end\n",
+    "  if ", ArgName/binary, "\n",
+    "    printf( '\"true\"' )\n",
+    "  else\n",
+    "    printf( '\"false\"' )\n",
+    "  end\n",
+    "end\n",
+    "printf( ']}\\n' )\n\n">>.
 

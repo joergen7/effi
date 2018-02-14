@@ -350,7 +350,10 @@ when is_port( Port ),
         _ ->
 
           % continue
-          listen_port( Port, <<>>, <<Output/binary, "\n", Line/binary>>, RetBindLst,
+          listen_port( Port,
+                       <<>>,
+                       <<Output/binary, Line/binary, "\n">>,
+                       RetBindLst,
                        Success )
 
       end;
