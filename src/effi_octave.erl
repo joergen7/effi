@@ -125,7 +125,7 @@ when is_list( ArgTypeLst ),
     Binding/binary, "\n",
     Script/binary, "\n",
     Echoing/binary, "\n",
-    "display( ", ?EOT, " )\n", "\n",
+    "display( '", ?EOT, "' )\n", "\n",
     "catch e\n  exit( -1 )\nend_try_catch\n">>.
 
 
