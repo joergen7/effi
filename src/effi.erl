@@ -251,7 +251,7 @@ when is_list( Call ),
         | {error, binary()}.
 
 listen_port( Port ) ->
-  listen_port( Port, <<>>, <<>>, [] ).
+  listen_port( Port, <<>>, <<>>, [], false ).
 
 %%====================================================================
 %% Internal functions
@@ -301,26 +301,28 @@ get_lang_mod( <<"Octave">> )          -> effi_octave;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 
--spec listen_port( Port, LineAcc, Output, RetBindLst ) ->
+-spec listen_port( Port, LineAcc, Output, RetBindLst, Success ) ->
           {ok, binary(), [#{atom() => binary()}]}
         | {error, binary()}
 when Port       :: port(),
      LineAcc    :: binary(),
      Output     :: binary(),
-     RetBindLst :: [#{atom() => binary()}].
+     RetBindLst :: [#{atom() => binary()}],
+     Success    :: boolean().
 
-listen_port( Port, LineAcc, Output, RetBindLst )
+listen_port( Port, LineAcc, Output, RetBindLst, Success )
 when is_port( Port ),
      is_binary( LineAcc ),
      is_binary( Output ),
-     is_list( RetBindLst ) ->
+     is_list( RetBindLst ),
+     is_boolean( Success ) ->
 
   receive
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
       LineAcc1 = <<LineAcc/binary, PartLine/binary>>,
-      listen_port( Port, LineAcc1, Output, RetBindLst );
+      listen_port( Port, LineAcc1, Output, RetBindLst, Success );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->
@@ -332,7 +334,8 @@ when is_port( Port ),
 
         % end of transmission
         <<?EOT>> ->
-          {ok, Output, RetBindLst};
+          listen_port( Port, LineAcc, Output, RetBindLst, true );
+          
 
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
@@ -341,19 +344,23 @@ when is_port( Port ),
           RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
 
           % continue
-          listen_port( Port, <<>>, Output, [RetBind|RetBindLst] );
+          listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success );
 
         % line is an ordinary output
         _ ->
 
           % continue
-          listen_port( Port, <<>>, <<Output/binary, Line/binary>>, RetBindLst )
+          listen_port( Port, <<>>, <<Output/binary, "\n", Line/binary>>, RetBindLst,
+                       Success )
 
       end;
 
     % process succeeded but no end of transmission was received
     {Port, {exit_status, 0}} ->
-      {error, Output};
+      case Success of
+        true  -> {ok, Output, RetBindLst};
+        false -> {error, Output}
+      end;
 
     % process failed
     {Port, {exit_status, _}} ->
