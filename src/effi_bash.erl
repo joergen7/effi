@@ -67,15 +67,15 @@ when is_list( ArgTypeLst ),
 
 
   Preamble = <<"set -eu -o pipefail\n">>,
-
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
-
   Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+  EndOfTransmission = <<"echo ", ?EOT>>,
 
   <<Preamble/binary, "\n",
     Binding/binary, "\n",
     Script/binary, "\n",
-    Echoing/binary, "\n">>.
+    Echoing/binary, "\n",
+    EndOfTransmission/binary>>.
 
 
 

@@ -120,13 +120,12 @@ when is_list( ArgTypeLst ),
 
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
   Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+  EndOfTransmission = <<"display( '", ?EOT, "' )\n">>,
 
-  <<"try\n",
-    Binding/binary, "\n",
+  <<Binding/binary, "\n",
     Script/binary, "\n",
     Echoing/binary, "\n",
-    "display( '", ?EOT, "' )\n", "\n",
-    "catch e\n  exit( -1 )\nend_try_catch\n">>.
+    EndOfTransmission/binary>>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->

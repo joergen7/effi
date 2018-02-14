@@ -111,6 +111,8 @@ when is_list( ArgTypeLst ),
 
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
   Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+  EndOfTransmission = <<"print( '", ?EOT, "' )\n">>,
+
 
   B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
   B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
@@ -118,7 +120,8 @@ when is_list( ArgTypeLst ),
 
   <<Binding/binary, "\n",
     B3/binary, "\n",
-    Echoing/binary, "\n">>.
+    Echoing/binary, "\n",
+    EndOfTransmission/binary>>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
@@ -161,18 +164,16 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"\"+str(", ArgName/binary,
-    ")+\"\\\"}\\n\")\n">>.
+  <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":\"'+str( ", ArgName/binary, " )+'\"}\\n' )\n">>.
 
 
 echo_singleton_boolean( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ", ArgName/binary, ":\n  print(\"", ?MSG, "{\\\"arg_name\\\":\\\"",
-    ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\")\nelse:\n  print(\"",
-    ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"false\\\"}\\n\")\n">>.
+  <<"if ", ArgName/binary, ":\n  print( '", ?MSG, "{\"arg_name\":\"",
+    ArgName/binary, "\",\"value\":\"true\"}\\n' )\nelse:\n  print( '", ?MSG,
+    "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' )\n">>.
 
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
@@ -180,6 +181,6 @@ when is_binary( ArgName ) ->
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"print(\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[\"+\",\".join(map(lambda x: \"\\\"%s\\\"\"%(x),",
-    ArgName/binary, "))+\"]}\\n\")\n">>.
+  <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x),", ArgName/binary,
+    " ) )+']}\\n')\n">>.
