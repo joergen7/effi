@@ -121,9 +121,11 @@ when is_list( ArgTypeLst ),
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
   Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
 
-  <<Binding/binary, "\n",
+  <<"try\n",
+    Binding/binary, "\n",
     Script/binary, "\n",
-    Echoing/binary, "\n">>.
+    Echoing/binary, "\n",
+    "catch e\n  exit( -1 )\nend_try_catch\n">>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
@@ -158,7 +160,7 @@ bind_singleton_string( ArgName, Value )
 when is_binary( ArgName ),
      is_binary( Value ) ->
 
-  <<ArgName/binary, " = '", Value/binary, "'\n">>.
+  <<ArgName/binary, " = '", Value/binary, "';\n">>.
 
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
