@@ -166,18 +166,16 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"display([\"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"\",", ArgName/binary,
-    ",\"\\\"}\\n\"])\n">>.
+  <<"display( ['", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":\"', ", ArgName/binary, ", '\"}\\n'] )\n">>.
 
 
 echo_singleton_boolean( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ", ArgName/binary, " display(\"", ?MSG, "{\\\"arg_name\\\":\\\"",
-    ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\") else display(\"",
-    ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"false\\\"}\\n\")\n">>.
+  <<"if ", ArgName/binary, " display( '", ?MSG, "{\"arg_name\":\"",
+    ArgName/binary, "\",\"value\":\"true\"}\\n' ) else display( '", ?MSG,
+    "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' ) end\n">>.
 
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
@@ -185,5 +183,8 @@ when is_binary( ArgName ) ->
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
-  error( nyi ).
+  <<"printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":[' )\nfor i = 1:length( ", ArgName/binary,
+    " )\n  if i ~= 1 printf( ',' ) end\n  printf( '%s', ",
+    ArgName/binary, "{ i } )\nend\nprintf( ']}\\n' )\n">>.
 
