@@ -31,7 +31,7 @@
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_octave ).
+-module( effi_matlab ).
 
 -behaviour( effi ).
 
@@ -130,7 +130,8 @@ when is_list( ArgTypeLst ),
   <<Binding/binary, "\n",
     Script/binary, "\n",
     Echoing/binary, "\n",
-    EndOfTransmission/binary>>.
+    EndOfTransmission/binary, "\n",
+    "exit\n">>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
@@ -144,7 +145,7 @@ when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
   ScriptFile = string:join( [Dir, "__script.m"], "/" ),
-  Call = "octave __script.m",
+  Call = "matlab -nodisplay -nosplash -r __script.m",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
