@@ -215,7 +215,7 @@ when is_binary( ArgName ) ->
     "  if i ~= 1\n",
     "    printf( ',' )\n",
     "  end\n",
-    "  printf( '%s', ", ArgName/binary, "{ i } )\n",
+    "  printf( '\"%s\"', ", ArgName/binary, "{ i } )\n",
     "end\n",
     "printf( ']}\\n' )\n\n">>.
 
