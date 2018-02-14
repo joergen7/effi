@@ -174,7 +174,7 @@ when is_binary( ArgName ),
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'string' )\n",
+  <<"if ~ischar( ", ArgName/binary, " )\n",
     "  error( '", ArgName/binary, " not a string' )\n",
     "end\n",
     "display( ['", ?MSG, "{\"arg_name\":\"", ArgName/binary,
@@ -201,11 +201,11 @@ when is_binary( ArgName ) ->
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
-  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'cell' )\n",
+  <<"if ~iscell( ", ArgName/binary, " )\n",
     "  error( '", ArgName/binary, " not a cell' )\n",
     "end\n",
     "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
-    "  if ~strcmp( typeinfo( ", ArgName/binary, "{ i } ), 'string' )\n",
+    "  if ~ischar( ", ArgName/binary, "{ i } )\n",
     "    error( '", ArgName/binary, " contains non-string elements' )\n",
     "  end\n",
     "end\n",
@@ -224,7 +224,7 @@ when is_binary( ArgName ) ->
 
 echo_boolean_list( ArgName ) ->
 
-  <<"if ~strcmp( typeinfo( ", ArgName/binary, " ), 'cell' )\n",
+  <<"if ~iscell( ", ArgName/binary, " )\n",
     "  error( '", ArgName/binary, " not a cell' )\n",
     "end\n",
     "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
