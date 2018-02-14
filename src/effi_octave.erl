@@ -74,17 +74,34 @@ when is_list( ArgTypeLst ),
       TypeInfo = effi:get_type_info( ArgName, ArgTypeLst ),
       #{ arg_type := ArgType, is_list := IsList } = TypeInfo,
 
-      % TODO: cases missing
-      case IsList of
+      X = 
+        case IsList of
 
-        false ->
-          case ArgType of
-            <<"Str">> ->
-              X = bind_singleton_string( ArgName, Value ),
-              <<B/binary, X/binary>>
-          end
+          false ->
+            case ArgType of
 
-      end
+              <<"Bool">> ->
+                bind_singleton_boolean( ArgName, Value );
+  
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                bind_singleton_string( ArgName, Value )
+
+            end;
+
+          true ->
+            case ArgType of
+
+              <<"Bool">> ->
+                bind_boolean_list( ArgName, Value );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                bind_string_list( ArgName, Value )
+
+            end
+
+        end,
+
+      <<B/binary, X/binary>>
     end,
 
   Echo =
@@ -92,35 +109,35 @@ when is_list( ArgTypeLst ),
 
       #{ arg_name := ArgName, arg_type := ArgType, is_list := IsList } = TypeInfo,
 
-      case IsList of
+      X =
+        case IsList of
 
-        false ->
-          case ArgType of
+          false ->
+            case ArgType of
 
-            <<"Bool">> ->
-              X = echo_singleton_boolean( ArgName ),
-              <<B/binary, X/binary>>;
+              <<"Bool">> ->
+                echo_singleton_boolean( ArgName );
 
-            T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-              X = echo_singleton_string( ArgName ),
-              <<B/binary, X/binary>>
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                echo_singleton_string( ArgName )
 
-          end;
+            end;
 
-        true ->
-          case ArgType of
+          true ->
+            case ArgType of
 
-            <<"Bool">> ->
-              X = echo_boolean_list( ArgName ),
-              <<B/binary, X/binary>>;
+              <<"Bool">> ->
+                echo_boolean_list( ArgName );
 
-            T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-              X = echo_string_list( ArgName ),
-              <<B/binary, X/binary>>
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                echo_string_list( ArgName )
 
-          end
+            end
 
-      end
+        end,
+
+      <<B/binary, X/binary>>
+
     end,
 
   Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
@@ -166,6 +183,37 @@ when is_binary( ArgName ),
      is_binary( Value ) ->
 
   <<ArgName/binary, " = '", Value/binary, "';\n">>.
+
+-spec bind_singleton_boolean( ArgName, Value ) -> binary()
+when ArgName :: binary(),
+     Value   :: binary().
+
+bind_singleton_boolean( ArgName, <<"true">> ) ->
+  <<ArgName/binary, " = true;\n">>;
+
+bind_singleton_boolean( ArgName, <<"false">> ) ->
+  <<ArgName/binary, " = false;\n">>.
+
+-spec bind_boolean_list( ArgName, Value ) -> binary()
+when ArgName :: binary(),
+     Value   :: [binary()].
+
+bind_boolean_list( ArgName, Value )
+when is_binary( ArgName ),
+     is_list( Value ) ->
+
+  error( nyi ).
+
+
+-spec bind_string_list( ArgName, Value ) -> binary()
+when ArgName :: binary(),
+     Value   :: [binary()].
+
+bind_string_list( ArgName, Value )
+when is_binary( ArgName ),
+     is_list( Value ) ->
+
+  error( nyi ).
 
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
