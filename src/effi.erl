@@ -330,6 +330,10 @@ when is_port( Port ),
 
       case Line of
 
+        % end of transmission
+        <<?EOT>> ->
+          {ok, Output, RetBindLst};
+
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
 
@@ -347,9 +351,9 @@ when is_port( Port ),
 
       end;
 
-    % process succeeded
+    % process succeeded but no end of transmission was received
     {Port, {exit_status, 0}} ->
-      {ok, Output, RetBindLst};
+      {error, Output};
 
     % process failed
     {Port, {exit_status, _}} ->
