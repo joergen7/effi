@@ -332,6 +332,7 @@ when is_port( Port ),
 
         % end of transmission
         <<?EOT>> ->
+          true = port_close( Port ),
           {ok, Output, RetBindLst};
 
         % line is a special message
