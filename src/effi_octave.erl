@@ -202,7 +202,9 @@ bind_boolean_list( ArgName, Value )
 when is_binary( ArgName ),
      is_list( Value ) ->
 
-  error( nyi ).
+  StrLst = map( fun binary_to_list/1, Value ),
+  B = list_to_binary( "{"++string:join( StrLst, ", " )++"}" ),
+  <<ArgName/binary, " = ", B/binary, ";\n">>.
 
 
 -spec bind_string_list( ArgName, Value ) -> binary()
@@ -213,7 +215,9 @@ bind_string_list( ArgName, Value )
 when is_binary( ArgName ),
      is_list( Value ) ->
 
-  error( nyi ).
+  StrLst = map( fun( V ) "'"++binary_to_list( V )++"'" end, Value ),
+  B = list_to_binary( "{"++string:join( StrLst, ", " )++"}" ),
+  <<ArgName/binary, " = ", B/binary, ";\n">>.
 
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
