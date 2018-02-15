@@ -67,7 +67,7 @@ get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
                                        Script,
                                        ArgBindLst ),
 
-  <<B/binary, "exit\n">>.
+  <<B/binary, "exit( 0 );\n">>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->

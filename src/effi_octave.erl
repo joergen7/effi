@@ -147,7 +147,7 @@ when is_list( ArgTypeLst ),
     Script/binary, "\n",
     Echoing/binary, "\n",
     EndOfTransmission/binary, "\n",
-    "catch e\n  exit( -1 );\nend\n">>.
+    "catch e\n  display( e );\n  exit( -1 );\nend\n">>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
