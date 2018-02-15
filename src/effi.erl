@@ -371,9 +371,7 @@ when is_port( Port ),
       {error, Output};
       
 
-    % if nothing matches, raise error
-    Msg ->
-      error( {bad_msg, Msg} )
+    % if nothing matches, ignore
 
   end.
 
