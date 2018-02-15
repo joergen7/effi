@@ -260,15 +260,15 @@ when is_binary( ArgName ) ->
     "    error( '", ArgName/binary, " contains non-string elements' )\n",
     "  end\n",
     "end\n",
-    "printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "fprintf( 1, '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
     "\",\"value\":[' )\n",
     "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
     "  if i ~= 1\n",
-    "    printf( ',' )\n",
+    "    fprintf( 1, ',' )\n",
     "  end\n",
-    "  printf( '\"%s\"', ", ArgName/binary, "{ i } )\n",
+    "  fprintf( 1, '\"%s\"', ", ArgName/binary, "{ i } )\n",
     "end\n",
-    "printf( ']}\\n' )\n\n">>.
+    "fprintf( 1, ']}\\n' )\n\n">>.
 
 
 -spec echo_boolean_list( ArgName :: binary() ) -> binary().
@@ -283,17 +283,17 @@ echo_boolean_list( ArgName ) ->
     "    error( '", ArgName/binary, " contains non-logical elements' )\n",
     "  end\n",
     "end\n",
-    "printf( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "fprintf( 1, '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
     "\",\"value\":[' )\n",
     "for i = 1:prod( size( ", ArgName/binary, " ) )\n",
     "  if i ~= 1\n",
-    "    printf( ',' )\n",
+    "    fprintf( 1, ',' )\n",
     "  end\n",
     "  if ", ArgName/binary, "\n",
-    "    printf( '\"true\"' )\n",
+    "    fprintf( 1, '\"true\"' )\n",
     "  else\n",
-    "    printf( '\"false\"' )\n",
+    "    fprintf( 1, '\"false\"' )\n",
     "  end\n",
     "end\n",
-    "printf( ']}\\n' )\n\n">>.
+    "fprintf( 1, ']}\\n' )\n\n">>.
 
