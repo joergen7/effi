@@ -368,7 +368,7 @@ when is_port( Port ),
 
     % process failed
     {Port, {exit_status, _}} ->
-      {error, Output};
+      {error, Output}
       
 
     % if nothing matches, ignore
