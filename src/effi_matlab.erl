@@ -80,8 +80,8 @@ run_extended_script( ExtendedScript, Dir )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
-  ScriptFile = string:join( [Dir, "__script.m"], "/" ),
-  Call = "matlab -nodisplay -nosplash -r __script.m",
+  ScriptFile = string:join( [Dir, "script.m"], "/" ),
+  Call = "matlab -nodisplay -nojvm -r script",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
