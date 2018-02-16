@@ -104,7 +104,7 @@ when is_binary( ArgName ),
 
 
 echo_singleton_boolean( ArgName ) ->
-  <<"if [ ", ArgName/binary, " == 'true' ]\n",
+  <<"if [ $", ArgName/binary, " == 'true' ]\n",
     "then\n",
     "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"true\"}'\n",
     "else\n",
