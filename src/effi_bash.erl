@@ -90,7 +90,7 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, "='", Value/binary, "'\n">>.
 
-bind_boolean_list( ArgName, Value )
+bind_boolean_list( ArgName, Value ) ->
   bind_string_list( ArgName, Value ).
 
 bind_string_list( ArgName, Value )
