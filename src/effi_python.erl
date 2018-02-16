@@ -80,8 +80,13 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
-bind_singleton_boolean( _ArgName, _Value ) ->
-  error( nyi ).
+bind_singleton_boolean( ArgName, <<"true">> ) ->
+  <<ArgName/binary, " = True\n">>;
+
+bind_singleton_boolean( ArgName, <<"false">> ) ->
+  <<ArgName/binary, " = False\n">>.
+
+
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
 when ArgName :: binary(),
@@ -93,11 +98,22 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, " = '", Value/binary, "'\n">>.
 
-bind_boolean_list( _ArgName, _Value ) ->
-  error( nyi ).
+bind_boolean_list( ArgName, Value ) ->
 
-bind_string_list( _ArgName, _Value ) ->
-  error( nyi ).
+  F =
+    fun
+      ( <<"true">> )  -> "True";
+      ( <<"false">> ) -> "False"
+    end,
+
+  S = string:join( [F( V ) || V <- Value], "," ),
+  B = list_to_binary( S ),
+  <<ArgName/binary, " = [", B, "]\n">>.
+
+bind_string_list( ArgName, Value ) ->
+  S = string:join( ["'"++binary_to_list( V )++"'" || V <- Value], "," ),
+  B = list_to_binary( S ),
+  <<ArgName/binary, " = [", B, "]\n">>.
 
 
 echo_singleton_boolean( ArgName )
@@ -116,8 +132,11 @@ when is_binary( ArgName ) ->
     "\",\"value\":\"'+str( ", ArgName/binary, " )+'\"}\\n' )\n">>.
 
 
-echo_boolean_list( _ArgName ) ->
-  error( nyi ).
+echo_boolean_list( ArgName ) ->
+
+  <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+    "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x), ", ArgName/binary,
+    " ) )+']}\\n')\n">>.
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
 
@@ -125,8 +144,8 @@ echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
   <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x),", ArgName/binary,
-    " ) )+']}\\n')\n">>.
+    "\",\"value\":['+','.join( map( lambda x: '\"true\" if x else \"false\", ",
+    ArgName/binary, " ) )+']}\\n')\n">>.
 
 prefix() ->
   <<>>.
