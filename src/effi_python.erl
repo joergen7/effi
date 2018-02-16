@@ -33,7 +33,19 @@
 %%====================================================================
 
 % effi callbacks
--export( [get_extended_script/4, run_extended_script/2] ).
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          end_of_transmission/0,
+          suffix/0,
+          process_script/1,
+          run_extended_script/2] ).
 
 
 %%====================================================================
@@ -46,82 +58,6 @@
 %% Effi callback function implementations
 %%====================================================================
 
--spec get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
-        binary()
-when ArgTypeLst :: [#{ atom() => _ }],
-     RetTypeLst :: [#{ atom() => _ }],
-     Script     :: binary(),
-     ArgBindLst :: [#{ atom() => _ }].
-
-get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst )
-when is_list( ArgTypeLst ),
-     is_list( RetTypeLst ),
-     is_binary( Script ),
-     is_list( ArgBindLst ) ->
-
-  Bind =
-    fun( #{ arg_name := ArgName, value := Value }, B ) ->
-
-      TypeInfo = effi:get_type_info( ArgName, ArgTypeLst ),
-      #{ arg_type := ArgType, is_list := IsList } = TypeInfo,
-
-      % TODO: cases missing
-      case IsList of
-
-        false ->
-          case ArgType of
-            <<"Str">> ->
-              X = bind_singleton_string( ArgName, Value ),
-              <<B/binary, X/binary>>
-          end
-
-      end
-    end,
-
-  Echo =
-    fun( TypeInfo, B ) ->
-
-      #{ arg_name := ArgName, arg_type := ArgType, is_list := IsList } = TypeInfo,
-
-      % TODO: cases missing
-      case IsList of
-
-        false ->
-          case ArgType of
-
-            <<"Str">> ->
-              X = echo_singleton_string( ArgName ),
-              <<B/binary, X/binary>>;
-
-            <<"Bool">> ->
-              X = echo_singleton_boolean( ArgName ),
-              <<B/binary, X/binary>>
-
-          end;
-
-        true ->
-          case ArgType of
-            <<"Str">> ->
-              X = echo_string_list( ArgName ),
-              <<B/binary, X/binary>>
-          end
-
-      end
-    end,
-
-  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
-  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
-  EndOfTransmission = <<"print( '", ?EOT, "' )\n">>,
-
-
-  B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
-  B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
-  B3 = <<"if True:\n ", B2/binary>>,
-
-  <<Binding/binary, "\n",
-    B3/binary, "\n",
-    Echoing/binary, "\n",
-    EndOfTransmission/binary>>.
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
@@ -144,9 +80,8 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
-%%====================================================================
-%% Internal functions
-%%====================================================================
+bind_singleton_boolean( _ArgName, _Value ) ->
+  error( nyi ).
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
 when ArgName :: binary(),
@@ -158,6 +93,19 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, " = '", Value/binary, "'\n">>.
 
+bind_boolean_list( _ArgName, _Value ) ->
+  error( nyi ).
+
+bind_string_list( _ArgName, _Value ) ->
+  error( nyi ).
+
+
+echo_singleton_boolean( ArgName )
+when is_binary( ArgName ) ->
+
+  <<"if ", ArgName/binary, ":\n  print( '", ?MSG, "{\"arg_name\":\"",
+    ArgName/binary, "\",\"value\":\"true\"}\\n' )\nelse:\n  print( '", ?MSG,
+    "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' )\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
 
@@ -168,13 +116,8 @@ when is_binary( ArgName ) ->
     "\",\"value\":\"'+str( ", ArgName/binary, " )+'\"}\\n' )\n">>.
 
 
-echo_singleton_boolean( ArgName )
-when is_binary( ArgName ) ->
-
-  <<"if ", ArgName/binary, ":\n  print( '", ?MSG, "{\"arg_name\":\"",
-    ArgName/binary, "\",\"value\":\"true\"}\\n' )\nelse:\n  print( '", ?MSG,
-    "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' )\n">>.
-
+echo_boolean_list( _ArgName ) ->
+  error( nyi ).
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
 
@@ -184,3 +127,17 @@ when is_binary( ArgName ) ->
   <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
     "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x),", ArgName/binary,
     " ) )+']}\\n')\n">>.
+
+prefix() ->
+  <<>>.
+
+end_of_transmission() ->
+  <<"print( '", ?EOT, "' )\n">>.
+
+suffix() ->
+  <<>>.
+
+process_script( Script ) ->
+  B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
+  B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
+  <<"if True:\n ", B2/binary>>.

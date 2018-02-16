@@ -29,57 +29,31 @@
 -module( effi_bash ).
 -behaviour( effi ).
 
--export( [get_extended_script/4, run_extended_script/2] ).
+% effi callbacks
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          end_of_transmission/0,
+          suffix/0,
+          process_script/1,
+          run_extended_script/2] ).
 
 -include( "effi.hrl" ).
 
--spec get_extended_script(
-            ArgTypeLst     :: [#{ atom() => _ }],
-            RetTypeLst     :: [#{ atom() => _ }],
-            Script         :: binary(),
-            ArgBindLst     :: [#{ atom() => _ }] ) -> binary().
-
-get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst )
-when is_list( ArgTypeLst ),
-     is_list( RetTypeLst ),
-     is_binary( Script ),
-     is_list( ArgBindLst ) ->
-
-  Bind =
-    fun( #{ arg_name := ArgName, value := Value }, B ) ->
-
-      % TODO: handle list values
-      % TODO: handle boolean values
-
-      X = bind_singleton_string( ArgName, Value ),
-      <<B/binary, X/binary>>
-    end,
-
-  Echo =
-    fun( #{ arg_name := ArgName }, B ) ->
-
-      % TODO: handle list return values
-      % TODO: handle boolean return values
-
-      X = echo_singleton_string( ArgName ),
-      <<B/binary, X/binary>>
-    end,
-
-
-  Preamble = <<"set -eu -o pipefail\n">>,
-  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
-  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
-  EndOfTransmission = <<"echo '", ?EOT, "'\n">>,
-
-  <<Preamble/binary, "\n",
-    Binding/binary, "\n",
-    Script/binary, "\n",
-    Echoing/binary, "\n",
-    EndOfTransmission/binary>>.
 
 
 
 
+
+%%====================================================================
+%% Effi callback function implementations
+%%====================================================================
 
 
 -spec run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
@@ -100,10 +74,9 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
+bind_singleton_boolean( _ArgName, _Value ) ->
+  error( nyi ).
 
-%%====================================================================
-%% Internal functions
-%%====================================================================
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
 when ArgName :: binary(),
@@ -115,6 +88,15 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, "='", Value/binary, "'\n">>.
 
+bind_boolean_list( _ArgName, _Value ) ->
+  error( nyi ).
+
+bind_string_list( _ArgName, _Value ) ->
+  error( nyi ).
+
+
+echo_singleton_boolean( _ArgName ) ->
+  error( nyi ).
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
 
@@ -123,3 +105,21 @@ when is_binary( ArgName ) ->
 
   <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.
+
+echo_boolean_list( _ArgName ) ->
+  error( nyi ).
+
+echo_string_list( _ArgName ) ->
+  error( nyi ).
+
+prefix() ->
+  <<"set -eu -o pipefail\n">>.
+
+end_of_transmission() ->
+  <<"echo '", ?EOT, "'\n">>.
+
+suffix() ->
+  <<>>.
+
+process_script( Script ) ->
+  Script.

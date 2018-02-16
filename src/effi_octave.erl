@@ -40,7 +40,19 @@
 %%====================================================================
 
 % effi callbacks
--export( [get_extended_script/4, run_extended_script/2] ).
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          suffix/0,
+          end_of_transmission/0,
+          process_script/1,
+          run_extended_script/2] ).
 
 
 %%====================================================================
@@ -52,103 +64,6 @@
 %%====================================================================
 %% Effi callback function implementations
 %%====================================================================
-
--spec get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
-        binary()
-when ArgTypeLst :: [#{ atom() => _ }],
-     RetTypeLst :: [#{ atom() => _ }],
-     Script     :: binary(),
-     ArgBindLst :: [#{ atom() => _ }].
-
-get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst )
-when is_list( ArgTypeLst ),
-     is_list( RetTypeLst ),
-     is_binary( Script ),
-     is_list( ArgBindLst ) ->
-
-  Bind =
-    fun( #{ arg_name := ArgName, value := Value }, B ) ->
-
-      TypeInfo = effi:get_type_info( ArgName, ArgTypeLst ),
-      #{ arg_type := ArgType, is_list := IsList } = TypeInfo,
-
-      X = 
-        case IsList of
-
-          false ->
-            case ArgType of
-
-              <<"Bool">> ->
-                bind_singleton_boolean( ArgName, Value );
-  
-              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-                bind_singleton_string( ArgName, Value )
-
-            end;
-
-          true ->
-            case ArgType of
-
-              <<"Bool">> ->
-                bind_boolean_list( ArgName, Value );
-
-              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-                bind_string_list( ArgName, Value )
-
-            end
-
-        end,
-
-      <<B/binary, X/binary>>
-    end,
-
-  Echo =
-    fun( TypeInfo, B ) ->
-
-      #{ arg_name := ArgName, arg_type := ArgType, is_list := IsList } = TypeInfo,
-
-      X =
-        case IsList of
-
-          false ->
-            case ArgType of
-
-              <<"Bool">> ->
-                echo_singleton_boolean( ArgName );
-
-              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-                echo_singleton_string( ArgName )
-
-            end;
-
-          true ->
-            case ArgType of
-
-              <<"Bool">> ->
-                echo_boolean_list( ArgName );
-
-              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
-                echo_string_list( ArgName )
-
-            end
-
-        end,
-
-      <<B/binary, X/binary>>
-
-    end,
-
-  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
-  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
-  EndOfTransmission = <<"display( '", ?EOT, "' )\n">>,
-
-  <<"try\n", "\n",
-    Binding/binary, "\n",
-    Script/binary, "\n",
-    Echoing/binary, "\n",
-    EndOfTransmission/binary, "\n",
-    "catch e\n  display( e );\n  exit( -1 );\nend\n">>.
-
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
           {ok, binary(), [#{ atom() => _ }]}
@@ -169,10 +84,6 @@ when is_binary( ExtendedScript ),
 
   effi:listen_port( Port ).
 
-
-%%====================================================================
-%% Internal functions
-%%====================================================================
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
 when ArgName :: binary(),
@@ -297,3 +208,14 @@ echo_boolean_list( ArgName ) ->
     "end\n",
     "fprintf( 1, ']}\\n' )\n\n">>.
 
+end_of_transmission() ->
+  <<"display( '", ?EOT, "' )\n">>.
+
+prefix() ->
+  <<"try\n">>.
+
+suffix() ->
+  <<"catch e\n  display( e );\n  exit( -1 );\nend\n">>.
+
+process_script( Script ) ->
+  Script.

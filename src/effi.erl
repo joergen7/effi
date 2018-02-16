@@ -68,11 +68,41 @@
 %% Callbacks
 %%====================================================================
 
--callback get_extended_script(
-            ArgTypeLst :: [#{ atom() => _ }],
-            RetTypeLst :: [#{ atom() => _ }],
-            Script     :: binary(),
-            ArgBindLst :: [#{ atom() => _ }] ) -> binary().
+-callback bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
+  binary().
+
+-callback bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
+  binary().
+
+-callback bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
+
+-callback bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
+
+-callback echo_singleton_boolean( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_singleton_string( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_boolean_list( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_string_list( ArgName :: binary() ) ->
+  binary().
+
+-callback prefix() ->
+  binary().
+
+-callback end_of_transmission() ->
+  binary().
+
+-callback suffix() ->
+  binary().
+
+-callback process_script( Script :: binary() ) ->
+  binary().
 
 -callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
     {ok, binary(), [#{ atom() => _ }]}
@@ -180,8 +210,8 @@ handle_request( Request, Dir ) ->
   LangMod = get_lang_mod( Lang ),
 
   % compute extended script
-  ExtendedScript = LangMod:get_extended_script( ArgTypeLst, RetTypeLst, Script,
-                                                ArgBindLst ),
+  ExtendedScript = get_extended_script( LangMod, ArgTypeLst, RetTypeLst, Script,
+                                        ArgBindLst ),
 
   % determine start time
   TStart = os:system_time(),
@@ -377,3 +407,106 @@ when is_port( Port ),
 
 
 
+-spec get_extended_script( Mod, ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
+        binary()
+when Mod        :: atom(),
+     ArgTypeLst :: [#{ atom() => _ }],
+     RetTypeLst :: [#{ atom() => _ }],
+     Script     :: binary(),
+     ArgBindLst :: [#{ atom() => _ }].
+
+get_extended_script( Mod, ArgTypeLst, RetTypeLst, Script, ArgBindLst )
+when is_atom( Mod ),
+     is_list( ArgTypeLst ),
+     is_list( RetTypeLst ),
+     is_binary( Script ),
+     is_list( ArgBindLst ) ->
+
+  Bind =
+    fun( #{ arg_name := ArgName, value := Value }, B ) ->
+
+      TypeInfo = get_type_info( ArgName, ArgTypeLst ),
+      #{ arg_type := ArgType,
+         is_list  := IsList } = TypeInfo,
+
+      X = 
+        case IsList of
+
+          false ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:bind_singleton_boolean( ArgName, Value );
+  
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:bind_singleton_string( ArgName, Value )
+
+            end;
+
+          true ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:bind_boolean_list( ArgName, Value );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:bind_string_list( ArgName, Value )
+
+            end
+
+        end,
+
+      <<B/binary, X/binary>>
+    end,
+
+  Echo =
+    fun( TypeInfo, B ) ->
+
+      #{ arg_name := ArgName,
+         arg_type := ArgType,
+         is_list  := IsList } = TypeInfo,
+
+      X =
+        case IsList of
+
+          false ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:echo_singleton_boolean( ArgName );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:echo_singleton_string( ArgName )
+
+            end;
+
+          true ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:echo_boolean_list( ArgName );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:echo_string_list( ArgName )
+
+            end
+
+        end,
+
+      <<B/binary, X/binary>>
+
+    end,
+
+  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
+  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+  EndOfTransmission = Mod:end_of_transmission(),
+  Prefix = Mod:prefix(),
+  Suffix = Mod:suffix(),
+  Script1 = Mod:process_script( Script ),
+
+  <<Prefix, "\n",
+    Binding/binary, "\n",
+    Script1/binary, "\n",
+    Echoing/binary, "\n",
+    EndOfTransmission/binary, "\n",
+    Suffix/binary, "\n">>.

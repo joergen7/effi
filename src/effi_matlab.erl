@@ -40,7 +40,19 @@
 %%====================================================================
 
 % effi callbacks
--export( [get_extended_script/4, run_extended_script/2] ).
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          end_of_transmission/0,
+          suffix/0,
+          process_script/1,
+          run_extended_script/2] ).
 
 
 %%====================================================================
@@ -53,21 +65,42 @@
 %% Effi callback function implementations
 %%====================================================================
 
--spec get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
-        binary()
-when ArgTypeLst :: [#{ atom() => _ }],
-     RetTypeLst :: [#{ atom() => _ }],
-     Script     :: binary(),
-     ArgBindLst :: [#{ atom() => _ }].
+bind_singleton_boolean( ArgName, Value ) ->
+  effi_octave:bind_singleton_boolean( ArgName, Value ).
 
-get_extended_script( ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
+bind_singleton_string( Argname, Value ) ->
+  effi_octave:bind_singleton_string( Argname, Value ).
 
-  B = effi_octave:get_extended_script( ArgTypeLst,
-                                       RetTypeLst,
-                                       Script,
-                                       ArgBindLst ),
+bind_boolean_list( ArgName, Value ) ->
+  effi_octave:bind_boolean_list( ArgName, Value ).
 
-  <<B/binary, "exit( 0 );\n">>.
+bind_string_list( ArgName, Value ) ->
+  effi_octave:bind_string_list( ArgName, Value ).
+
+echo_singleton_boolean( ArgName ) ->
+  effi_octave:echo_singleton_boolean( ArgName ).
+
+echo_singleton_string( ArgName ) ->
+  effi_octave:echo_singleton_string( ArgName ).
+
+echo_boolean_list( ArgName ) ->
+  effi_octave:echo_boolean_list( ArgName ).
+
+echo_string_list( ArgName ) ->
+  effi_octave:echo_string_list( ArgName ).
+
+prefix() ->
+  effi_octave:prefix().
+
+end_of_transmission() ->
+  effi_octave:end_of_transmission().
+
+suffix() ->
+  Suffix = effi_octave:suffix(),
+  <<Suffix/binary, "exit( 0 );\n">>.
+
+process_script( Script ) ->
+  effi_octave:process_script( Script ).
 
 
 -spec run_extended_script( ExtendedScript, Dir ) ->
