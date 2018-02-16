@@ -144,7 +144,7 @@ echo_string_list( ArgName )
 when is_binary( ArgName ) ->
 
   <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+','.join( map( lambda x: '\"true\" if x else \"false\", ",
+    "\",\"value\":['+','.join( map( lambda x: '\"true\"' if x else '\"false\"', ",
     ArgName/binary, " ) )+']}\\n')\n">>.
 
 prefix() ->
