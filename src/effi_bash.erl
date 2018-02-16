@@ -74,8 +74,13 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
-bind_singleton_boolean( _ArgName, _Value ) ->
-  error( nyi ).
+bind_singleton_boolean( ArgName, <<"true">> )
+when is_binary( ArgName ) ->
+  <<ArgName/binary, "=true\n">>;
+
+bind_singleton_boolean( ArgName, <<"false">> )
+when is_binary( ArgName ) ->
+  <<ArgName/binary, "=\n">>.
 
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
