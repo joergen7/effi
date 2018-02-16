@@ -119,11 +119,26 @@ when is_binary( ArgName ) ->
   <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.
 
-echo_boolean_list( _ArgName ) ->
-  error( nyi ).
+echo_boolean_list( ArgName ) ->
+  B = echo_string_list( ArgName ),
+  <<"for x in ${", ArgName/binary, "[@]}\n",
+    "do\n",
+    "  if [ $x != 'true' ]\n",
+    "  then\n",
+    "    if [ $x != 'false' ]\n",
+    "    then\n",
+    "      echo non-Boolean value in ", ArgName/binary, "\n",
+    "      exit -1\n",
+    "    fi\n",
+    "  fi\n",
+    "done\n",
+    B/binary>>.
 
-echo_string_list( _ArgName ) ->
-  error( nyi ).
+echo_string_list( ArgName ) ->
+  <<"TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
+    "TMP=${TMP:1}\n",
+    "echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":[$TMP]}\"\n\n">>.
 
 prefix() ->
   <<"set -eu -o pipefail\n">>.
