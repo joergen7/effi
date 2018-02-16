@@ -133,19 +133,17 @@ when is_binary( ArgName ) ->
 
 
 echo_boolean_list( ArgName ) ->
-
   <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x), ", ArgName/binary,
-    " ) )+']}\\n')\n">>.
+    "\",\"value\":['+','.join( map( lambda x: '\"true\"' if x else '\"false\"', ",
+    ArgName/binary, " ) )+']}\\n')\n">>.
 
 -spec echo_string_list( ArgName :: binary() ) -> binary().
 
 echo_string_list( ArgName )
 when is_binary( ArgName ) ->
-
   <<"print( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+','.join( map( lambda x: '\"true\"' if x else '\"false\"', ",
-    ArgName/binary, " ) )+']}\\n')\n">>.
+    "\",\"value\":['+','.join( map( lambda x: '\"%s\"'%(x), ", ArgName/binary,
+    " ) )+']}\\n')\n">>.
 
 prefix() ->
   <<>>.
