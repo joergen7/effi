@@ -504,7 +504,7 @@ when is_atom( Mod ),
   Suffix = Mod:suffix(),
   Script1 = Mod:process_script( Script ),
 
-  <<Prefix, "\n",
+  <<Prefix/binary, "\n",
     Binding/binary, "\n",
     Script1/binary, "\n",
     Echoing/binary, "\n",
