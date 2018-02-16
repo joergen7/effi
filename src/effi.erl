@@ -221,7 +221,13 @@ handle_request( Request, Dir ) ->
     case LangMod:run_extended_script( ExtendedScript, Dir ) of
 
       {ok, _Output, RetBindLst} ->
+
+        % determine duration
+        Duration = os:system_time()-TStart,
+
         #{ status       => <<"ok">>,
+           stat         => #{ t_start  => integer_to_binary( TStart ),
+                              duration => integer_to_binary( Duration ) },
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->
@@ -232,13 +238,8 @@ handle_request( Request, Dir ) ->
 
     end,
 
-  % determine duration
-  Duration = os:system_time()-TStart,
-
   % create reply data structure
   #{ app_id          => AppId,
-     stat            => #{ t_start  => integer_to_binary( TStart ),
-                           duration => integer_to_binary( Duration ) },
      result          => Result }.
 
 
