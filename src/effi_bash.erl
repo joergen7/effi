@@ -74,13 +74,10 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
-bind_singleton_boolean( ArgName, <<"true">> )
-when is_binary( ArgName ) ->
-  <<ArgName/binary, "=true\n">>;
-
-bind_singleton_boolean( ArgName, <<"false">> )
-when is_binary( ArgName ) ->
-  <<ArgName/binary, "=\n">>.
+bind_singleton_boolean( ArgName, Value )
+when is_binary( ArgName ),
+     is_binary( Value ) ->
+  <<ArgName/binary, "='", Value/binary, "'\n">>.
 
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
@@ -93,15 +90,26 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, "='", Value/binary, "'\n">>.
 
-bind_boolean_list( _ArgName, _Value ) ->
-  error( nyi ).
+bind_boolean_list( ArgName, Value )
+  bind_string_list( ArgName, Value ).
 
-bind_string_list( _ArgName, _Value ) ->
-  error( nyi ).
+bind_string_list( ArgName, Value )
+when is_binary( ArgName ),
+     is_list( Value ) ->
+  SLst = ["'"++binary_to_list( V )++"'" || V <- Value],
+  S = string:join( SLst, " " ),
+  B = list_to_binary( S ),
+  <<ArgName/binary, "=(", B/binary, ")\n">>.
+  
 
 
-echo_singleton_boolean( _ArgName ) ->
-  error( nyi ).
+echo_singleton_boolean( ArgName ) ->
+  <<"if [ ", ArgName/binary, " == 'true' ]\n",
+    "then\n",
+    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"true\"}'\n",
+    "else\n",
+    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}'\n",
+    "fi\n\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
 
