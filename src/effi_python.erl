@@ -108,12 +108,12 @@ bind_boolean_list( ArgName, Value ) ->
 
   S = string:join( [F( V ) || V <- Value], "," ),
   B = list_to_binary( S ),
-  <<ArgName/binary, " = [", B, "]\n">>.
+  <<ArgName/binary, " = [", B/binary, "]\n">>.
 
 bind_string_list( ArgName, Value ) ->
   S = string:join( ["'"++binary_to_list( V )++"'" || V <- Value], "," ),
   B = list_to_binary( S ),
-  <<ArgName/binary, " = [", B, "]\n">>.
+  <<ArgName/binary, " = [", B/binary, "]\n">>.
 
 
 echo_singleton_boolean( ArgName )
