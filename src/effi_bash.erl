@@ -1,8 +1,8 @@
 %% -*- erlang -*-
 %%
-%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%% Effi: Erlang Foreign Function Interface
 %%
-%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%% Copyright 2015-2018 Jörgen Brandt
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -15,63 +15,139 @@
 %% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
-
-%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
+%%
+%% -------------------------------------------------------------------
+%% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
+%% @version 0.1.4
+%% @copyright 2015-2018 Jörgen Brandt
+%%
+%%
+%% @end
+%% -------------------------------------------------------------------
 
 
 -module( effi_bash ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
+-behaviour( effi ).
 
--behaviour( effi_lang ).
-
+% effi callbacks
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          end_of_transmission/0,
+          suffix/0,
+          process_script/1,
+          run_extended_script/2] ).
 
 -include( "effi.hrl" ).
 
-%% ------------------------------------------------------------
-%% Callback exports
-%% ------------------------------------------------------------
-
--export( [create_port/2, assignment/3, dismissal/2, process/1, prefix/0,
-          suffix/0] ).
 
 
-%% ------------------------------------------------------------
-%% Callback functions
-%% ------------------------------------------------------------
 
 
-create_port( Script, Dir )
-when is_binary( Script ),
+
+%%====================================================================
+%% Effi callback function implementations
+%%====================================================================
+
+
+-spec run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+    {ok, binary(), [#{ atom() => _ }]}
+  | {error, binary()}.
+
+run_extended_script( ExtendedScript, Dir )
+when is_binary( ExtendedScript ),
      is_list( Dir ) ->
-  effi_port:create_interact_port( Script, Dir, "bash" ).
+
+  ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
+  Call = "bash __script.sh",
+
+  ok = file:write_file( ScriptFile, ExtendedScript ),
+
+  Port = effi:create_port( Call, Dir ),
+
+  effi:listen_port( Port ).
 
 
-prefix() -> <<"set -eu -o pipefail">>.
-
-
-suffix() -> <<"exit">>.
-
-assignment( Name, false, [Value] )
-when is_binary( Name ),
+bind_singleton_boolean( ArgName, Value )
+when is_binary( ArgName ),
      is_binary( Value ) ->
-  <<Name/binary, $=, $", Value/binary, $" , $\n>>;
+  <<ArgName/binary, "='", Value/binary, "'\n">>.
 
-assignment( Name, true, ValueLst )
-when is_binary( Name ),
-     is_list( ValueLst ) ->
-  X = list_to_binary( string:join( [[$", V, $"] || V <- ValueLst], " " ) ),
-  <<Name/binary, "=(", X/binary, ")\n">>.
 
-dismissal( OutName, false )
-when is_binary( OutName ) ->
-  <<"echo \"", ?MSG, "{\\\"", OutName/binary, "\\\":[\\\"$", OutName/binary,
-    "\\\"]}.\"\n">>;
+-spec bind_singleton_string( ArgName, Value ) -> binary()
+when ArgName :: binary(),
+     Value   :: binary().
 
-dismissal( OutName, true )
-when is_binary( OutName ) ->
-  <<"TMP=`printf \",\\\"%s\\\"\" ${", OutName/binary,
-    "[@]}`\nTMP=${TMP:1}\necho \"", ?MSG, "{\\\"", OutName/binary,
-    "\\\":[$TMP]}.\"\n">>.
+bind_singleton_string( ArgName, Value )
+when is_binary( ArgName ),
+     is_binary( Value ) ->
 
-process( Script ) -> binary:replace( Script, <<$\r>>, <<"">>, [global] ).
+  <<ArgName/binary, "='", Value/binary, "'\n">>.
 
+bind_boolean_list( ArgName, Value ) ->
+  bind_string_list( ArgName, Value ).
+
+bind_string_list( ArgName, Value )
+when is_binary( ArgName ),
+     is_list( Value ) ->
+  SLst = ["'"++binary_to_list( V )++"'" || V <- Value],
+  S = string:join( SLst, " " ),
+  B = list_to_binary( S ),
+  <<ArgName/binary, "=(", B/binary, ")\n">>.
+  
+
+
+echo_singleton_boolean( ArgName ) ->
+  <<"if [ $", ArgName/binary, " == 'true' ]\n",
+    "then\n",
+    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"true\"}'\n",
+    "else\n",
+    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}'\n",
+    "fi\n\n">>.
+
+-spec echo_singleton_string( ArgName :: binary() ) -> binary().
+
+echo_singleton_string( ArgName )
+when is_binary( ArgName ) ->
+
+  <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.
+
+echo_boolean_list( ArgName ) ->
+  B = echo_string_list( ArgName ),
+  <<"for x in ${", ArgName/binary, "[@]}\n",
+    "do\n",
+    "  if [ $x != 'true' ]\n",
+    "  then\n",
+    "    if [ $x != 'false' ]\n",
+    "    then\n",
+    "      echo non-Boolean value in ", ArgName/binary, "\n",
+    "      exit -1\n",
+    "    fi\n",
+    "  fi\n",
+    "done\n",
+    B/binary>>.
+
+echo_string_list( ArgName ) ->
+  <<"TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
+    "TMP=${TMP:1}\n",
+    "echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":[$TMP]}\"\n\n">>.
+
+prefix() ->
+  <<"set -eu -o pipefail\n">>.
+
+end_of_transmission() ->
+  <<"echo '", ?EOT, "'\n">>.
+
+suffix() ->
+  <<>>.
+
+process_script( Script ) ->
+  Script.

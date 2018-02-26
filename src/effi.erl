@@ -1,8 +1,8 @@
 %% -*- erlang -*-
 %%
-%% Cuneiform: A Functional Language for Large Scale Scientific Data Analysis
+%% Erlang foreign function interface.
 %%
-%% Copyright 2016 Jörgen Brandt, Marc Bux, and Ulf Leser
+%% Copyright 2015-2018 Jörgen Brandt
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -15,172 +15,290 @@
 %% WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
-
+%%
+%% -------------------------------------------------------------------
+%% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
+%% @version 0.1.4
+%% @copyright 2015-2018 Jörgen Brandt
+%%
 %% @doc The standalone application entry point is {@link main/1}. 
 %% The create_port callback defined here is an abstract way to execute child 
 %% processes in foreign languages. 
 %% There are two foreign language interfaces, both implementing this callback,
 %% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
 %% Bash, R).
-
-%% @author Jorgen Brandt <brandjoe@hu-berlin.de>
+%%
+%% @end
+%% -------------------------------------------------------------------
 
 
 -module( effi ).
--author( "Jorgen Brandt <brandjoe@hu-berlin.de>" ).
 
-%% ------------------------------------------------------------
+
+%%====================================================================
+%% Exports
+%%====================================================================
+
+% handle_request function
+-export( [handle_request/2] ).
+
+% helper functions for implementing effi modules
+-export( [get_type_info/2, create_port/2, listen_port/1] ).
+
+% escript main functíon
+-export( [main/1] ).
+
+
+%%====================================================================
 %% Includes
-%% ------------------------------------------------------------
+%%====================================================================
 
 -include( "effi.hrl" ).
--include_lib( "cf_lang/include/cf_protcl.hrl" ).
 
--ifdef( TEST ).
--include_lib( "eunit/include/eunit.hrl" ).
--endif.
 
-%% ------------------------------------------------------------
-%% API export
-%% ------------------------------------------------------------
+%%====================================================================
+%% Definitions
+%%====================================================================
 
--export( [check_run/2, main/1] ).
+-define( VSN, "0.1.4" ).
+-define( BUF_SIZE, 1024 ).
 
-%% ------------------------------------------------------------
-%% API functions
-%% ------------------------------------------------------------
 
-%% main/1
-%% @doc Parses command line arguments and processes the request file using
-%% {@link runscript/4}.
--spec main( ArgList::[string()] ) -> ok.
+%%====================================================================
+%% Callbacks
+%%====================================================================
 
-main( [] ) ->
-  print_banner(),
-  print_usage();
+-callback bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
+  binary().
+
+-callback bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
+  binary().
+
+-callback bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
+
+-callback bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
+
+-callback echo_singleton_boolean( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_singleton_string( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_boolean_list( ArgName :: binary() ) ->
+  binary().
+
+-callback echo_string_list( ArgName :: binary() ) ->
+  binary().
+
+-callback prefix() ->
+  binary().
+
+-callback end_of_transmission() ->
+  binary().
+
+-callback suffix() ->
+  binary().
+
+-callback process_script( Script :: binary() ) ->
+  binary().
+
+-callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+    {ok, binary(), [#{ atom() => _ }]}
+  | {error, binary()}.
+
+
+%%====================================================================
+%% Escript main function
+%%====================================================================
+
+%% @doc Parses command line arguments and processes the request file.
+
+-spec main( ArgList :: [string()] ) -> ok.
 
 main( CmdLine ) ->
-  case getopt:parse( get_optspec_lst(), CmdLine ) of
-    {error, {Reason, Data}}     -> error( {Reason, Data} );
-    {ok, {OptList, NonOptList}} ->
-      case lists:member( version, OptList ) of
-        true  -> print_vsn();
-        false ->
-          case lists:member( help, OptList ) of
-            true  ->
-              print_banner(),
-              print_usage();
-            false ->
-              case lists:member( cite, OptList ) of
-                true  -> print_bibtex();
-                false ->
-                  case NonOptList of
-                    [RequestFile, SumFile] ->
-                      {dir, Dir} = lists:keyfind( dir, 1, OptList ),
-                      {refactor, Refactor} = lists:keyfind( refactor, 1, OptList ),
-                      run_script( Dir, Refactor, RequestFile, SumFile );
-                    _ ->
-                      error( {request_and_summary_expected, NonOptList} )
-                  end
-              end
-          end
-      end
+
+  try
+
+    case getopt:parse( get_optspec_lst(), CmdLine ) of
+
+      {error, Reason} -> error( Reason );
+
+      {ok, {OptLst, []}} ->
+
+        % break if version needs to be displayed
+        case lists:member( version, OptLst ) of
+          true  -> throw( version );
+          false -> ok
+        end,
+
+        % break if help needs to be displayed
+        case lists:member( help, OptLst ) of
+          true  -> throw( help );
+          false -> ok
+        end,
+
+        % extract working directory
+        {dir, Dir} = lists:keyfind( dir, 1, OptLst ),
+
+        % extract request input file
+        InputFile =
+          case lists:keyfind( input_file, 1, OptLst ) of
+            false           -> throw( help );
+            {input_file, I} -> I
+          end,
+
+        % extract reply output file
+        OutputFile =
+          case lists:keyfind( output_file, 1, OptLst ) of
+            false            -> throw( help );
+            {output_file, O} -> O
+          end,
+
+
+        % read script from file
+        B =
+          case file:read_file( InputFile ) of
+            {error, R1}     -> error( {R1, InputFile} );
+            {ok, X}         -> X
+          end,
+
+        % parse request
+        Request = jsone:decode( B, [{keys, atom}] ),
+
+        % handle request
+        Reply = handle_request( Request, Dir ),
+
+        % write reply output file
+        case file:write_file( OutputFile, jsone:encode( Reply ) ) of
+          {error, R2} -> error( {R2, OutputFile} );
+          ok          -> ok
+        end
+
+
+    end
+
+  catch
+    throw:version -> print_version();
+    throw:help    -> print_help()
   end.
 
-%% check_run/2
-%% @doc Tries to process a parsed request file (Lam, Fa, R, LibMap) using
-%% {@link run/2} and handles possible failures. Also measures the execution
-%% time. If successful, returns a reply_ok record, otherwise a reply_error
-%% record is generated.
--spec check_run( Submit, Dir ) -> #reply_ok{} | #reply_error{}
-when Submit :: #submit{},
-     Dir    :: string().
+%%====================================================================
+%% API functions
+%%====================================================================
 
-check_run( Submit=#submit{ id       = Id,
-                           app_line = AppLine,
-                           lam_name = LamName,
-                           out_vars = OutVars,
-                           in_vars  = InVars,
-                           arg_map  = ArgMap }, Dir ) ->
+%% @doc Parses a request input file, processes it, and writes the reply output
+%%      file.
+-spec handle_request( Request, Dir ) -> #{ atom() => _ }
+when Request :: #{ atom() => _ },
+     Dir :: string().
+
+handle_request( Request, Dir ) ->
+
+  #{ app_id       := AppId,
+     lambda       := Lambda,
+     arg_bind_lst := ArgBindLst } = Request,
+
+  #{ arg_type_lst := ArgTypeLst,
+     ret_type_lst := RetTypeLst,
+     script       := Script,
+     lang         := Lang } = Lambda,
 
 
-  % check pre-conditions
-  PreMissingLst = check_if_file( InVars, ArgMap, Dir ),
+  % determine language module from lambda
+  LangMod = get_lang_mod( Lang ),
 
-  case PreMissingLst of
-    [_|_] ->
-      Msg1 = list_to_binary(
-              io_lib:format( "Pre-condition not met: ~s",
-                             [string:join( [binary_to_list( M ) || M <- PreMissingLst], ", " )] ) ),
-      #reply_error{ id=Id, app_line=AppLine, lam_name=LamName, output=Msg1 };
-    [] ->
+  % compute extended script
+  ExtendedScript = get_extended_script( LangMod, ArgTypeLst, RetTypeLst, Script,
+                                        ArgBindLst ),
 
-      % run
-      Reply = run( Submit, Dir ),
+  % determine start time
+  TStart = os:system_time(),
 
-      case Reply of
-        #reply_error{} -> Reply;
-        #reply_ok{ result_map=ResultMap } ->
+  % run extended script
+  Result =
+    case LangMod:run_extended_script( ExtendedScript, Dir ) of
 
-          % check post-conditions
-          PostMissingLst = check_if_file( OutVars, ResultMap, Dir ),
+      {ok, _Output, RetBindLst} ->
 
-          case PostMissingLst of
-            [_|_] ->
-              Msg2 = list_to_binary(
-                       io_lib:format( "Post-condition not met: ~s",
-                                      [string:join( [binary_to_list( M ) || M <- PostMissingLst], ", " )] ) ),
+        % determine duration
+        Duration = os:system_time()-TStart,
 
-              #reply_error{ id=Id, app_line=AppLine, lam_name=LamName,
-                            output=Msg2 };
-            [] ->
-              Reply
-          end
-      end
+        #{ status       => <<"ok">>,
+           stat         => #{ t_start  => integer_to_binary( TStart ),
+                              duration => integer_to_binary( Duration ) },
+           ret_bind_lst => RetBindLst };
+
+      {error, Output} ->
+        #{ status          => <<"error">>,
+           stage           => <<"run">>,
+           extended_script => ExtendedScript,
+           output          => Output }
+
+    end,
+
+  % create reply data structure
+  #{ app_id          => AppId,
+     result          => Result }.
+
+
+-spec get_type_info( ArgName, TypeLst ) -> #{ atom() => _ }
+when ArgName :: binary(),
+     TypeLst :: [#{ atom() => _ }].
+
+get_type_info( _ArgName, [] ) ->
+  error( type_undefined );
+
+get_type_info( ArgName, [H = #{ arg_name := N }|T] )
+when is_binary( ArgName ),
+     is_binary( N ),
+     is_list( T ) ->
+
+  case N of
+    ArgName -> H;
+    _       -> get_type_info( ArgName, T )
   end.
+
+
+-spec create_port( Call, Dir ) -> port()
+when Call :: string(),
+     Dir  :: string().
+
+create_port( Call, Dir )
+when is_list( Call ),
+     is_list( Dir ) ->
+
+  open_port( {spawn, Call},
+             [exit_status,
+              stderr_to_stdout,
+              binary,
+              {cd, Dir},
+              {line, ?BUF_SIZE}] ).
+
+
+-spec listen_port( Port :: port() ) -> 
+          {ok, binary(), [#{atom() => binary()}]}
+        | {error, binary()}.
+
+listen_port( Port ) ->
+  listen_port( Port, <<>>, <<>>, [], false ).
+
+%%====================================================================
+%% Internal functions
+%%====================================================================
 
 %% opt_spec_list/0
 %% @doc Returns the command line parameters that effi can parse, in a format that the getopt module understands. 
 get_optspec_lst() ->
   [
-   {version,  $v, "version",  undefined,         "Show Effi version"},
-   {help,     $h, "help",     undefined,         "Show command line options"},
-   {cite,     $c, "cite",     undefined,         "Show Bibtex entry for citation"},
-   {dir,      $d, "dir",      {string, "."},     "Working directory"},
-   {refactor, $r, "refactor", {boolean, false},  "Refactor output files"}
+   {version,     $v, "version",     undefined,     "Show effi version."},
+   {help,        $h, "help",        undefined,     "Show command line options."},
+   {dir,         $d, "dir",         {string, "."}, "Working directory in which to look for input data and run the request."},
+   {input_file,  $i, "input_file",  string,        "Input file holding the effi request (must be specified)."},
+   {output_file, $o, "output_file", string,        "Output file into which to write the effi reply (must be specified)."}
   ].
 
-%% ------------------------------------------------------------
-%% Internal functions
-%% ------------------------------------------------------------
-
-%% print_usage/0
-%
-print_usage() -> getopt:usage( get_optspec_lst(), "effi", "<requestfile> <summaryfile>" ).
-
-%% print_bibtex_entry/0
-%
-print_bibtex() -> io:format( "~n~s~n~n", [get_bibtex()] ).
-
-%% get_bibtex/0
-%
-get_bibtex() ->
-  string:join( ["@InProceedings{Brandt2015,",
-         "  Title                    = {Cuneiform: A Functional Language for Large Scale Scientific Data Analysis},",
-         "  Author                   = {Brandt, J{\"o}rgen and Bux, Marc and Leser, Ulf},",
-         "  Booktitle                = {Proceedings of the Workshops of the EDBT/ICDT},",
-         "  Year                     = {2015},",
-         "  Address                  = {Brussels, Belgium},",
-         "  Month                    = {March},",
-         "  Pages                    = {17--26},",
-         "  Volume                   = {1330},",
-         "  Abstract                 = {The need to analyze massive scientific data sets on the one hand and the availability of distributed compute resources with an increasing number of CPU cores on the other hand have promoted the development of a variety of languages and systems for parallel, distributed data analysis. Among them are data-parallel query languages such as Pig Latin or Spark as well as scientific workflow languages such as Swift or Pegasus DAX. While data-parallel query languages focus on the exploitation of data parallelism, scientific workflow languages focus on the integration of external tools and libraries. However, a language that combines easy integration of arbitrary tools, treated as black boxes, with the ability to fully exploit data parallelism does not exist yet. Here, we present Cuneiform, a novel language for large-scale scientific data analysis. We highlight its functionality with respect to a set of desirable features for such languages, introduce its syntax and semantics by example, and show its flexibility and conciseness with use cases, including a complex real-life workflow from the area of genome research. Cuneiform scripts are executed dynamically on the workflow execution platform Hi-WAY which is based on Hadoop YARN. The language Cuneiform, including tool support for programming, workflow visualization, debugging, logging, and provenance-tracing, and the parallel execution engine Hi-WAY are fully implemented.},",
-         "  Doi                      = {10.13140/RG.2.1.3547.6561},",
-         "  Url                      = {http://ceur-ws.org/Vol-1330/paper-03.pdf}",
-         "}"], "\n" ).
-
-print_banner() ->
-  io:format( "~s~n~n", [get_banner()] ).
 
 get_banner() ->
   string:join( [
@@ -190,158 +308,53 @@ get_banner() ->
       "  _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the",
       "  ^^^^^  P qF  `     function's arguments, body and output values.",
       "",
-      "Copyright 2016 Jorgen Brandt <brandjoe@hu-berlin.de>"
+      "Copyright 2015-2018 Jorgen Brandt <joergen.brandt@onlinehome.de>"
 
     ], "\n" ).
 
-%% print_vsn/0
-%
-print_vsn() -> io:format( "~s build ~s~n", [?VSN, ?BUILD] ).
+
+print_help() ->
+  io:format( "~s~n~n", [get_banner()] ),
+  getopt:usage( get_optspec_lst(), "effi" ),
+  timer:sleep( 10 ),
+  io:format( "~nThe input_file and output_file arguments must be specified.~n~n" ).
 
 
-%% run_script/4
-%% @doc Parses a request file, processes it using {@link check_run/6} and writes
-%% a summary to a file.
--spec run_script( Dir, Refactor, RequestFile, SumFile ) -> ok
-when Dir              :: string(),
-     Refactor         :: boolean(),
-     RequestFile      :: string(),
-     SumFile          :: string().
-
-run_script( Dir, Refactor, RequestFile, SumFile ) ->
-
-  % read script from file
-  B = case file:read_file( RequestFile ) of
-        {error, R1} -> error( {R1, RequestFile} );
-        {ok, X}     -> X
-      end,
-
-  % parse request
-  Submit = cf_protcl:decode( submit, B ),
+print_version() ->
+  io:format( "application: effi ~s~n", [?VSN] ).
 
 
-  % run script
-  Reply = check_run( Submit, Dir ),
+-spec get_lang_mod( B :: binary() ) -> atom().
 
-  % refactor if necessary
-  Reply1 = case Reply of
-    #reply_ok{} ->
-      case Refactor of
-        false -> Reply;
-        true  ->
-          #reply_ok{ id=Id, result_map=ResultMap } = Reply,
-          #submit{ id=Id, out_vars=OutVars } = Submit,
-          {RefactorLst, [], ResultMap1} = lib_refactor:get_refactoring( OutVars,
-            ResultMap, Dir, [Dir], Id ),
-          ok = lib_refactor:apply_refactoring( RefactorLst ),
-          Reply#reply_ok{ result_map=ResultMap1 }
-      end;
-    _ -> Reply
-  end,
-
-  % write summary
-  case file:write_file( SumFile, cf_protcl:encode( Reply1 ) ) of
-    {error, R4} -> error( {R4, SumFile} );
-    ok          -> ok
-  end.
+get_lang_mod( <<"Bash">> )            -> effi_bash;
+get_lang_mod( <<"Matlab">> )          -> effi_matlab;
+get_lang_mod( <<"Python">> )          -> effi_python;
+get_lang_mod( <<"Octave">> )          -> effi_octave;
+get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 
-check_if_file( VarLst, ArgMap, Dir ) ->
-  lists:foldl( fun( Var, Acc ) -> acc_missing( Var, Acc, ArgMap, Dir ) end, [],
-               VarLst ).
+-spec listen_port( Port, LineAcc, Output, RetBindLst, Success ) ->
+          {ok, binary(), [#{atom() => binary()}]}
+        | {error, binary()}
+when Port       :: port(),
+     LineAcc    :: binary(),
+     Output     :: binary(),
+     RetBindLst :: [#{atom() => binary()}],
+     Success    :: boolean().
 
-acc_missing( #{ is_file := false }, Acc, _ArgMap, _Dir ) ->
-  Acc;
-
-acc_missing( #{ name := N, is_file := true }, Acc, ArgMap, Dir ) ->
-  #{ N := V } = ArgMap,
-  lists:foldl( fun( File, AccIn ) ->
-                 acc_file( File, AccIn, Dir )
-               end,
-               Acc, V ).
-
-acc_file( B, Acc, Dir ) ->
-  File = binary_to_list( B ),
-  AbsSrc = string:join( [Dir, File], "/" ),
-  case filelib:is_regular( AbsSrc ) of
-    false -> [B|Acc];
-    true  -> Acc
-  end.
-
-%% run/4
-%% @doc Creates a port and listens to it, i.e., collects and parses the output
-%% from the stdout. Returns a tuple containing a status message (e.g., finished,
-%% failed) a result map and the program output.
-
--spec run( Submit, Dir ) -> Result
-when Submit :: #submit{},
-     Dir    :: string(),
-     Result :: #reply_ok{} | #reply_error{}.
-
-run( Submit=#submit{ out_vars = OutVars,
-                     in_vars  = InVars,
-                     lang     = Lang,
-                     script   = Script,
-                     arg_map  = ArgMap }, Dir )
-when is_list( Dir ) ->
-
-  % the module to call, depends on the language, e.g., effi_python
-  Mod = list_to_atom( "effi_"++atom_to_list( Lang ) ),
-
-  % collect assignments
-  Assign = lists:foldl(
-             fun( #{ is_list := Pl, name := N }, Acc ) ->
-               #{ N := X } = ArgMap,
-               C = Mod:assignment( N, Pl, X ),
-               <<Acc/binary, C/binary, $\n>>
-             end,
-             <<"">>, InVars ),
-
-  % collect dismissals
-  Dismiss = lists:foldl(
-              fun( #{ is_list := Pl, name := N }, Acc ) ->
-                C = Mod:dismissal( N, Pl ),
-                <<Acc/binary, C/binary, $\n>>
-              end,
-              <<"">>, OutVars ),
-
-  Script1 = Mod:process( Script ),
-  Prefix = Mod:prefix(),
-  Suffix = Mod:suffix(),
-
-  ActScript = <<Prefix/binary, $\n, Assign/binary, $\n, Script1/binary, $\n,
-                Dismiss/binary, $\n, Suffix/binary, $\n>>,
-
-  % create port
-  Port = Mod:create_port( ActScript, Dir ),
-
-  % receive result
-  listen_port( Port, Submit, ActScript, <<>>, #{}, <<>> ).
-
-
-%% listen_port/6
-%% @doc Processes the output of the child process (in a foreign language) and
-%% builds a result map from it.
--spec listen_port( Port, Submit, ActScript, LineAcc, ResultAcc, OutAcc ) -> Result
-when Port      :: port(),
-     Submit    :: #submit{},
-     ActScript :: binary(),
-     LineAcc   :: binary(),
-     ResultAcc :: #{binary() => [binary()]},
-     OutAcc    :: binary(),
-     Result    :: #reply_ok{} | #reply_error{}.
-
-listen_port( Port, Submit=#submit{ id       = Id,
-                                   app_line = AppLine,
-                                   lam_name = LamName },
-             ActScript, LineAcc, ResultAcc, OutAcc ) ->
+listen_port( Port, LineAcc, Output, RetBindLst, Success )
+when is_port( Port ),
+     is_binary( LineAcc ),
+     is_binary( Output ),
+     is_list( RetBindLst ),
+     is_boolean( Success ) ->
 
   receive
 
     % no line feed, buffer line and continue
     {Port, {data, {noeol, PartLine}}} ->
       LineAcc1 = <<LineAcc/binary, PartLine/binary>>,
-      listen_port( Port, Submit, ActScript, LineAcc1, ResultAcc, OutAcc );
+      listen_port( Port, LineAcc1, Output, RetBindLst, Success );
 
     % line feed encountered
     {Port, {data, {eol, PartLine}}} ->
@@ -351,71 +364,150 @@ listen_port( Port, Submit=#submit{ id       = Id,
 
       case Line of
 
+        % end of transmission
+        <<?EOT>> ->
+          listen_port( Port, LineAcc, Output, RetBindLst, true );
+          
+
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
 
           % parse line
-          AssocMap = jsone:decode( AssocStr ),
+          RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
 
           % continue
-          listen_port( Port, Submit, ActScript, <<>>, maps:merge( ResultAcc, AssocMap ), OutAcc );
+          listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success );
 
         % line is an ordinary output
         _ ->
 
           % continue
-          listen_port( Port, Submit, ActScript, <<>>, ResultAcc, <<OutAcc/binary, Line/binary>> )
+          listen_port( Port,
+                       <<>>,
+                       <<Output/binary, Line/binary, "\n">>,
+                       RetBindLst,
+                       Success )
 
       end;
 
-    % process succeeded
+    % process succeeded but no end of transmission was received
     {Port, {exit_status, 0}} ->
-
-      #reply_ok{ id=Id, result_map=ResultAcc };
+      case Success of
+        true  -> {ok, Output, RetBindLst};
+        false -> {error, Output}
+      end;
 
     % process failed
     {Port, {exit_status, _}} ->
+      {error, Output}
+      
 
-      #reply_error{ id         = Id,
-                    app_line   = AppLine,
-                    lam_name   = LamName,
-                    act_script = ActScript,
-                    output     = OutAcc };
-
-    % if nothing matches, raise error
-    Msg ->
-      error( {bad_msg, Msg} )
+    % if nothing matches, ignore
 
   end.
 
-%% =============================================================================
-%% Unit Tests
-%% =============================================================================
 
--ifdef( TEST ).
 
-greet_bash_test() ->
+-spec get_extended_script( Mod, ArgTypeLst, RetTypeLst, Script, ArgBindLst ) ->
+        binary()
+when Mod        :: atom(),
+     ArgTypeLst :: [#{ atom() => _ }],
+     RetTypeLst :: [#{ atom() => _ }],
+     Script     :: binary(),
+     ArgBindLst :: [#{ atom() => _ }].
 
-  Script  = <<"out=\"Hello $person\"">>,
-  OutVars = [#{name    => <<"out">>,
-               is_file => false,
-               is_list => false}],
-  InVars  = [#{name    => <<"person">>,
-               is_file => false,
-               is_list => false}],
-  ArgMap  = #{<<"person">> => [<<"Jörgen">>]},
-  Submit  = #submit{ id       = <<"123">>,
-                      app_line = 10,
-                      lam_name = <<"greet">>,
-                      out_vars = OutVars,
-                      in_vars  = InVars,
-                      lang     = bash,
-                      script   = Script,
-                      arg_map  = ArgMap },
-  Dir     = "/tmp",
+get_extended_script( Mod, ArgTypeLst, RetTypeLst, Script, ArgBindLst )
+when is_atom( Mod ),
+     is_list( ArgTypeLst ),
+     is_list( RetTypeLst ),
+     is_binary( Script ),
+     is_list( ArgBindLst ) ->
 
-  Reply = run( Submit, Dir ),
-    
-  ?_assertEqual( #reply_ok{ result_map=#{ <<"out">> => [<<"Hello Jörgen">>] } }, Reply ).
+  Bind =
+    fun( #{ arg_name := ArgName, value := Value }, B ) ->
 
--endif.
+      TypeInfo = get_type_info( ArgName, ArgTypeLst ),
+      #{ arg_type := ArgType,
+         is_list  := IsList } = TypeInfo,
+
+      X = 
+        case IsList of
+
+          false ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:bind_singleton_boolean( ArgName, Value );
+  
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:bind_singleton_string( ArgName, Value )
+
+            end;
+
+          true ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:bind_boolean_list( ArgName, Value );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:bind_string_list( ArgName, Value )
+
+            end
+
+        end,
+
+      <<B/binary, X/binary>>
+    end,
+
+  Echo =
+    fun( TypeInfo, B ) ->
+
+      #{ arg_name := ArgName,
+         arg_type := ArgType,
+         is_list  := IsList } = TypeInfo,
+
+      X =
+        case IsList of
+
+          false ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:echo_singleton_boolean( ArgName );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:echo_singleton_string( ArgName )
+
+            end;
+
+          true ->
+            case ArgType of
+
+              <<"Bool">> ->
+                Mod:echo_boolean_list( ArgName );
+
+              T when T =:= <<"Str">> orelse T =:= <<"File">> ->
+                Mod:echo_string_list( ArgName )
+
+            end
+
+        end,
+
+      <<B/binary, X/binary>>
+
+    end,
+
+  Binding = lists:foldl( Bind, <<>>, ArgBindLst ),
+  Echoing = lists:foldl( Echo, <<>>, RetTypeLst ),
+  EndOfTransmission = Mod:end_of_transmission(),
+  Prefix = Mod:prefix(),
+  Suffix = Mod:suffix(),
+  Script1 = Mod:process_script( Script ),
+
+  <<Prefix/binary, "\n",
+    Binding/binary, "\n",
+    Script1/binary, "\n",
+    Echoing/binary, "\n",
+    EndOfTransmission/binary, "\n",
+    Suffix/binary, "\n">>.
