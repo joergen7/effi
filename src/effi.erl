@@ -227,7 +227,8 @@ handle_request( Request, Dir ) ->
 
         #{ status       => <<"ok">>,
            stat         => #{ t_start  => integer_to_binary( TStart ),
-                              duration => integer_to_binary( Duration ) },
+                              duration => integer_to_binary( Duration ),
+                              node     => atom_to_binary( node(), utf8 ) },
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->

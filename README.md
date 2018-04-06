@@ -129,12 +129,15 @@ The following is an example for an Effi reply:
 
 ```json
 { "app_id":          "1234",
-  "stat":            { "tstart":   "...",
-                       "duration": "..." },
+  "stat":            { "tstart":   "1523007609917834743",
+                       "duration": "30391761645",
+                       "node":     "cf_worker@x240" },
   "result":          { "status":   "ok",
                        "ret_bind_lst": [{ "arg_name": "idx",
                                           "value":    "idx.tar" }] } }
 ```
+
+The start time `tstart` is given in nanoseconds from 1970-01-01 and also the the wall-clock running time `duration` is given in nanoseconds. So the example ran `bowtie2-build` for about 30.4 seconds. The `node` field identifies the Erlang node name of the worker instance that ran the task.
 
 ### Request Format
 
