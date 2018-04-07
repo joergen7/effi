@@ -238,8 +238,7 @@ handle_request( Request, Dir ) ->
   Duration = os:system_time()-TStart,
 
   RunStat = #{ t_start  => integer_to_binary( TStart ),
-               duration => integer_to_binary( Duration ),
-               node     => atom_to_binary( node(), utf8 ) },
+               duration => integer_to_binary( Duration ) },
 
 
   % create reply data structure
