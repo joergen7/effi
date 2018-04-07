@@ -243,7 +243,8 @@ handle_request( Request, Dir ) ->
 
   % create reply data structure
   #{ app_id          => AppId,
-     stat            => #{ run => RunStat },
+     stat            => #{ run  => RunStat,
+                           node => atom_to_binary( node(), utf8 ) },
      result          => Result }.
 
 
