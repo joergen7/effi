@@ -222,13 +222,8 @@ handle_request( Request, Dir ) ->
 
       {ok, _Output, RetBindLst} ->
 
-        % determine duration
-        Duration = os:system_time()-TStart,
 
         #{ status       => <<"ok">>,
-           stat         => #{ t_start  => integer_to_binary( TStart ),
-                              duration => integer_to_binary( Duration ),
-                              node     => atom_to_binary( node(), utf8 ) },
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->
@@ -239,8 +234,17 @@ handle_request( Request, Dir ) ->
 
     end,
 
+  % determine duration
+  Duration = os:system_time()-TStart,
+
+  RunStat = #{ t_start  => integer_to_binary( TStart ),
+               duration => integer_to_binary( Duration ),
+               node     => atom_to_binary( node(), utf8 ) },
+
+
   % create reply data structure
   #{ app_id          => AppId,
+     stat            => #{ run => RunStat },
      result          => Result }.
 
 
