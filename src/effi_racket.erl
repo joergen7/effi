@@ -138,7 +138,7 @@ echo_boolean_list( ArgName ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-  <<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\")]\n",
+  <<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\"))]\n",
     "       [l            (map quote-string ", ArgName/binary, ")]\n",
     "       [s            (string-join l \",\")])\n",
     "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
