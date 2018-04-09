@@ -28,6 +28,38 @@
 -module( effi_racket ).
 -behaviour( effi ).
 
+
+%%====================================================================
+%% Exports
+%%====================================================================
+
+% effi callbacks
+-export( [bind_singleton_boolean/2,
+          bind_singleton_string/2,
+          bind_boolean_list/2,
+          bind_string_list/2,
+          echo_singleton_boolean/1,
+          echo_singleton_string/1,
+          echo_boolean_list/1,
+          echo_string_list/1,
+          prefix/0,
+          end_of_transmission/0,
+          suffix/0,
+          process_script/1,
+          run_extended_script/2] ).
+
+
+%%====================================================================
+%% Includes
+%%====================================================================
+
+-include( "effi.hrl" ).
+
+
+%%====================================================================
+%% Effi callback function implementations
+%%====================================================================
+
 -spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
   binary().
 
@@ -67,7 +99,7 @@ bind_string_list( ArgName, ValueLst ) ->
 
   F =
     fun( X, Acc ) ->
-      <<Acc/binary, " \"", X/binary, "\"">>;
+      <<Acc/binary, " \"", X/binary, "\"">>
     end,
 
   B = lists:foldl( F, <<>>, ValueLst ),
@@ -87,7 +119,7 @@ echo_singleton_boolean( ArgName ) ->
   binary().
 
 echo_singleton_string( ArgName ) ->
-  <<"  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":~s}\\n\" ", ArgName/binary, ")\n">>,
+  <<"(printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":~s}\\n\" ", ArgName/binary, ")\n">>.
 
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
@@ -105,10 +137,11 @@ echo_boolean_list( ArgName ) ->
 -spec echo_string_list( ArgName :: binary() ) ->
   binary().
 
-<<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\")]\n",
-  "       [l            (map quote-string ", ArgName/binary, ")]\n",
-  "       [s            (string-join l \",\")])\n",
-  "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":[~a]}\\n\" s))\n">>.
+echo_string_list( ArgName ) ->
+  <<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\")]\n",
+    "       [l            (map quote-string ", ArgName/binary, ")]\n",
+    "       [s            (string-join l \",\")])\n",
+    "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":[~a]}\\n\" s))\n">>.
 
 
 -spec prefix() ->
