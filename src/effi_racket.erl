@@ -155,7 +155,7 @@ prefix() ->
   binary().
 
 end_of_transmission() ->
-  <<"(printf \"", ?EOT, "\")\n">>.
+  <<"(printf \"", ?EOT, "\\n\")\n">>.
 
 
 -spec suffix() ->
