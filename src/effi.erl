@@ -95,6 +95,9 @@
 -callback prefix() ->
   binary().
 
+% Some programming languages return an exit code 0 even if an exception
+% terminated the program. As an extra safety measure, effi expects a redundant
+% end-of-transmission message and assumes a failure, if it is not received.
 -callback end_of_transmission() ->
   binary().
 
@@ -335,6 +338,7 @@ get_lang_mod( <<"Bash">> )            -> effi_bash;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
 get_lang_mod( <<"Python">> )          -> effi_python;
 get_lang_mod( <<"Octave">> )          -> effi_octave;
+get_lang_mod( <<"Racket">> )          -> effi_racket;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 
