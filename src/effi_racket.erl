@@ -112,14 +112,14 @@ bind_string_list( ArgName, ValueLst ) ->
 
 echo_singleton_boolean( ArgName ) ->
   <<"(if ", ArgName/binary, "\n",
-    "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":\\\"true\\\"}\\n\")\n",
-    "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":\\\"false\\\"}\\n\"))\n">>.
+    "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"true\\\"}\\n\")\n",
+    "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"false\\\"}\\n\"))\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
 
 echo_singleton_string( ArgName ) ->
-  <<"(printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":~s}\\n\" ", ArgName/binary, ")\n">>.
+  <<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":~s}\\n\" ", ArgName/binary, ")\n">>.
 
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
@@ -130,7 +130,7 @@ echo_boolean_list( ArgName ) ->
 <<"(let* ([boolean-to-string (lambda (x) (if x \"\\\"true\\\"\" \"\\\"false\\\"\"))]\n",
   "       [l                 (map boolean-to-string ", ArgName/binary, ")]\n",
   "       [s                 (string-join l \",\")])\n",
-  "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":[~a]}\\n\" s))\n">>.
+  "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
 
 
 
@@ -141,7 +141,7 @@ echo_string_list( ArgName ) ->
   <<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\")]\n",
     "       [l            (map quote-string ", ArgName/binary, ")]\n",
     "       [s            (string-join l \",\")])\n",
-    "  (printf \"", ?MSG, "{\\\"", ArgName/binary, "\\\":[~a]}\\n\" s))\n">>.
+    "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
 
 
 -spec prefix() ->
