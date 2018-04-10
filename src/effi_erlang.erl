@@ -61,8 +61,8 @@
 -spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
   binary().
 
-bind_singleton_boolean( ArgName, <<"true">> ) ->
-  <<ArgName/binary, " = true,\n">>.
+bind_singleton_boolean( ArgName, Value ) ->
+  <<ArgName/binary, " = ", Value/binary, ",\n">>.
 
 
 -spec bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
