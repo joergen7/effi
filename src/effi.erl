@@ -107,6 +107,9 @@
 -callback process_script( Script :: binary() ) ->
   binary().
 
+% Returns either ok or error followed by standard/error output binary. If the
+% run was successful also the return binding list is packaged in the return
+% value.
 -callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
@@ -335,6 +338,7 @@ print_version() ->
 -spec get_lang_mod( B :: binary() ) -> atom().
 
 get_lang_mod( <<"Bash">> )            -> effi_bash;
+get_lang_mod( <<"Erlang">> )          -> effi_erlang;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
 get_lang_mod( <<"Python">> )          -> effi_python;
 get_lang_mod( <<"Octave">> )          -> effi_octave;
