@@ -92,21 +92,21 @@ bind_string_list( ArgName, ValueLst ) ->
 
 echo_singleton_boolean( ArgName ) ->
   <<"io:format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"~p\\\"}\", [", ArgName/binary, "] ),\n">>.
+    "\\\",\\\"value\\\":\\\"~p\\\"}~n\", [", ArgName/binary, "] ),\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
 
 echo_singleton_string( ArgName ) ->
   <<"io:format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"~s\\\"}\", [", ArgName/binary, "] ),\n">>.
+    "\\\",\\\"value\\\":\\\"~s\\\"}~n\", [", ArgName/binary, "] ),\n">>.
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
 
 echo_boolean_list( ArgName ) ->
   <<"io:format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[~s]}\", [string:join( [if V -> \"\\\"true\\\"\"; true -> \"\\\"false\\\"\" end || V <- ",
+    "\\\",\\\"value\\\":[~s]}~n\", [string:join( [if V -> \"\\\"true\\\"\"; true -> \"\\\"false\\\"\" end || V <- ",
     ArgName/binary, "], \", \" )] ),\n">>.
 
 -spec echo_string_list( ArgName :: binary() ) ->
@@ -114,7 +114,7 @@ echo_boolean_list( ArgName ) ->
 
 echo_string_list( ArgName ) ->
   <<"io:format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[~s]}\", string:join( [\"\\\"\"++V++\"\\\"\" || V <- ",
+    "\\\",\\\"value\\\":[~s]}~n\", string:join( [\"\\\"\"++V++\"\\\"\" || V <- ",
     ArgName/binary, "], \", \" )] ),\n">>.
 
 -spec prefix() ->
