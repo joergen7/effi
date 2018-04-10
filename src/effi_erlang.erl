@@ -114,7 +114,7 @@ echo_boolean_list( ArgName ) ->
 
 echo_string_list( ArgName ) ->
   <<"io:format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[~s]}~n\", string:join( [\"\\\"\"++V++\"\\\"\" || V <- ",
+    "\\\",\\\"value\\\":[~s]}~n\", [string:join( [\"\\\"\"++V++\"\\\"\" || V <- ",
     ArgName/binary, "], \", \" )] ),\n">>.
 
 -spec prefix() ->
