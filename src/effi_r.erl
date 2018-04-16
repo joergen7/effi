@@ -113,10 +113,11 @@ bind_string_list( ArgName, ValueLst ) ->
   binary().
 
 echo_singleton_boolean( ArgName ) ->
-  <<"if( ", ArgName/binary, " )\n",
+  <<"if( ", ArgName/binary, " ) {\n",
     "  cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"TRUE\\\"}\\n\", sep=\"\" )\n",
-    "else\n",
-    "  cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"FALSE\\\"}\\n\", sep=\"\" )\n">>.
+    "}\n else {\n",
+    "  cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"FALSE\\\"}\\n\", sep=\"\" )\n",
+    "}\n">>.
 
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
