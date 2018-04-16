@@ -12,9 +12,15 @@ The foreign code snippet along with input variable bindings is given to effi in 
 ## Supported Languages
 
 - [Bash](https://www.gnu.org/software/bash/)
+- [Erlang](http://www.erlang.org/)
+- [Java](https://www.java.com)
 - [Matlab](https://www.mathworks.com/products/matlab.html)
 - [Octave](https://www.gnu.org/software/octave/)
+- [Perl](https://www.perl.org/)
 - [Python](https://www.python.org/)
+- [R](https://www.r-project.org/)
+- [Racket](http://www.racket-lang.org/)
+- [Scala](http://scala-lang.org/)
 
 ## Usage
 

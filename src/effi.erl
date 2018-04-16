@@ -342,6 +342,7 @@ get_lang_mod( <<"Erlang">> )          -> effi_erlang;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
 get_lang_mod( <<"Python">> )          -> effi_python;
 get_lang_mod( <<"Octave">> )          -> effi_octave;
+get_lang_mod( <<"R">> )               -> effi_r;
 get_lang_mod( <<"Racket">> )          -> effi_racket;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
