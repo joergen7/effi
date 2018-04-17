@@ -397,7 +397,7 @@ when is_port( Port ),
             listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success )
 
           catch
-            Reason ->
+            error:Reason ->
               S = io_lib:format( "Cuneiform internal error: could not decode output: ~p~n", [Reason] ),
               B = list_to_binary( S ),
               {error, <<Output, "\n", B/binary>>}
