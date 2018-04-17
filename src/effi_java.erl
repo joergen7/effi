@@ -152,7 +152,7 @@ echo_string_list( ArgName ) ->
 
 prefix() ->
   <<"public class Main {\n",
-    "public static void main( String[] __args ) throws InterruptedException {\n">>.
+    "public static void main( String[] __args ) {\n">>.
 
 
 -spec end_of_transmission() ->
@@ -166,7 +166,7 @@ end_of_transmission() ->
   binary().
 
 suffix() ->
-  <<"System.out.flush();\nThread.sleep( 1000 );\n}\n}\n">>.
+  <<"}\n}\n">>.
 
 
 -spec process_script( Script :: binary() ) ->
@@ -183,7 +183,7 @@ process_script( Script ) ->
 run_extended_script( ExtendedScript, Dir ) ->
 
   ScriptFile = string:join( [Dir, "Main.java"], "/" ),
-  Call = "javac Main.java; java Main",
+  Call = "javac Main.java; java -Xdiag Main",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
