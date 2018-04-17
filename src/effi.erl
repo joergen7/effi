@@ -389,7 +389,11 @@ when is_port( Port ),
         <<?MSG, AssocStr/binary>> ->
 
           % parse line
-          RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
+          try
+            RetBind = jsone:decode( AssocStr, [{keys, atom}] )
+          catch
+            Reason -> {error, <<Output, "\nCuneiform internal error: could not decode output.\n">>}
+          end,
 
           % continue
           listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success );
