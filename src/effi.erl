@@ -203,7 +203,7 @@ when Request :: #{ atom() => _ },
 handle_request( Request, Dir ) ->
 
   %%%%
-  io:format( "~s~n", jsone:encode( Request ) ),
+  io:format( "~s~n", [jsone:encode( Request )] ),
   %%%%
 
   #{ app_id       := AppId,
