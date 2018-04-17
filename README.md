@@ -12,9 +12,14 @@ The foreign code snippet along with input variable bindings is given to effi in 
 ## Supported Languages
 
 - [Bash](https://www.gnu.org/software/bash/)
+- [Erlang](http://www.erlang.org/)
+- [Java](https://www.java.com)
 - [Matlab](https://www.mathworks.com/products/matlab.html)
 - [Octave](https://www.gnu.org/software/octave/)
+- [Perl](https://www.perl.org/)
 - [Python](https://www.python.org/)
+- [R](https://www.r-project.org/)
+- [Racket](http://www.racket-lang.org/)
 
 ## Usage
 
@@ -28,14 +33,14 @@ Although Effi can be imported also directly from GitHub, we recommend adding a d
 To integrate Effi into a rebar3-managed project change the `deps` entry in your application's `rebar.config` file to include the tuple `{effi, "0.1.4"}`.
 
 ```erlang
-{deps, [{effi, "0.1.4"}]}.
+{deps, [{effi, "0.1.5"}]}.
 ```
 
 
 #### mix
 
 ```elixir
-{:effi, "~> 0.1.4"}
+{:effi, "~> 0.1.5"}
 ```
 
 ### Compiling
@@ -128,13 +133,16 @@ Below is an example for an Effi request (an application):
 The following is an example for an Effi reply:
 
 ```json
-{ "app_id":          "1234",
-  "stat":            { "tstart":   "...",
-                       "duration": "..." },
-  "result":          { "status":   "ok",
-                       "ret_bind_lst": [{ "arg_name": "idx",
-                                          "value":    "idx.tar" }] } }
+{ "app_id": "1234",
+  "stat":   { "run":  { "t_start":  "1523007609917834743",
+                        "duration": "30391761645" },
+              "node": "cf_worker@x240" },
+  "result": { "status":       "ok",
+              "ret_bind_lst": [{ "arg_name": "idx",
+                                 "value":    "idx.tar" }] } }
 ```
+
+The start time `tstart` is given in nanoseconds from 1970-01-01 and also the the wall-clock running time `duration` is given in nanoseconds. So the example ran `bowtie2-build` for about 30.4 seconds. The `node` field identifies the Erlang node name of the worker instance that ran the task.
 
 ### Request Format
 

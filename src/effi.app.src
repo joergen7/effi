@@ -1,9 +1,10 @@
 {application, effi,
  [
-  {description, "Erlang foreign function interface."},
-  {vsn, "0.1.4"},
+  {description, "Erlang foreign function interface"},
+  {vsn, "0.1.5"},
   {modules, [
-             effi, effi_bash, effi_matlab, effi_octave, effi_python
+             effi, effi_bash, effi_matlab, effi_octave, effi_python,
+             effi_racket
             ]},
   {registered, []},
   {applications, [

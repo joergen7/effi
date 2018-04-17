@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% Erlang foreign function interface.
+%% Erlang foreign function interface
 %%
 %% Copyright 2015-2018 Jörgen Brandt
 %%
@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 0.1.4
+%% @version 0.1.5
 %% @copyright 2015-2018 Jörgen Brandt
 %%
 %% @doc The standalone application entry point is {@link main/1}. 
@@ -60,7 +60,7 @@
 %% Definitions
 %%====================================================================
 
--define( VSN, "0.1.4" ).
+-define( VSN, "0.1.5" ).
 -define( BUF_SIZE, 1024 ).
 
 
@@ -95,6 +95,9 @@
 -callback prefix() ->
   binary().
 
+% Some programming languages return an exit code 0 even if an exception
+% terminated the program. As an extra safety measure, effi expects a redundant
+% end-of-transmission message and assumes a failure, if it is not received.
 -callback end_of_transmission() ->
   binary().
 
@@ -104,6 +107,9 @@
 -callback process_script( Script :: binary() ) ->
   binary().
 
+% Returns either ok or error followed by standard/error output binary. If the
+% run was successful also the return binding list is packaged in the return
+% value.
 -callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
@@ -222,12 +228,8 @@ handle_request( Request, Dir ) ->
 
       {ok, _Output, RetBindLst} ->
 
-        % determine duration
-        Duration = os:system_time()-TStart,
 
         #{ status       => <<"ok">>,
-           stat         => #{ t_start  => integer_to_binary( TStart ),
-                              duration => integer_to_binary( Duration ) },
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->
@@ -238,8 +240,17 @@ handle_request( Request, Dir ) ->
 
     end,
 
+  % determine duration
+  Duration = os:system_time()-TStart,
+
+  RunStat = #{ t_start  => integer_to_binary( TStart ),
+               duration => integer_to_binary( Duration ) },
+
+
   % create reply data structure
   #{ app_id          => AppId,
+     stat            => #{ run  => RunStat,
+                           node => atom_to_binary( node(), utf8 ) },
      result          => Result }.
 
 
@@ -327,9 +338,14 @@ print_version() ->
 -spec get_lang_mod( B :: binary() ) -> atom().
 
 get_lang_mod( <<"Bash">> )            -> effi_bash;
+get_lang_mod( <<"Erlang">> )          -> effi_erlang;
+get_lang_mod( <<"Java">> )            -> effi_java;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
 get_lang_mod( <<"Python">> )          -> effi_python;
 get_lang_mod( <<"Octave">> )          -> effi_octave;
+get_lang_mod( <<"Perl">> )            -> effi_perl;
+get_lang_mod( <<"R">> )               -> effi_r;
+get_lang_mod( <<"Racket">> )          -> effi_racket;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 
@@ -372,11 +388,21 @@ when is_port( Port ),
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
 
-          % parse line
-          RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
+          try
 
-          % continue
-          listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success );
+            % parse line
+            RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
+
+            % continue
+            listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success )
+
+          catch
+            error:Reason ->
+              S = io_lib:format( "Cuneiform internal error: could not decode output: ~p~n", [Reason] ),
+              B = list_to_binary( S ),
+              {error, <<Output/binary, "\n", B/binary>>}
+          end;
+
 
         % line is an ordinary output
         _ ->
