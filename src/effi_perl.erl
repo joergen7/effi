@@ -139,7 +139,7 @@ echo_boolean_list( ArgName ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-  <<"$TMP = join( \", \", map { \"\\\"$_\\\"\" } );\n",
+  <<"$TMP = join( \", \", map { \"\\\"$_\\\"\" } @", ArgName/binary, " );\n",
     "print \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [$TMP] }\\n\";\n">>.
 
 
