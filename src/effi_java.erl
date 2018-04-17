@@ -105,7 +105,7 @@ bind_string_list( ArgName, ValueLst ) ->
   binary().
 
 echo_singleton_boolean( ArgName ) ->
-  <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ) );\n">>.
+  <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ).append( \"\\\" }\") );\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
