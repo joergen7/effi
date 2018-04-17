@@ -388,15 +388,21 @@ when is_port( Port ),
         % line is a special message
         <<?MSG, AssocStr/binary>> ->
 
-          % parse line
           try
-            RetBind = jsone:decode( AssocStr, [{keys, atom}] )
-          catch
-            Reason -> {error, <<Output, "\nCuneiform internal error: could not decode output.\n">>}
-          end,
 
-          % continue
-          listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success );
+            % parse line
+            RetBind = jsone:decode( AssocStr, [{keys, atom}] ),
+
+            % continue
+            listen_port( Port, <<>>, Output, [RetBind|RetBindLst], Success )
+
+          catch
+            Reason ->
+              S = io_lib:format( "Cuneiform internal error: could not decode output: ~p~n", [Reason] ),
+              B = list_to_binary( S ),
+              {error, <<Output, "\n", B/binary>>}
+          end;
+
 
         % line is an ordinary output
         _ ->
