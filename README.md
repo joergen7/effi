@@ -30,7 +30,7 @@ Although Effi can be imported also directly from GitHub, we recommend adding a d
 
 #### rebar3
 
-To integrate Effi into a rebar3-managed project change the `deps` entry in your application's `rebar.config` file to include the tuple `{effi, "0.1.4"}`.
+To integrate Effi into a rebar3-managed project change the `deps` entry in your application's `rebar.config` file to include the tuple `{effi, "0.1.5"}`.
 
 ```erlang
 {deps, [{effi, "0.1.5"}]}.
