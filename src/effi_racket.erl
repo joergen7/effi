@@ -126,11 +126,10 @@ echo_singleton_string( ArgName ) ->
   binary().
 
 echo_boolean_list( ArgName ) ->
-
-<<"(let* ([boolean-to-string (lambda (x) (if x \"\\\"true\\\"\" \"\\\"false\\\"\"))]\n",
-  "       [l                 (map boolean-to-string ", ArgName/binary, ")]\n",
-  "       [s                 (string-join l \",\")])\n",
-  "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
+  <<"(let* ([boolean-to-string (lambda (x) (if x \"\\\"true\\\"\" \"\\\"false\\\"\"))]\n",
+    "       [l                 (map boolean-to-string ", ArgName/binary, ")]\n",
+    "       [s                 (string-join l \",\")])\n",
+    "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
 
 
 
