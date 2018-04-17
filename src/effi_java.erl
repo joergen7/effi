@@ -183,11 +183,13 @@ process_script( Script ) ->
 run_extended_script( ExtendedScript, Dir ) ->
 
   JavaFile = string:join( [Dir, "Main.java"], "/" ),
-  ScriptFile = string:join( [Dir, "Main.java"], "/" ),
-  ok = file:write_file( "__script.sh", "javac Main.java\njava Main\n" ),
+  ok = file:write_file( JavaFile, ExtendedScript ),
+
+  ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
+  ok = file:write_file( ScriptFile, "javac Main.java\njava Main\n" ),
+
   Call = "bash __script.sh",
 
-  ok = file:write_file( ScriptFile, ExtendedScript ),
 
   Port = effi:create_port( Call, Dir ),
 
