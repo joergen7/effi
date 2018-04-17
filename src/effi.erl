@@ -415,7 +415,7 @@ when is_port( Port ),
     {Port, {exit_status, 0}} ->
       case Success of
         true  -> {ok, Output, RetBindLst};
-        false -> {error, Output}
+        false -> io:format( "I did not see the EOT token.~n" ), {error, Output}
       end;
 
     % process failed
