@@ -20,7 +20,6 @@ The foreign code snippet along with input variable bindings is given to effi in 
 - [Python](https://www.python.org/)
 - [R](https://www.r-project.org/)
 - [Racket](http://www.racket-lang.org/)
-- [Scala](http://scala-lang.org/)
 
 ## Usage
 
