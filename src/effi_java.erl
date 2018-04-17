@@ -85,14 +85,16 @@ bind_boolean_list( ArgName, ValueLst ) ->
 
   <<"final boolean[] ", ArgName/binary, " = { ", B/binary, " };\n">>.
 
--spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
+-spec bind_string_list( ArgName :: binary(), ValueLst :: [binary()] ) ->
   binary().
 
-bind_string_list( ArgName, ValueLst ) ->
+bind_string_list( ArgName, ValueLst )
+when is_binary( ArgName ),
+     is_list( ValueLst ) ->
 
   F =
-    fun( X ) ->
-      "\""++binary_to_list( X/binary )++"\""
+    fun( X ) when is_binary( X ) ->
+      "\""++binary_to_list( X )++"\""
     end,
 
   S = string:join( [F( Value ) || Value <- ValueLst], ", " ),
