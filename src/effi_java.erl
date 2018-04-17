@@ -151,9 +151,11 @@ echo_string_list( ArgName ) ->
   binary().
 
 prefix() ->
-  <<"import java.io.BufferedWriter;\n",
-    "import java.io.File;\n",
+  <<"import java.io.BufferedReader;\n",
+    "import java.io.BufferedWriter;\n",
+    "import java.io.FileReader;\n",
     "import java.io.FileWriter;\n",
+    "import java.io.File;\n",
     "import java.io.IOException;\n",
     "public class Main {\n",
     "public static void main( String[] __args ) throws IOException {\n">>.
