@@ -120,8 +120,8 @@ echo_singleton_string( ArgName ) ->
 echo_boolean_list( ArgName ) ->
   <<"StringBuffer __s = new StringBuffer();\n",
     "__s.append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [\" );\n",
-    "boolean __comma = false;"
-    "for( x : ", ArgName/binary, " ) {\n",
+    "boolean __comma = false;\n"
+    "for( boolean x : ", ArgName/binary, " ) {\n",
     "  if( __comma )\n",
     "    __s.append( ',' );\n"
     "  __comma = true;"
@@ -137,8 +137,8 @@ echo_boolean_list( ArgName ) ->
 echo_string_list( ArgName ) ->
   <<"StringBuffer __s = new StringBuffer();\n",
     "__s.append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [\" );\n",
-    "boolean __comma = false;"
-    "for( x : ", ArgName/binary, " ) {\n",
+    "boolean __comma = false;\n"
+    "for( String x : ", ArgName/binary, " ) {\n",
     "  if( __comma )\n",
     "    __s.append( ',' );\n"
     "  __comma = true;"
@@ -186,7 +186,7 @@ run_extended_script( ExtendedScript, Dir ) ->
   ok = file:write_file( JavaFile, ExtendedScript ),
 
   ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
-  ok = file:write_file( ScriptFile, "javac Main.java\njava Main\n" ),
+  ok = file:write_file( ScriptFile, "set -eu -o pipefail\njavac Main.java\njava Main\n" ),
 
   Call = "bash __script.sh",
 
