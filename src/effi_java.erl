@@ -152,7 +152,7 @@ echo_string_list( ArgName ) ->
 
 prefix() ->
   <<"public class Main {\n",
-    "public static void main( String[] __args ) {\n">>.
+    "public static void main( String[] __args ) throws InterruptedException {\n">>.
 
 
 -spec end_of_transmission() ->
