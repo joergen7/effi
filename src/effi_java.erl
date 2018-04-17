@@ -151,8 +151,12 @@ echo_string_list( ArgName ) ->
   binary().
 
 prefix() ->
-  <<"public class Main {\n",
-    "public static void main( String[] __args ) {\n">>.
+  <<"import java.io.BufferedWriter;\n",
+    "import java.io.File;\n",
+    "import java.io.FileWriter;\n",
+    "import java.io.IOException;\n",
+    "public class Main {\n",
+    "public static void main( String[] __args ) throws IOException {\n">>.
 
 
 -spec end_of_transmission() ->
