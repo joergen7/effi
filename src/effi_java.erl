@@ -182,8 +182,10 @@ process_script( Script ) ->
 
 run_extended_script( ExtendedScript, Dir ) ->
 
+  JavaFile = string:join( [Dir, "Main.java"], "/" ),
   ScriptFile = string:join( [Dir, "Main.java"], "/" ),
-  Call = "echo 'we start'; javac Main.java; java -Xdiag Main; echo 'we end'",
+  ok = file:write_file( "__script.sh", "javac Main.java\njava Main\n" ),
+  Call = "bash __script.sh",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
