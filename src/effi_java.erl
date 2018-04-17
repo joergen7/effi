@@ -166,7 +166,7 @@ end_of_transmission() ->
   binary().
 
 suffix() ->
-  <<"}\n}\n">>.
+  <<"System.out.flush();\n}\n}\n">>.
 
 
 -spec process_script( Script :: binary() ) ->

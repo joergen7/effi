@@ -202,10 +202,6 @@ when Request :: #{ atom() => _ },
 
 handle_request( Request, Dir ) ->
 
-  %%%%
-  io:format( "~s~n", [jsone:encode( Request )] ),
-  %%%%
-
   #{ app_id       := AppId,
      lambda       := Lambda,
      arg_bind_lst := ArgBindLst } = Request,
@@ -415,7 +411,7 @@ when is_port( Port ),
     {Port, {exit_status, 0}} ->
       case Success of
         true  -> {ok, Output, RetBindLst};
-        false -> io:format( "I did not see the EOT token.~n" ), {error, Output}
+        false -> {error, Output}
       end;
 
     % process failed
