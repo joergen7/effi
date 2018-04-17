@@ -130,7 +130,7 @@ echo_singleton_string( ArgName ) ->
   binary().
 
 echo_boolean_list( ArgName ) ->
-  <<"$TMP = join( \", \", map { $_ ? \"true\" : \"false\" } @", ArgName/binary, " );\n",
+  <<"$TMP = join( \", \", map { $_ ? \"\\\"true\\\"\" : \"false\" } @", ArgName/binary, " );\n",
     "print \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [$TMP] }\\n\";\n">>.
 
 
