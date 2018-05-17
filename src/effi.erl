@@ -1,6 +1,6 @@
 %% -*- erlang -*-
 %%
-%% Erlang foreign function interface
+%% effi
 %%
 %% Copyright 2015-2018 Jörgen Brandt
 %%
@@ -18,7 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen.brandt@onlinehome.de>
-%% @version 0.1.5
+%% @version 0.1.6
 %% @copyright 2015-2018 Jörgen Brandt
 %%
 %% @doc The standalone application entry point is {@link main/1}. 
@@ -60,7 +60,7 @@
 %% Definitions
 %%====================================================================
 
--define( VSN, "0.1.5" ).
+-define( VSN, "0.1.6" ).
 -define( BUF_SIZE, 1024 ).
 
 
