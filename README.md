@@ -224,6 +224,8 @@ The Effi reply format is what is produced.
 ## Authors
 
 - Jörgen Brandt ([@joergen7](https://github.com/joergen7/)) [joergen.brandt@onlinehome.de](mailto:joergen.brandt@onlinehome.de)
+- Carl Witt ([@carlwitt](https://github.com/carlwitt))
+- [@bharendt](https://github.com/bharendt)
 
 ## License
 
