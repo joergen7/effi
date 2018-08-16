@@ -11,6 +11,8 @@ The foreign code snippet along with input variable bindings is given to effi in 
 
 ## Supported Languages
 
+The following programming languages are supported by effi:
+
 - [Bash](https://www.gnu.org/software/bash/)
 - [Erlang](http://www.erlang.org/)
 - [Java](https://www.java.com)
@@ -21,7 +23,7 @@ The foreign code snippet along with input variable bindings is given to effi in 
 - [R](https://www.r-project.org/)
 - [Racket](http://www.racket-lang.org/)
 
-## Usage
+## Integration and Build
 
 ### Adding Effi to a Project
 
@@ -39,6 +41,8 @@ To integrate Effi into a rebar3-managed project change the `deps` entry in your 
 
 #### mix
 
+To integrate effi into a mix-managed project include the following
+
 ```elixir
 {:effi, "~> 0.1.6"}
 ```
@@ -53,11 +57,8 @@ If you want to drive the project from the command line please compile it by ente
 
     rebar3 escriptize
 
-## Starting Effi
 
-Effi can be started in two different ways. It can be started from the command line or it can be driven from an Erlang API.
-
-### Starting from the Command Line
+## Command Line Synopsis
 
 Compiling Effi using `escriptize` creates an Erlang script file `effi` whcih allows starting it via the command line.
 
@@ -95,7 +96,7 @@ To start Effi from the command line consuming the request file `effi_request.jso
 
 The format of the request and reply is described below.
 
-### Erlang API
+## Erlang API
 
 Effi can be driven from an Erlang API by using the function `effi:handle_request/2`. Given an Erlang hash map using atoms as keys and binaries as values bound in the variable `EffiRequest` you can start effi by entering
 
@@ -106,6 +107,8 @@ effi:handle_request( EffiRequest, Dir ).
 ```
 
 Effi starts evaluating the request, expecting input data in and writing output data to the working directory given in the variable `Dir`.
+
+The `handle_request/2` function returns a reply-map summarizing the result of the computation.
 
 ## Effi JSON Exchange Format
 
@@ -176,9 +179,14 @@ The `arg_type` pair provides the base type of the argument. The base type `Type`
 The `lang` pair provides the programming language in which the script is written. The language `Lang` has the following form:
 
     Lang ::= "Bash"
+           | "Erlang"
+           | "Java"
            | "Matlab"
            | "Octave"
+           | "Perl"
            | "Python"
+           | "R"
+           | "Racket"
 
 A lambda expression contains a list of argument bindings `Bind` of the following form:
 
