@@ -147,7 +147,7 @@ echo_string_list( ArgName ) ->
   binary().
 
 prefix() ->
-  <<"#lang racket\n">>.
+  <<"#lang racket/base\n">>.
 
 
 -spec end_of_transmission() ->
