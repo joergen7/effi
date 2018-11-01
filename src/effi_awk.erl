@@ -73,25 +73,25 @@ bind_string_list( _ArgName, _Value ) -> error( nyi ).
 -spec echo_singleton_boolean( ArgName :: binary() ) ->
   binary().
 
-echo_singleton_boolean( ArgName ) -> error( invalid_op ).
+echo_singleton_boolean( _ArgName ) -> error( invalid_op ).
 
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
 
-echo_singleton_string( ArgName ) -> error( invalid_op ).
+echo_singleton_string( _ArgName ) -> error( invalid_op ).
 
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
 
-echo_boolean_list( ArgName ) -> error( invalid_op ).
+echo_boolean_list( _ArgName ) -> error( invalid_op ).
 
 
 -spec echo_string_list( ArgName :: binary() ) ->
   binary().
 
-echo_string_list( ArgName ) -> error( invalid_op ).
+echo_string_list( _ArgName ) -> error( invalid_op ).
 
 -spec prefix() ->
   binary().
@@ -99,18 +99,24 @@ echo_string_list( ArgName ) -> error( invalid_op ).
 prefix() -> <<>>.
 
 
--callback end_of_transmission() ->
+-spec end_of_transmission() ->
   binary().
 
--callback suffix() ->
+end_of_transmission() -> <<>>.
+
+-spec suffix() ->
   binary().
 
--callback process_script( Script :: binary() ) ->
+suffix() -> <<>>.
+
+-spec process_script( Script :: binary() ) ->
   binary().
 
-% Returns either ok or error followed by standard/error output binary. If the
-% run was successful also the return binding list is packaged in the return
-% value.
--callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+process_script( Script ) -> Script.
+
+-spec run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
+
+run_extended_script( _, _ ) ->
+  {error, nyi}.
