@@ -14,8 +14,10 @@ The foreign code snippet along with input variable bindings is given to effi in 
 The following programming languages are supported by effi:
 
 - [Bash](https://www.gnu.org/software/bash/)
+- [Elixir](https://elixir-lang.org/)
 - [Erlang](http://www.erlang.org/)
 - [Java](https://www.java.com)
+- [Javascript](https://www.w3schools.com/js/)
 - [Matlab](https://www.mathworks.com/products/matlab.html)
 - [Octave](https://www.gnu.org/software/octave/)
 - [Perl](https://www.perl.org/)

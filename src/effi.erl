@@ -337,6 +337,7 @@ print_version() ->
 -spec get_lang_mod( B :: binary() ) -> atom().
 
 get_lang_mod( <<"Bash">> )            -> effi_bash;
+get_lang_mod( <<"Elixir">> )          -> effi_elixir;
 get_lang_mod( <<"Erlang">> )          -> effi_erlang;
 get_lang_mod( <<"Java">> )            -> effi_java;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
