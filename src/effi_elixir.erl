@@ -129,7 +129,7 @@ echo_boolean_list( ArgName ) ->
 echo_string_list( ArgName ) ->
   <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( ( for v <- ",
-    ArgName/binary, ", do: \"\\\"\"++v++\"\\\"\" ), \", \" )] )\n">>.
+    ArgName/binary, ", do: \"\\\"#{v}\\\"\" ), \", \" )] )\n">>.
 
 
 -spec prefix() ->
