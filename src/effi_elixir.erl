@@ -48,7 +48,7 @@ when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
   ScriptFile = string:join( [Dir, "__script.exs"], "/" ),
-  Call = "elixir __script.js",
+  Call = "elixir __script.exs",
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
 
