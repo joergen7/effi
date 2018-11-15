@@ -60,11 +60,10 @@ when is_binary( ExtendedScript ),
 -spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
   binary().
 
-bind_singleton_boolean( ArgName, <<"true">> ) ->
-  <<ArgName/binary, " = True\n">>;
-
-bind_singleton_boolean( ArgName, <<"false">> ) ->
-  <<ArgName/binary, " = False\n">>.
+bind_singleton_boolean( ArgName, Value ) ->
+when is_binary( ArgName ),
+     is_binary( Value ) ->
+  <<ArgName/binary, " = ", Value, "\n">>.
 
 
 -spec bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
