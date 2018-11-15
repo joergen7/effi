@@ -111,7 +111,7 @@ echo_singleton_boolean( ArgName ) ->
   binary().
 
 echo_singleton_string( ArgName ) ->
-  <<"IO.puts( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"~s\\\"}~n\", [", ArgName/binary, "] )\n">>.
 
 
@@ -119,16 +119,15 @@ echo_singleton_string( ArgName ) ->
   binary().
 
 echo_boolean_list( ArgName ) ->
-  <<"IO.puts( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( for v <- ",
     ArgName/binary, ", do: if v, do: \"\\\"true\\\"\", else: \"\\\"false\\\"\" ), \", \"] )\n">>.
-
 
 -spec echo_string_list( ArgName :: binary() ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-  <<"IO.puts( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( for v <- ",
     ArgName/binary, ", do: \"\\\"\"++v++\"\\\"\" ), \", \"] )\n">>.
 
