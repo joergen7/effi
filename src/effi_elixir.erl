@@ -78,14 +78,7 @@ bind_singleton_string( ArgName, Value ) ->
   binary().
 
 bind_boolean_list( ArgName, Value ) ->
-
-  F =
-    fun
-      ( <<"true">> ) -> "True";
-      ( <<"false">> ) -> "False"
-    end,
-
-  S = string:join( [F( V ) || V <- Value], ", " ),
+  S = string:join( [binary_to_list( V ) || V <- Value], ", " ),
   B = list_to_binary( S ),
   <<ArgName/binary, " = [", B/binary, "],\n">>.
 
