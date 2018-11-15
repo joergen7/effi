@@ -121,7 +121,7 @@ echo_singleton_string( ArgName ) ->
 echo_boolean_list( ArgName ) ->
   <<"IO.puts( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( for v <- ",
-    ArgName/binary, ", do: if v do \"\\\"true\\\"\" else \"\\\"false\\\"\" end, \", \" )] )\n">>.
+    ArgName/binary, ", do: if v, do: \"\\\"true\\\"\", else: \"\\\"false\\\"\" ), \", \"] )\n">>.
 
 
 -spec echo_string_list( ArgName :: binary() ) ->
