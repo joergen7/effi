@@ -103,7 +103,7 @@ bind_string_list( ArgName, Value ) ->
   binary().
 
 echo_singleton_boolean( ArgName ) ->
-  <<"IO.puts( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"~p\\\"}~n\", [", ArgName/binary, "] )\n">>.
 
 
