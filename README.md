@@ -34,10 +34,10 @@ Although Effi can be imported also directly from GitHub, we recommend adding a d
 
 #### rebar3
 
-To integrate Effi into a rebar3-managed project change the `deps` entry in your application's `rebar.config` file to include the tuple `{effi, "0.1.6"}`.
+To integrate Effi into a rebar3-managed project change the `deps` entry in your application's `rebar.config` file to include the tuple `{effi, "0.1.7"}`.
 
 ```erlang
-{deps, [{effi, "0.1.6"}]}.
+{deps, [{effi, "0.1.7"}]}.
 ```
 
 
@@ -46,7 +46,7 @@ To integrate Effi into a rebar3-managed project change the `deps` entry in your 
 To integrate effi into a mix-managed project include the following
 
 ```elixir
-{:effi, "~> 0.1.6"}
+{:effi, "~> 0.1.7"}
 ```
 
 ### Compiling
@@ -76,7 +76,7 @@ This shows the command line synopsis, which looks like the following:
       _W   y @  # qF     languages (e.g., Bash, Python, or R) by specifying the
       ^^^^^  P qF  `     function's arguments, body and output values.
 
-    Copyright 2015-2018 Jorgen Brandt <joergen.brandt@onlinehome.de>
+    Copyright 2015-2019 Jorgen Brandt <joergen@cuneiform-lang.org>
 
     Usage: effi [-v] [-h] [-d [<dir>]] [-i <input_file>] [-o <output_file>]
 
