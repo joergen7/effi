@@ -1,5 +1,5 @@
-# effi
-###### Erlang foreign function interface.
+# Effi
+###### Erlang foreign function interface
 
 [![hex.pm](https://img.shields.io/hexpm/v/effi.svg?style=flat-square)](https://hex.pm/packages/effi) [![Build Status](https://travis-ci.org/joergen7/effi.svg?branch=master)](https://travis-ci.org/joergen7/effi)
 
