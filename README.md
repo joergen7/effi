@@ -140,9 +140,9 @@ The following is an example for an Effi reply:
 ```json
 { "app_id": "1234",
   "result": { "status":       "ok",
-              "stat":         { "run":  { "t_start":  "1523007609917834743",
-                                          "duration": "30391761645" },
-                                "node": "cf_worker@x240" },
+              "node":         "cf_worker@x240",
+              "stat":         { "run": { "t_start":  "1523007609917834743",
+                                         "duration": "30391761645" } },
               "ret_bind_lst": [{ "arg_name": "idx",
                                  "value":    "idx.tar" }] } }
 ```
@@ -208,12 +208,22 @@ The Effi reply format is what is produced.
                 "result": Result }
 
     Result ::= { "status": "ok",
-                 "stat":   { "run":  { "t_start": S, "duration": S },
-                             "node": S },
+                 "node":   S,
+                 "stat":   { "run":  { "t_start": S, "duration": S } },
                  "ret_bind_lst": [Bind, ...] }
-             | { "status": "error", "stage": "run", "extended_script": S, "output": S }
-             | { "status": "error", "stage": "stagein", file_lst: [S, ...] }
-             | { "status": "error", "stage": "stageout", file_lst: [S, ...] }
+             | { "status":          "error",
+                 "node":            S
+                 "stage":           "run",
+                 "extended_script": S,
+                 "output":          S }
+             | { "status":   "error",
+                 "node":     S
+                 "stage":    "stagein",
+                 "file_lst": [S, ...] }
+             | { "status":   "error",
+                 "node":     S
+                 "stage":    "stageout",
+                 "file_lst": [S, ...] }
 
 
 

@@ -236,12 +236,13 @@ handle_request( Request, Dir ) ->
                      duration => integer_to_binary( Duration ) },
 
         #{ status       => <<"ok">>,
-           stat         => #{ run  => RunStat,
-                              node => atom_to_binary( node(), utf8 ) },
+           node         => atom_to_binary( node(), utf8 ),
+           stat         => #{ run  => RunStat },
            ret_bind_lst => RetBindLst };
 
       {error, Output} ->
         #{ status          => <<"error">>,
+           node            => atom_to_binary( node(), utf8 ),
            stage           => <<"run">>,
            extended_script => ExtendedScript,
            output          => Output }
