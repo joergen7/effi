@@ -147,7 +147,7 @@ echo_string_list( ArgName ) ->
   binary().
 
 prefix() ->
-  <<"#lang racket/base\n">>.
+  <<"#lang racket/base\n(require (only-in racket/string string-join))\n">>.
 
 
 -spec end_of_transmission() ->
