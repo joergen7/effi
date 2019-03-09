@@ -72,13 +72,7 @@ when is_binary( ExtendedScript ),
   ok = file:write_file( ScriptFile, ExtendedScript ),
   Port = effi:create_port( Call, Dir ),
 
-  RetBind = #{ arg_name => <<"result">>,
-               value    => <<"__result">> },
-
-  case effi:listen_port( Port ) of
-    {error, B}          -> {error, B};
-    {ok, B, RetBindLst} -> {ok, B, [RetBind|RetBindLst]}
-  end.
+  effi:listen_port( Port ).
 
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> #run_info{}.
@@ -128,7 +122,7 @@ echo_string_list( _ArgName ) ->
   error( nyi ).
 
 prefix() ->
-  <<>>.
+  <<"BEGIN { result = \"__result\" }\n">>.
 
 end_of_transmission() ->
   <<"END { print \"", ?EOT, "\" }\n">>.
