@@ -118,7 +118,8 @@ echo_singleton_boolean( _ArgName ) ->
 
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
-  <<"END { print \"", ?MSG, "\"{\\\"arg_name\\\":\\\"", ArgName, "\\\",\\\"value\\\":\\\"\" ", ArgName, " \"\\\"}\" }\n">>. 
+  <<"END { print \"", ?MSG, "\"{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\",\\\"value\\\":\\\"\" ", ArgName/binary, " \"\\\"}\" }\n">>. 
 
 echo_boolean_list( _ArgName ) ->
   error( nyi ).
