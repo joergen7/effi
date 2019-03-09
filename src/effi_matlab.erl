@@ -52,7 +52,8 @@
           end_of_transmission/0,
           suffix/0,
           process_script/1,
-          run_extended_script/2] ).
+          run_extended_script/3,
+          get_run_info/1] ).
 
 
 %%====================================================================
@@ -103,13 +104,14 @@ process_script( Script ) ->
   effi_octave:process_script( Script ).
 
 
--spec run_extended_script( ExtendedScript, Dir ) ->
+-spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
           {ok, binary(), [#{ atom() => _ }]}
         | {error, binary()}
 when ExtendedScript :: binary(),
-     Dir            :: string().
+     Dir            :: string(),
+     RunInfo        :: _.
 
-run_extended_script( ExtendedScript, Dir )
+run_extended_script( ExtendedScript, Dir, _ )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
@@ -122,4 +124,8 @@ when is_binary( ExtendedScript ),
 
   effi:listen_port( Port ).
 
+-spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+
+get_run_info( Request ) ->
+  [].
 

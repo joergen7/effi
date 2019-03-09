@@ -110,9 +110,13 @@
 % Returns either ok or error followed by standard/error output binary. If the
 % run was successful also the return binding list is packaged in the return
 % value.
--callback run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+-callback run_extended_script( ExtendedScript :: binary(),
+                               Dir            :: string(),
+                               RunInfo        :: _ ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
+
+-callback get_run_info( Request :: #{ atom() => _ } ) -> _.
 
 
 %%====================================================================
@@ -219,12 +223,15 @@ handle_request( Request, Dir ) ->
   ExtendedScript = get_extended_script( LangMod, ArgTypeLst, RetTypeLst, Script,
                                         ArgBindLst ),
 
+  % extract extra info
+  RunInfo = LangMod:get_run_info( Request ),
+
   % determine start time
   TStart = os:system_time(),
 
   % run extended script
   Result =
-    case LangMod:run_extended_script( ExtendedScript, Dir ) of
+    case LangMod:run_extended_script( ExtendedScript, Dir, RunInfo ) of
 
       {ok, _Output, RetBindLst} ->
 
@@ -337,17 +344,18 @@ print_version() ->
 
 -spec get_lang_mod( B :: binary() ) -> atom().
 
+get_lang_mod( <<"Awk">> )             -> effi_awk;
 get_lang_mod( <<"Bash">> )            -> effi_bash;
 get_lang_mod( <<"Elixir">> )          -> effi_elixir;
 get_lang_mod( <<"Erlang">> )          -> effi_erlang;
 get_lang_mod( <<"Java">> )            -> effi_java;
+get_lang_mod( <<"Javascript">> )      -> effi_javascript;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;
 get_lang_mod( <<"Python">> )          -> effi_python;
 get_lang_mod( <<"Octave">> )          -> effi_octave;
 get_lang_mod( <<"Perl">> )            -> effi_perl;
 get_lang_mod( <<"R">> )               -> effi_r;
 get_lang_mod( <<"Racket">> )          -> effi_racket;
-get_lang_mod( <<"Javascript">> )      -> effi_javascript;
 get_lang_mod( B ) when is_binary( B ) -> error( {lang_not_recognized, B} ).
 
 

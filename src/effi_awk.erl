@@ -25,8 +25,7 @@
 %% @end
 %% -------------------------------------------------------------------
 
-
--module( effi_bash ).
+-module( effi_awk ).
 -behaviour( effi ).
 
 % effi callbacks
@@ -48,32 +47,46 @@
 -include( "effi.hrl" ).
 
 
-
-
-
+-record( run_info, {src_file} ).
 
 %%====================================================================
-%% Effi callback function implementations
+%% Effi callback functions
 %%====================================================================
 
-
--spec run_extended_script( ExtendedScript :: binary(), Dir :: string(), RunInfo :: _ ) ->
+-spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
     {ok, binary(), [#{ atom() => _ }]}
-  | {error, binary()}.
+  | {error, binary()}
+when  ExtendedScript :: binary(),
+      Dir            :: string(),
+      RunInfo        :: #run_info{}.
 
-run_extended_script( ExtendedScript, Dir, _ )
+run_extended_script( ExtendedScript, Dir, RunInfo )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
-  ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
-  Call = "bash __script.sh",
+  #run_info{ src_file  = SrcFile } = RunInfo,
+
+  ScriptFile = string:join( [Dir, "__script.awk"], "/" ),
+  Call = io_lib:format( "awk -f __script.awk ~s > __result", [SrcFile] ),
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
-
   Port = effi:create_port( Call, Dir ),
 
-  effi:listen_port( Port ).
+  RetBind = #{ arg_name => <<"result">>,
+               value    => <<"__result">> },
 
+  case effi:listen_port( Port ) of
+    {error, B}          -> {error, B};
+    {ok, B, RetBindLst} -> {ok, B, [RetBind|RetBindLst]}
+  end.
+
+
+-spec get_run_info( Request :: #{ atom() => _ } ) -> #run_info{}.
+
+get_run_info( Request ) ->
+  #{ arg_bind_lst := ArgBindLst } = Request,
+  [#{ value := Value}|_] = ArgBindLst,
+  #run_info{ src_file = Value }.
 
 bind_singleton_boolean( ArgName, Value )
 when is_binary( ArgName ),
@@ -89,71 +102,39 @@ bind_singleton_string( ArgName, Value )
 when is_binary( ArgName ),
      is_binary( Value ) ->
 
-  <<ArgName/binary, "='", Value/binary, "'\n">>.
+  error( nyi ).
 
 bind_boolean_list( ArgName, Value ) ->
-  bind_string_list( ArgName, Value ).
+  error( nyi ).
 
 bind_string_list( ArgName, Value )
 when is_binary( ArgName ),
      is_list( Value ) ->
-  SLst = ["'"++binary_to_list( V )++"'" || V <- Value],
-  S = string:join( SLst, " " ),
-  B = list_to_binary( S ),
-  <<ArgName/binary, "=(", B/binary, ")\n">>.
+  error( nyi ).
   
-
-
 echo_singleton_boolean( ArgName ) ->
-  <<"if [ $", ArgName/binary, " == 'true' ]\n",
-    "then\n",
-    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"true\"}'\n",
-    "else\n",
-    "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}'\n",
-    "fi\n\n">>.
+  error( nyi ).
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
 
 echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
-
-  <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.
+  error( nyi ).
 
 echo_boolean_list( ArgName ) ->
-  B = echo_string_list( ArgName ),
-  <<"for x in ${", ArgName/binary, "[@]}\n",
-    "do\n",
-    "  if [ $x != 'true' ]\n",
-    "  then\n",
-    "    if [ $x != 'false' ]\n",
-    "    then\n",
-    "      echo non-Boolean value in ", ArgName/binary, "\n",
-    "      exit -1\n",
-    "    fi\n",
-    "  fi\n",
-    "done\n",
-    B/binary>>.
+  error( nyi ).
 
 echo_string_list( ArgName ) ->
-  <<"TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
-    "TMP=${TMP:1}\n",
-    "echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[$TMP]}\"\n\n">>.
+  error( nyi ).
 
 prefix() ->
-  <<"set -eu -o pipefail\n">>.
+  <<>>.
 
 end_of_transmission() ->
-  <<"echo '", ?EOT, "'\n">>.
+  <<"END { print \"", ?EOT, "\" }\n">>.
 
 suffix() ->
   <<>>.
 
 process_script( Script ) ->
   Script.
-
--spec get_run_info( Request :: #{ atom() => _ } ) -> [].
-
-get_run_info( Request ) ->
-  [].

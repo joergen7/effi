@@ -46,7 +46,8 @@
           end_of_transmission/0,
           suffix/0,
           process_script/1,
-          run_extended_script/2] ).
+          run_extended_script/3,
+          get_run_info/1] ).
 
 
 %%====================================================================
@@ -171,11 +172,11 @@ process_script( Script ) ->
   Script.
 
 
--spec run_extended_script( ExtendedScript :: binary(), Dir :: string() ) ->
+-spec run_extended_script( ExtendedScript :: binary(), Dir :: string(), RunInfo :: _ ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
 
-run_extended_script( ExtendedScript, Dir ) ->
+run_extended_script( ExtendedScript, Dir, _ ) ->
 
   ScriptFile = string:join( [Dir, "__script.pl"], "/" ),
   Call = "perl __script.pl",
@@ -185,3 +186,8 @@ run_extended_script( ExtendedScript, Dir ) ->
   Port = effi:create_port( Call, Dir ),
 
   effi:listen_port( Port ).
+
+-spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+
+get_run_info( _Request ) ->
+  [].

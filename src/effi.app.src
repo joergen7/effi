@@ -5,7 +5,7 @@
   {modules, [
              effi, effi_bash, effi_elixir, effi_erlang,
              effi_java, effi_javascript, effi_matlab, effi_octave,
-             effi_python, effi_r, effi_racket
+             effi_python, effi_r, effi_racket, effi_awk
             ]},
   {registered, []},
   {applications, [

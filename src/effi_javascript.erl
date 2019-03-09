@@ -31,20 +31,22 @@
 -export( [bind_singleton_boolean/2, bind_singleton_string/2,
           bind_boolean_list/2, bind_string_list/2,
           prefix/0, suffix/0, end_of_transmission/0, process_script/1,
-          run_extended_script/2, echo_singleton_boolean/1,
+          run_extended_script/3, echo_singleton_boolean/1,
           echo_singleton_string/1, echo_boolean_list/1,
-          echo_string_list/1] ).
+          echo_string_list/1,
+          get_run_info/1] ).
 
 -include( "effi.hrl" ).
 
 
--spec run_extended_script( ExtendedScript, Dir ) ->
+-spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}
 when ExtendedScript :: binary(),
-     Dir            :: string().
+     Dir            :: string(),
+     RunInfo        :: _.
 
-run_extended_script( ExtendedScript, Dir )
+run_extended_script( ExtendedScript, Dir, _ )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
@@ -169,3 +171,8 @@ when is_binary( ArgName ) ->
   <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
     "\",\"value\":['+String( ", ArgName/binary,
     ".map( x => '\"'+x+'\"' ) )+']}' );\n">>.
+
+-spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+
+get_run_info( Request ) ->
+  [].

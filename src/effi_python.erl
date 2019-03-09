@@ -45,7 +45,8 @@
           end_of_transmission/0,
           suffix/0,
           process_script/1,
-          run_extended_script/2] ).
+          run_extended_script/3,
+          get_run_info/1] ).
 
 
 %%====================================================================
@@ -60,13 +61,14 @@
 
 
 
--spec run_extended_script( ExtendedScript, Dir ) ->
+-spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
           {ok, binary(), [#{ atom() => _ }]}
         | {error, binary()}
 when ExtendedScript :: binary(),
-     Dir            :: string().
+     Dir            :: string(),
+     RunInfo        :: _.
 
-run_extended_script( ExtendedScript, Dir )
+run_extended_script( ExtendedScript, Dir, _ )
 when is_binary( ExtendedScript ),
      is_list( Dir ) ->
 
@@ -158,3 +160,8 @@ process_script( Script ) ->
   B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
   B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
   <<"if True:\n ", B2/binary>>.
+
+-spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+
+get_run_info( Request ) ->
+  [].
