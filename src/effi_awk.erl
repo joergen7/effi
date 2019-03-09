@@ -91,7 +91,7 @@ get_run_info( Request ) ->
 bind_singleton_boolean( ArgName, Value )
 when is_binary( ArgName ),
      is_binary( Value ) ->
-  <<ArgName/binary, "='", Value/binary, "'\n">>.
+  error( nyi ).
 
 
 -spec bind_singleton_string( ArgName, Value ) -> binary()
@@ -101,8 +101,7 @@ when ArgName :: binary(),
 bind_singleton_string( ArgName, Value )
 when is_binary( ArgName ),
      is_binary( Value ) ->
-
-  error( nyi ).
+  <<"BEGIN { ", ArgName/binary, " = \"", Value/binary, "\" }\n">>.
 
 bind_boolean_list( _ArgName, _Value ) ->
   error( nyi ).
