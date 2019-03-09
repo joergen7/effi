@@ -174,5 +174,5 @@ when is_binary( ArgName ) ->
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
-get_run_info( Request ) ->
+get_run_info( _Request ) ->
   [].
