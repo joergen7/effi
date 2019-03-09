@@ -189,5 +189,5 @@ run_extended_script( ExtendedScript, Dir, _ ) ->
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
-get_run_info( Request ) ->
+get_run_info( _Request ) ->
   [].

@@ -104,7 +104,7 @@ when is_binary( ArgName ),
 
   error( nyi ).
 
-bind_boolean_list( ArgName, Value ) ->
+bind_boolean_list( _ArgName, _Value ) ->
   error( nyi ).
 
 bind_string_list( ArgName, Value )
@@ -112,7 +112,7 @@ when is_binary( ArgName ),
      is_list( Value ) ->
   error( nyi ).
   
-echo_singleton_boolean( ArgName ) ->
+echo_singleton_boolean( _ArgName ) ->
   error( nyi ).
 
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
@@ -121,10 +121,10 @@ echo_singleton_string( ArgName )
 when is_binary( ArgName ) ->
   error( nyi ).
 
-echo_boolean_list( ArgName ) ->
+echo_boolean_list( _ArgName ) ->
   error( nyi ).
 
-echo_string_list( ArgName ) ->
+echo_string_list( _ArgName ) ->
   error( nyi ).
 
 prefix() ->

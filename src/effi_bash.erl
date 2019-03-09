@@ -155,5 +155,5 @@ process_script( Script ) ->
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
-get_run_info( Request ) ->
+get_run_info( _Request ) ->
   [].
