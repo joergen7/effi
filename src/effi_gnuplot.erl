@@ -25,7 +25,7 @@
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_awk ).
+-module( effi_gnuplot ).
 -behaviour( effi ).
 
 % effi callbacks
@@ -47,60 +47,22 @@
 -include( "effi.hrl" ).
 
 
--record( run_info, {src_file} ).
 
 %%====================================================================
 %% Effi callback functions
 %%====================================================================
 
--spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
-    {ok, binary(), [#{ atom() => _ }]}
-  | {error, binary()}
-when  ExtendedScript :: binary(),
-      Dir            :: string(),
-      RunInfo        :: #run_info{}.
-
-run_extended_script( ExtendedScript, Dir, RunInfo )
-when is_binary( ExtendedScript ),
-     is_list( Dir ) ->
-
-  #run_info{ src_file  = SrcFile } = RunInfo,
-
-  ScriptFile = string:join( [Dir, "__script.awk"], "/" ),
-  Call = io_lib:format( "awk -f __script.awk ~s | awk '/^<MSG>/ { print } /^<EOT>$/ { print } !($0~~/^<MSG>/||$0~~/^<EOT>$/) { print > \"__result\" }'", [SrcFile] ),
-
-  ok = file:write_file( ScriptFile, ExtendedScript ),
-  Port = effi:create_port( Call, Dir ),
-
-  effi:listen_port( Port ).
-
-
--spec get_run_info( Request :: #{ atom() => _ } ) -> #run_info{}.
-
-get_run_info( Request ) ->
-  #{ arg_bind_lst := ArgBindLst } = Request,
-  [#{ value := Value}|_] = ArgBindLst,
-  #run_info{ src_file = Value }.
-
-
 -spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
   binary().
 
-bind_singleton_boolean( ArgName, Value )
-when is_binary( ArgName ),
-     is_binary( Value ) ->
+bind_singleton_boolean( _ArgName, _Value ) ->
   error( nyi ).
 
+-spec bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
+  binary().
 
--spec bind_singleton_string( ArgName, Value ) -> binary()
-when ArgName :: binary(),
-     Value   :: binary().
-
-bind_singleton_string( ArgName, Value )
-when is_binary( ArgName ),
-     is_binary( Value ) ->
-  <<"BEGIN { ", ArgName/binary, " = \"", Value/binary, "\" }\n">>.
-
+bind_singleton_string( _ArgName, _Value ) ->
+  error( nyi ).
 
 -spec bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
   binary().
@@ -108,15 +70,11 @@ when is_binary( ArgName ),
 bind_boolean_list( _ArgName, _Value ) ->
   error( nyi ).
 
-
 -spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
   binary().
 
-bind_string_list( ArgName, Value )
-when is_binary( ArgName ),
-     is_list( Value ) ->
+bind_string_list( _ArgName, _Value ) ->
   error( nyi ).
-  
 
 -spec echo_singleton_boolean( ArgName :: binary() ) ->
   binary().
@@ -124,14 +82,11 @@ when is_binary( ArgName ),
 echo_singleton_boolean( _ArgName ) ->
   error( nyi ).
 
+-spec echo_singleton_string( ArgName :: binary() ) ->
+  binary().
 
--spec echo_singleton_string( ArgName :: binary() ) -> binary().
-
-echo_singleton_string( ArgName )
-when is_binary( ArgName ) ->
-  <<"END { print \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"\" ", ArgName/binary, " \"\\\"}\" }\n">>. 
-
+echo_singleton_string( _ArgName ) ->
+  error( nyi ).
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
@@ -139,36 +94,46 @@ when is_binary( ArgName ) ->
 echo_boolean_list( _ArgName ) ->
   error( nyi ).
 
-
 -spec echo_string_list( ArgName :: binary() ) ->
   binary().
 
 echo_string_list( _ArgName ) ->
   error( nyi ).
 
-
 -spec prefix() ->
   binary().
 
 prefix() ->
-  <<"BEGIN { result = \"__result\" }\n">>.
-
+  error( nyi ).
 
 -spec end_of_transmission() ->
   binary().
 
 end_of_transmission() ->
-  <<"END { print \"", ?EOT, "\" }\n">>.
-
+  error( nyi ).
 
 -spec suffix() ->
   binary().
 
 suffix() ->
-  <<>>.
+  error( nyi ).
 
 -spec process_script( Script :: binary() ) ->
   binary().
 
-process_script( Script ) ->
-  Script.
+process_script( _Script ) ->
+  error( nyi ).
+
+-spec run_extended_script( ExtendedScript :: binary(),
+                               Dir            :: string(),
+                               RunInfo        :: _ ) ->
+    {ok, binary(), [#{ atom() => _ }]}
+  | {error, binary()}.
+
+run_extended_script( _ExtendedScript, _Dir, _RunInfo ) ->
+  error( nyi ).
+
+-spec get_run_info( Request :: #{ atom() => _ } ) -> _.
+
+get_run_info( _Request ) ->
+  error( nyi ).

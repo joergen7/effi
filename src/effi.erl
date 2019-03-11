@@ -348,6 +348,7 @@ get_lang_mod( <<"Awk">> )             -> effi_awk;
 get_lang_mod( <<"Bash">> )            -> effi_bash;
 get_lang_mod( <<"Elixir">> )          -> effi_elixir;
 get_lang_mod( <<"Erlang">> )          -> effi_erlang;
+get_lang_mod( <<"Gnuplot">> )         -> effi_gnuplot;
 get_lang_mod( <<"Java">> )            -> effi_java;
 get_lang_mod( <<"Javascript">> )      -> effi_javascript;
 get_lang_mod( <<"Matlab">> )          -> effi_matlab;

@@ -53,7 +53,7 @@
 
 
 %%====================================================================
-%% Effi callback function implementations
+%% Effi callback functions
 %%====================================================================
 
 
@@ -75,6 +75,9 @@ when is_binary( ExtendedScript ),
   effi:listen_port( Port ).
 
 
+-spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
+  binary().
+
 bind_singleton_boolean( ArgName, Value )
 when is_binary( ArgName ),
      is_binary( Value ) ->
@@ -91,8 +94,16 @@ when is_binary( ArgName ),
 
   <<ArgName/binary, "='", Value/binary, "'\n">>.
 
+
+-spec bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
+
 bind_boolean_list( ArgName, Value ) ->
   bind_string_list( ArgName, Value ).
+
+
+-spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
+  binary().
 
 bind_string_list( ArgName, Value )
 when is_binary( ArgName ),
@@ -103,6 +114,8 @@ when is_binary( ArgName ),
   <<ArgName/binary, "=(", B/binary, ")\n">>.
   
 
+-spec echo_singleton_boolean( ArgName :: binary() ) ->
+  binary().
 
 echo_singleton_boolean( ArgName ) ->
   <<"if [ $", ArgName/binary, " == 'true' ]\n",
@@ -112,6 +125,7 @@ echo_singleton_boolean( ArgName ) ->
     "  echo '", ?MSG, "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}'\n",
     "fi\n\n">>.
 
+
 -spec echo_singleton_string( ArgName :: binary() ) -> binary().
 
 echo_singleton_string( ArgName )
@@ -119,6 +133,10 @@ when is_binary( ArgName ) ->
 
   <<"echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":\\\"$", ArgName/binary, "\\\"}\"\n">>.
+
+
+-spec echo_boolean_list( ArgName :: binary() ) ->
+  binary().
 
 echo_boolean_list( ArgName ) ->
   B = echo_string_list( ArgName ),
@@ -135,23 +153,44 @@ echo_boolean_list( ArgName ) ->
     "done\n",
     B/binary>>.
 
+
+-spec echo_string_list( ArgName :: binary() ) ->
+  binary().
+
 echo_string_list( ArgName ) ->
   <<"TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
     "TMP=${TMP:1}\n",
     "echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
     "\\\",\\\"value\\\":[$TMP]}\"\n\n">>.
 
+
+-spec prefix() ->
+  binary().
+
 prefix() ->
   <<"set -eu -o pipefail\n">>.
+
+
+-spec end_of_transmission() ->
+  binary().
 
 end_of_transmission() ->
   <<"echo '", ?EOT, "'\n">>.
 
+
+-spec suffix() ->
+  binary().
+
 suffix() ->
   <<>>.
 
+
+-spec process_script( Script :: binary() ) ->
+  binary().
+
 process_script( Script ) ->
   Script.
+
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
