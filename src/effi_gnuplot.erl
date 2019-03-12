@@ -90,7 +90,7 @@ echo_singleton_boolean( _ArgName ) ->
 
 echo_singleton_string( ArgName ) ->
   <<"print \"", ?MSG, "\", \"{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\", \\\"value\\\":\\\"\",", ArgName/binary, ",\"\\\"}\"">>.
+    "\\\", \\\"value\\\":\\\"\",", ArgName/binary, ",\"\\\"}\"\n">>.
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
@@ -108,19 +108,19 @@ echo_string_list( _ArgName ) ->
   binary().
 
 prefix() ->
-  error( nyi ).
+  <<>>.
 
 -spec end_of_transmission() ->
   binary().
 
 end_of_transmission() ->
-  error( nyi ).
+  <<"print \"", ?EOT, "\"\n">>.
 
 -spec suffix() ->
   binary().
 
 suffix() ->
-  error( nyi ).
+  <<>>.
 
 -spec process_script( Script :: binary() ) ->
   binary().
@@ -128,16 +128,25 @@ suffix() ->
 process_script( _Script ) ->
   error( nyi ).
 
+-spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+
+get_run_info( _Request ) ->
+  [].
+
+
 -spec run_extended_script( ExtendedScript :: binary(),
                                Dir            :: string(),
-                               RunInfo        :: _ ) ->
+                               RunInfo        :: [] ) ->
     {ok, binary(), [#{ atom() => _ }]}
   | {error, binary()}.
 
-run_extended_script( _ExtendedScript, _Dir, _RunInfo ) ->
-  error( nyi ).
+run_extended_script( ExtendedScript, Dir, _RunInfo ) ->
 
--spec get_run_info( Request :: #{ atom() => _ } ) -> _.
+  ScriptFile = string:join( [Dir, "__script"], "/" ),
+  Call = "gnuplot __script",
 
-get_run_info( _Request ) ->
-  error( nyi ).
+  ok = file:write_file( ScriptFile, ExtendedScript ),
+
+  Port = effi:create_port( Call, Dir ),
+
+  effi:listen_port( Port ).
