@@ -88,8 +88,9 @@ echo_singleton_boolean( _ArgName ) ->
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
 
-echo_singleton_string( _ArgName ) ->
-  error( nyi ).
+echo_singleton_string( ArgName ) ->
+  <<"print \"", ?MSG, "\", \"{\\\"arg_name\\\":\\\"", ArgName/binary,
+    "\\\", \\\"value\\\":\\\"\",", ArgName/binary, ",\"\\\"}\"">>.
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
