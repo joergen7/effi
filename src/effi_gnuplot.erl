@@ -73,8 +73,11 @@ bind_boolean_list( _ArgName, _Value ) ->
 -spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
   binary().
 
-bind_string_list( _ArgName, _Value ) ->
-  error( nyi ).
+bind_string_list( ArgName, Value ) ->
+  L = binary:encode_unsigned( length( Value ) ),
+  SLst = ["\""++binary_to_list( V )++"\"" || V <- Value],
+  B = list_to_binary( string:join( SLst, "," ) ),
+  <<"array ", ArgName/binary, "[", L/binary, "]=[", B/binary, "]\n">>.
 
 -spec echo_singleton_boolean( ArgName :: binary() ) ->
   binary().
