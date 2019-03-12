@@ -125,8 +125,8 @@ suffix() ->
 -spec process_script( Script :: binary() ) ->
   binary().
 
-process_script( _Script ) ->
-  error( nyi ).
+process_script( Script ) ->
+  Script.
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
