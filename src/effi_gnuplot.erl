@@ -74,7 +74,7 @@ bind_boolean_list( _ArgName, _Value ) ->
   binary().
 
 bind_string_list( ArgName, Value ) ->
-  L = binary:encode_unsigned( length( Value ) ),
+  L = list_to_binary( integer_to_list( length( Value ) ) ),
   SLst = ["\""++binary_to_list( V )++"\"" || V <- Value],
   B = list_to_binary( string:join( SLst, "," ) ),
   <<"array ", ArgName/binary, "[", L/binary, "]=[", B/binary, "]\n">>.
