@@ -67,7 +67,7 @@ when is_binary( ExtendedScript ),
   #run_info{ src_file  = SrcFile } = RunInfo,
 
   ScriptFile = string:join( [Dir, "__script.awk"], "/" ),
-  Call = io_lib:format( "touch __result; awk -f __script.awk ~s | awk '/^<MSG>/ { print } /^<EOT>$/ { print } !($0~~/^<MSG>/||$0~~/^<EOT>$/) { print > \"__result\" }'", [SrcFile] ),
+  Call = io_lib:format( "awk -f __script.awk ~s | awk '/^<MSG>/ { print } /^<EOT>$/ { print } !($0~~/^<MSG>/||$0~~/^<EOT>$/) { print > \"__result\" }'", [SrcFile] ),
 
   ok = file:write_file( ScriptFile, ExtendedScript ),
   Port = effi:create_port( Call, Dir ),
@@ -151,7 +151,7 @@ echo_string_list( _ArgName ) ->
   binary().
 
 prefix() ->
-  <<"BEGIN { result = \"__result\" }\n">>.
+  <<"BEGIN { result = \"__result\"; system( "touch " result ) }\n">>.
 
 
 -spec end_of_transmission() ->
