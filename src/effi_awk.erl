@@ -151,7 +151,7 @@ echo_string_list( _ArgName ) ->
   binary().
 
 prefix() ->
-  <<"BEGIN { result = \"__result\"; system( "touch " result ) }\n">>.
+  <<"BEGIN { result = \"__result\"; system( \"touch \" result ) }\n">>.
 
 
 -spec end_of_transmission() ->
