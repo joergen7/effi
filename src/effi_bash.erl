@@ -158,10 +158,14 @@ echo_boolean_list( ArgName ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-  <<"TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
-    "TMP=${TMP:1}\n",
-    "echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[$TMP]}\"\n\n">>.
+  <<"if ${", ArgName/binary, "[@]}\n",
+    "then\n",
+    "  TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
+    "  TMP=${TMP:1}\n",
+    "  echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[$TMP]}\"\n"
+    "else\n",
+    "  echo \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[]}\"\n"
+    "fi\n\n">>.
 
 
 -spec prefix() ->
