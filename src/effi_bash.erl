@@ -158,7 +158,7 @@ echo_boolean_list( ArgName ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-  <<"if ${", ArgName/binary, "[@]}\n",
+  <<"if [ ${", ArgName/binary, "[@]} ]\n",
     "then\n",
     "  TMP=`printf \",\\\"%s\\\"\" ${", ArgName/binary, "[@]}`\n",
     "  TMP=${TMP:1}\n",
