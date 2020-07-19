@@ -159,7 +159,7 @@ suffix() ->
 process_script( Script ) ->
   B1 = binary:replace( Script, <<$\r>>, <<"">>, [global] ),
   B2 = binary:replace( B1, <<$\n>>, <<"\n ">>, [global] ),
-  <<"def main():\n ", B2/binary, "\nmain()">>.
+  <<"if True:\n ", B2/binary>>.
 
 -spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
