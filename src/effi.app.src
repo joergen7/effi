@@ -1,7 +1,7 @@
 {application, effi,
  [
   {description, "Erlang foreign function interface"},
-  {vsn, "0.1.7"},
+  {vsn, "0.1.8"},
   {modules, [
              effi,
              effi_awk,

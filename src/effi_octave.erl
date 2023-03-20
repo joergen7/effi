@@ -2,7 +2,7 @@
 %%
 %% Effi: Erlang foreign function interface
 %%
-%% Copyright 2015-2019 Jörgen Brandt <joergen@cuneiform-lang.org>
+%% Copyright 2015 Jörgen Brandt <joergen@cuneiform-lang.org>
 %%
 %% Licensed under the Apache License, Version 2.0 (the "License");
 %% you may not use this file except in compliance with the License.
@@ -18,8 +18,7 @@
 %%
 %% -------------------------------------------------------------------
 %% @author Jörgen Brandt <joergen@cuneiform-lang.org>
-%% @version 0.1.7
-%% @copyright 2015-2019
+%% @copyright 2015
 %%
 %% @doc The standalone application entry point is {@link main/1}. 
 %% The create_port callback defined here is an abstract way to execute child 
