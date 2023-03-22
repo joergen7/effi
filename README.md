@@ -13,9 +13,11 @@ The foreign code snippet along with input variable bindings is given to effi in 
 
 The following programming languages are supported by effi:
 
+- [Awk](https://www.gnu.org/software/gawk/manual/gawk.html)
 - [Bash](https://www.gnu.org/software/bash/)
 - [Elixir](https://elixir-lang.org/)
 - [Erlang](http://www.erlang.org/)
+- [gnuplot](http://www.gnuplot.info/)
 - [Java](https://www.java.com)
 - [Javascript](https://www.w3schools.com/js/)
 - [Matlab](https://www.mathworks.com/products/matlab.html)
@@ -24,6 +26,7 @@ The following programming languages are supported by effi:
 - [Python](https://www.python.org/)
 - [R](https://www.r-project.org/)
 - [Racket](http://www.racket-lang.org/)
+- [Wal](https://wal-lang.org/)
 
 ## Integration and Build
 
