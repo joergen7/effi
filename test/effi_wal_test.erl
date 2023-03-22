@@ -92,16 +92,16 @@ test_bind_string_list_nonempty() ->
 	?assertEqual( <<"(set (l (list \"bla\" \"blub\")))\n">>, bind_string_list( <<"l">>, [<<"bla">>, <<"blub">>] ) ).
 
 test_echo_singleton_boolean() ->
-	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"a\\\",\\\"value\\\":\\\"%s\\\"}\\\n\" (if a \"true\" \"false\"))\n">>, echo_singleton_boolean( <<"a">> ) ).
+	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"a\\\",\\\"value\\\":\\\"%s\\\"}\\n\" (if a \"true\" \"false\"))\n">>, echo_singleton_boolean( <<"a">> ) ).
 
 test_echo_singleton_string() ->
-	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"a\\\",\\\"value\\\":\\\"%s\\\"}\\\n\" a)\n">>, echo_singleton_string( <<"a">> ) ).
+	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"a\\\",\\\"value\\\":\\\"%s\\\"}\\n\" a)\n">>, echo_singleton_string( <<"a">> ) ).
 
 test_echo_boolean_list() ->
-	?assertEqual( <<"(let ((f (lambda (x) (if x \"true\" \"false\"))))\n  (printf \"<MSG>{\\\"arg_name\\\":\\\"l\\\",\\\"value\\\":[\")\n  (if (length l)\n     (let ((hd (first l)) (tl (rest l))) (printf \"\\\"%s\\\"\" (f hd)) (map (lambda (x) (printf \",\\\"%s\\\"\" (f x))) tl)))\n  (printf \"]}\\\n\"))\n">>, echo_boolean_list( <<"l">> ) ).
+	?assertEqual( <<"(let ((f (lambda (x) (if x \"true\" \"false\"))))\n  (printf \"<MSG>{\\\"arg_name\\\":\\\"l\\\",\\\"value\\\":[\")\n  (if (length l)\n     (let ((hd (first l)) (tl (rest l))) (printf \"\\\"%s\\\"\" (f hd)) (map (lambda (x) (printf \",\\\"%s\\\"\" (f x))) tl)))\n  (printf \"]}\\n\"))\n">>, echo_boolean_list( <<"l">> ) ).
 
 test_echo_string_list() ->
-	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"l\\\",\\\"value\\\":[\")\n(if (length l)\n   (let ((hd (first l)) (tl (rest l))) (printf \"\\\"%s\\\"\" hd) (map (lambda (x) (printf \",\\\"%s\\\"\" x)) tl)))\n(printf \"]}\\\n\")\n">>, echo_string_list( <<"l">> ) ).
+	?assertEqual( <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"l\\\",\\\"value\\\":[\")\n(if (length l)\n   (let ((hd (first l)) (tl (rest l))) (printf \"\\\"%s\\\"\" hd) (map (lambda (x) (printf \",\\\"%s\\\"\" x)) tl)))\n(printf \"]}\\n\")\n">>, echo_string_list( <<"l">> ) ).
 
 test_prefix() ->
 	?assertEqual( <<>>, prefix() ).

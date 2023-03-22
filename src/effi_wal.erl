@@ -93,25 +93,25 @@ bind_string_list( ArgName, Value ) ->
   binary().
 
 echo_singleton_boolean( ArgName ) when is_binary( ArgName )->
-	<<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\\n\" (if ", ArgName/binary, " \"true\" \"false\"))\n">>.
+	<<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\n\" (if ", ArgName/binary, " \"true\" \"false\"))\n">>.
 
 -spec echo_singleton_string( ArgName :: binary() ) ->
   binary().
 
 echo_singleton_string( ArgName ) ->
-	<<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\\n\" ", ArgName/binary, ")\n">>.
+	<<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\n\" ", ArgName/binary, ")\n">>.
 
 -spec echo_boolean_list( ArgName :: binary() ) ->
   binary().
 
 echo_boolean_list( ArgName ) ->
-	<<"(let ((f (lambda (x) (if x \"true\" \"false\"))))\n  (printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n  (if (length ", ArgName/binary, ")\n     (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" (f hd)) (map (lambda (x) (printf \",\\\"%s\\\"\" (f x))) tl)))\n  (printf \"]}\\\n\"))\n">>.
+	<<"(let ((f (lambda (x) (if x \"true\" \"false\"))))\n  (printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n  (if (length ", ArgName/binary, ")\n     (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" (f hd)) (map (lambda (x) (printf \",\\\"%s\\\"\" (f x))) tl)))\n  (printf \"]}\\n\"))\n">>.
 
 -spec echo_string_list( ArgName :: binary() ) ->
   binary().
 
 echo_string_list( ArgName ) ->
-	<<"(printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n(if (length ", ArgName/binary, ")\n   (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" hd) (map (lambda (x) (printf \",\\\"%s\\\"\" x)) tl)))\n(printf \"]}\\\n\")\n">>.
+	<<"(printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n(if (length ", ArgName/binary, ")\n   (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" hd) (map (lambda (x) (printf \",\\\"%s\\\"\" x)) tl)))\n(printf \"]}\\n\")\n">>.
 
 -spec prefix() ->
   binary().
