@@ -62,6 +62,9 @@ If you want to drive the project from the command line please compile it by ente
 
     rebar3 escriptize
 
+### Building the Documentation
+
+    rebar3 edoc
 
 ## Command Line Synopsis
 

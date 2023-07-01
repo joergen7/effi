@@ -1,0 +1,35 @@
+** overview file for the application effi **
+
+@author Jörgen Brandt <joergen@cuneiform-lang.org>
+@copyright 2015
+@title effi Documentation
+@doc
+
+== Introduction and Goals ==
+
+The state of the art for describing computation is via programs or scripts. A script is a textual description of computation. As such, it is a reproducible artifact that can be executed anywhere by anyone. A script can inspect or alter its environment or write to the standard output. Thus, anything a script consumes or produces needs to be encoded either in the script's environment or in its output. The environment, i.e., command line arguments, the file system, environment variables, etc., is a very versatile way to exchange information between a script and its caller. However, this versatility leaves us with many ways to accomplish the same task and different programming languages, like Bash, Python, R, etc., lean towards different ways to interact with the environment.
+
+The effi tool allows a user to box computation. Herein, boxing computation means to describe a piece of computation in a textual format. This description can be sent to a remote computer to execute it. Just like a docker image describes the state of a file system in a reproducible way, an effi file describes a piece of computation in a reproducible way. Since it is a reproducible artifact the computation can be executed anywhere by anyone.
+
+=== Requirements Overview ===
+
+=== Quality Goals ===
+
+== Architecture Constraints ==
+
+== System Scope and Context ==
+
+== Building Block View ==
+
+== Runtime View ==
+
+== Deployment View ==
+
+== Cross-Cutting Concepts ==
+
+== Quality Requirements ==
+
+== Risks and Technical Debts ==
+
+
+@end

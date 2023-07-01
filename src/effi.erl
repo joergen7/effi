@@ -59,7 +59,6 @@
 %% Definitions
 %%====================================================================
 
--define( VSN, "0.1.8" ).
 -define( BUF_SIZE, 1024 ).
 
 
@@ -127,6 +126,8 @@
 -spec main( ArgList :: [string()] ) -> ok.
 
 main( CmdLine ) ->
+
+	ok = application:start( effi ),
 
   try
 
@@ -338,7 +339,8 @@ print_help() ->
 
 
 print_version() ->
-  io:format( "application: effi ~s~n", [?VSN] ).
+	{ok, Version} = application:get_key( effi, vsn ),
+	io:format( "effi ~s~n", [Version] ).
 
 
 -spec get_lang_mod( B :: binary() ) -> atom().

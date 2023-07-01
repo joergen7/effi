@@ -9,8 +9,9 @@ rel/example_project
 .concrete/DEV_MODE
 .rebar
 *~
-doc
 _build
 rebar.lock
-
-*.DS_Store
+rebar3.crashdump
+doc/*
+!doc/overview.edoc
+.DS_Store

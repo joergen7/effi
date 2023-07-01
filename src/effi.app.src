@@ -8,6 +8,7 @@
              effi_bash,
              effi_elixir,
              effi_erlang,
+			 effi_fs,
              effi_gnuplot,
              effi_java,
              effi_javascript,
