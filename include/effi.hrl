@@ -1,2 +1,2 @@
--define( MSG, "<MSG>" ).
--define( EOT, "<EOT>" ).
+-define(MSG, "<MSG>").
+-define(EOT, "<EOT>").

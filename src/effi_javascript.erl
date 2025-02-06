@@ -24,154 +24,163 @@
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_javascript ).
--behaviour( effi ).
+-module(effi_javascript).
+-behaviour(effi).
 
--export( [bind_singleton_boolean/2, bind_singleton_string/2,
-          bind_boolean_list/2, bind_string_list/2,
-          prefix/0, suffix/0, end_of_transmission/0, process_script/1,
-          run_extended_script/3, echo_singleton_boolean/1,
-          echo_singleton_string/1, echo_boolean_list/1,
-          echo_string_list/1,
-          get_run_info/1] ).
+-export([bind_singleton_boolean/2,
+         bind_singleton_string/2,
+         bind_boolean_list/2,
+         bind_string_list/2,
+         prefix/0,
+         suffix/0,
+         end_of_transmission/0,
+         process_script/1,
+         run_extended_script/3,
+         echo_singleton_boolean/1,
+         echo_singleton_string/1,
+         echo_boolean_list/1,
+         echo_string_list/1,
+         get_run_info/1]).
 
--include( "effi.hrl" ).
-
-
--spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
-    {ok, binary(), [#{ atom() => _ }]}
-  | {error, binary()}
-when ExtendedScript :: binary(),
-     Dir            :: string(),
-     RunInfo        :: _.
-
-run_extended_script( ExtendedScript, Dir, _ )
-when is_binary( ExtendedScript ),
-     is_list( Dir ) ->
-
-  ScriptFile = string:join( [Dir, "__script.js"], "/" ),
-  Call = "node __script.js",
-
-  ok = file:write_file( ScriptFile, ExtendedScript ),
-
-  Port = effi:create_port( Call, Dir ),
-
-  effi:listen_port( Port ).
+-include("effi.hrl").
 
 
--spec bind_singleton_boolean( ArgName, Value ) ->
-  binary()
-when ArgName :: binary(),
-     Value   :: binary().
+-spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
+          {ok, binary(), [#{atom() => _}]} |
+          {error, binary()}
+              when ExtendedScript :: binary(),
+                   Dir :: string(),
+                   RunInfo :: _.
 
-bind_singleton_boolean( ArgName, <<"true">> )
-when is_binary( ArgName ) ->
-  <<"var ", ArgName/binary, " = true;\n">>;
+run_extended_script(ExtendedScript, Dir, _)
+  when is_binary(ExtendedScript),
+       is_list(Dir) ->
 
-bind_singleton_boolean( ArgName, <<"false">> )
-when is_binary( ArgName ) ->
-  <<"var ", ArgName/binary, " = false;\n">>.
+    ScriptFile = string:join([Dir, "__script.js"], "/"),
+    Call = "node __script.js",
 
+    ok = file:write_file(ScriptFile, ExtendedScript),
 
--spec bind_singleton_string( ArgName, Value ) ->
-  binary()
-when ArgName :: binary(),
-     Value   :: binary().
+    Port = effi:create_port(Call, Dir),
 
-bind_singleton_string( ArgName, Value )
-when is_binary( ArgName ),
-     is_binary( Value ) ->
-  <<"var ", ArgName/binary, " = '", Value/binary, "';\n">>.
+    effi:listen_port(Port).
 
 
--spec bind_boolean_list( ArgName, Value ) ->
-  binary()
-when ArgName :: binary(),
-     Value   :: [binary()].
+-spec bind_singleton_boolean(ArgName, Value) ->
+          binary()
+              when ArgName :: binary(),
+                   Value :: binary().
 
-bind_boolean_list( ArgName, Value )
-when is_binary( ArgName ),
-     is_list( Value ) ->
-  SLst = [binary_to_list( V ) || V <- Value],
-  B = list_to_binary( string:join( SLst, ", " ) ),
-  <<"var ", ArgName/binary, " = [ ", B/binary, " ];\n">>.
+bind_singleton_boolean(ArgName, <<"true">>)
+  when is_binary(ArgName) ->
+    <<"var ", ArgName/binary, " = true;\n">>;
+
+bind_singleton_boolean(ArgName, <<"false">>)
+  when is_binary(ArgName) ->
+    <<"var ", ArgName/binary, " = false;\n">>.
 
 
--spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
-  binary().
+-spec bind_singleton_string(ArgName, Value) ->
+          binary()
+              when ArgName :: binary(),
+                   Value :: binary().
 
-bind_string_list( ArgName, Value )
-when is_binary( ArgName ),
-     is_list( Value ) ->
-  SLst = ["'"++binary_to_list( V )++"'" || V <- Value],
-  B = list_to_binary( string:join( SLst, ", " ) ),
-  <<"var ", ArgName/binary, " = [ ", B/binary, " ];\n">>.
+bind_singleton_string(ArgName, Value)
+  when is_binary(ArgName),
+       is_binary(Value) ->
+    <<"var ", ArgName/binary, " = '", Value/binary, "';\n">>.
+
+
+-spec bind_boolean_list(ArgName, Value) ->
+          binary()
+              when ArgName :: binary(),
+                   Value :: [binary()].
+
+bind_boolean_list(ArgName, Value)
+  when is_binary(ArgName),
+       is_list(Value) ->
+    SLst = [ binary_to_list(V) || V <- Value ],
+    B = list_to_binary(string:join(SLst, ", ")),
+    <<"var ", ArgName/binary, " = [ ", B/binary, " ];\n">>.
+
+
+-spec bind_string_list(ArgName :: binary(), Value :: [binary()]) ->
+          binary().
+
+bind_string_list(ArgName, Value)
+  when is_binary(ArgName),
+       is_list(Value) ->
+    SLst = [ "'" ++ binary_to_list(V) ++ "'" || V <- Value ],
+    B = list_to_binary(string:join(SLst, ", ")),
+    <<"var ", ArgName/binary, " = [ ", B/binary, " ];\n">>.
 
 
 -spec prefix() ->
-  binary().
+          binary().
 
 prefix() -> <<>>.
 
 
 -spec end_of_transmission() ->
-  binary().
+          binary().
 
 end_of_transmission() ->
-  <<"console.log( '", ?EOT, "' );\n">>.
+    <<"console.log( '", ?EOT, "' );\n">>.
 
 
 -spec suffix() ->
-  binary().
+          binary().
 
 suffix() -> <<>>.
 
 
--spec process_script( Script :: binary() ) ->
-  binary().
+-spec process_script(Script :: binary()) ->
+          binary().
 
-process_script( Script )
-when is_binary( Script ) ->
-  Script.
-
-
--spec echo_singleton_boolean( ArgName :: binary() ) ->
-  binary().
-
-echo_singleton_boolean( ArgName )
-when is_binary( ArgName ) ->
-  <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":\"'+String( ", ArgName/binary, " )+'\"}' );\n">>.
+process_script(Script)
+  when is_binary(Script) ->
+    Script.
 
 
--spec echo_singleton_string( ArgName :: binary() ) ->
-  binary().
+-spec echo_singleton_boolean(ArgName :: binary()) ->
+          binary().
 
-echo_singleton_string( ArgName )
-when is_binary( ArgName ) ->
-  <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":\"'+", ArgName/binary, "+'\"}' );\n">>.
+echo_singleton_boolean(ArgName)
+  when is_binary(ArgName) ->
+    <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+      "\",\"value\":\"'+String( ", ArgName/binary, " )+'\"}' );\n">>.
 
 
--spec echo_boolean_list( ArgName :: binary() ) ->
-  binary().
+-spec echo_singleton_string(ArgName :: binary()) ->
+          binary().
 
-echo_boolean_list( ArgName )
-when is_binary( ArgName ) ->
-  <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+String( ", ArgName/binary,
-    ".map( x => '\"'+String( x )+'\"' ) )+']}' );\n">>.
+echo_singleton_string(ArgName)
+  when is_binary(ArgName) ->
+    <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+      "\",\"value\":\"'+", ArgName/binary, "+'\"}' );\n">>.
 
--spec echo_string_list( ArgName :: binary() ) ->
-  binary().
 
-echo_string_list( ArgName )
-when is_binary( ArgName ) ->
-  <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
-    "\",\"value\":['+String( ", ArgName/binary,
-    ".map( x => '\"'+x+'\"' ) )+']}' );\n">>.
+-spec echo_boolean_list(ArgName :: binary()) ->
+          binary().
 
--spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+echo_boolean_list(ArgName)
+  when is_binary(ArgName) ->
+    <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+      "\",\"value\":['+String( ", ArgName/binary,
+      ".map( x => '\"'+String( x )+'\"' ) )+']}' );\n">>.
 
-get_run_info( _Request ) ->
-  [].
+
+-spec echo_string_list(ArgName :: binary()) ->
+          binary().
+
+echo_string_list(ArgName)
+  when is_binary(ArgName) ->
+    <<"console.log( '", ?MSG, "{\"arg_name\":\"", ArgName/binary,
+      "\",\"value\":['+String( ", ArgName/binary,
+      ".map( x => '\"'+x+'\"' ) )+']}' );\n">>.
+
+
+-spec get_run_info(Request :: #{atom() => _}) -> [].
+
+get_run_info(_Request) ->
+    [].

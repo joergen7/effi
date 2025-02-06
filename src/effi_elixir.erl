@@ -24,135 +24,145 @@
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_elixir ).
--behaviour( effi ).
+-module(effi_elixir).
+-behaviour(effi).
 
--export( [bind_singleton_boolean/2, bind_singleton_string/2,
-          bind_boolean_list/2, bind_string_list/2,
-          prefix/0, suffix/0, end_of_transmission/0, process_script/1,
-          run_extended_script/3, echo_singleton_boolean/1,
-          echo_singleton_string/1, echo_boolean_list/1,
-          echo_string_list/1,
-          get_run_info/1] ).
+-export([bind_singleton_boolean/2,
+         bind_singleton_string/2,
+         bind_boolean_list/2,
+         bind_string_list/2,
+         prefix/0,
+         suffix/0,
+         end_of_transmission/0,
+         process_script/1,
+         run_extended_script/3,
+         echo_singleton_boolean/1,
+         echo_singleton_string/1,
+         echo_boolean_list/1,
+         echo_string_list/1,
+         get_run_info/1]).
 
--include( "effi.hrl" ).
-
--spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
-    {ok, binary(), [#{ atom() => _ }]}
-  | {error, binary()}
-when ExtendedScript :: binary(),
-     Dir            :: string(),
-     RunInfo        :: _.
-
-run_extended_script( ExtendedScript, Dir, _ )
-when is_binary( ExtendedScript ),
-     is_list( Dir ) ->
-
-  ScriptFile = string:join( [Dir, "__script.exs"], "/" ),
-  Call = "elixir __script.exs",
-
-  ok = file:write_file( ScriptFile, ExtendedScript ),
-
-  Port = effi:create_port( Call, Dir ),
-
-  effi:listen_port( Port ).
+-include("effi.hrl").
 
 
--spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
-  binary().
+-spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
+          {ok, binary(), [#{atom() => _}]} |
+          {error, binary()}
+              when ExtendedScript :: binary(),
+                   Dir :: string(),
+                   RunInfo :: _.
 
-bind_singleton_boolean( ArgName, Value )
-when is_binary( ArgName ),
-     is_binary( Value ) ->
-  <<ArgName/binary, " = ", Value/binary, "\n">>.
+run_extended_script(ExtendedScript, Dir, _)
+  when is_binary(ExtendedScript),
+       is_list(Dir) ->
 
+    ScriptFile = string:join([Dir, "__script.exs"], "/"),
+    Call = "elixir __script.exs",
 
--spec bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
-  binary().
+    ok = file:write_file(ScriptFile, ExtendedScript),
 
-bind_singleton_string( ArgName, Value ) ->
-  <<ArgName/binary, " = \"", Value/binary, "\"\n">>.
+    Port = effi:create_port(Call, Dir),
 
-
--spec bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
-  binary().
-
-bind_boolean_list( ArgName, Value ) ->
-  S = string:join( [binary_to_list( V ) || V <- Value], ", " ),
-  B = list_to_binary( S ),
-  <<ArgName/binary, " = [", B/binary, "],\n">>.
+    effi:listen_port(Port).
 
 
--spec bind_string_list( ArgName :: binary(), Value :: [binary()] ) ->
-  binary().
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) ->
+          binary().
 
-bind_string_list( ArgName, Value ) ->
-  S = string:join( ["\""++binary_to_list( V )++"\"" || V <- Value], ", " ),
-  B = list_to_binary( S ),
-  <<ArgName/binary, " = [", B/binary, "]\n">>.
-
-
--spec echo_singleton_boolean( ArgName :: binary() ) ->
-  binary().
-
-echo_singleton_boolean( ArgName ) ->
-  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"~p\\\"}~n\", [", ArgName/binary, "] )\n">>.
+bind_singleton_boolean(ArgName, Value)
+  when is_binary(ArgName),
+       is_binary(Value) ->
+    <<ArgName/binary, " = ", Value/binary, "\n">>.
 
 
--spec echo_singleton_string( ArgName :: binary() ) ->
-  binary().
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) ->
+          binary().
 
-echo_singleton_string( ArgName ) ->
-  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":\\\"~s\\\"}~n\", [", ArgName/binary, "] )\n">>.
+bind_singleton_string(ArgName, Value) ->
+    <<ArgName/binary, " = \"", Value/binary, "\"\n">>.
 
 
--spec echo_boolean_list( ArgName :: binary() ) ->
-  binary().
+-spec bind_boolean_list(ArgName :: binary(), Value :: [binary()]) ->
+          binary().
 
-echo_boolean_list( ArgName ) ->
-  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( ( for v <- ",
-    ArgName/binary, ", do: if v, do: \"\\\"true\\\"\", else: \"\\\"false\\\"\" ), \", \" )] )\n">>.
+bind_boolean_list(ArgName, Value) ->
+    S = string:join([ binary_to_list(V) || V <- Value ], ", "),
+    B = list_to_binary(S),
+    <<ArgName/binary, " = [", B/binary, "],\n">>.
 
--spec echo_string_list( ArgName :: binary() ) ->
-  binary().
 
-echo_string_list( ArgName ) ->
-  <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
-    "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( ( for v <- ",
-    ArgName/binary, ", do: \"\\\"#{v}\\\"\" ), \", \" )] )\n">>.
+-spec bind_string_list(ArgName :: binary(), Value :: [binary()]) ->
+          binary().
+
+bind_string_list(ArgName, Value) ->
+    S = string:join([ "\"" ++ binary_to_list(V) ++ "\"" || V <- Value ], ", "),
+    B = list_to_binary(S),
+    <<ArgName/binary, " = [", B/binary, "]\n">>.
+
+
+-spec echo_singleton_boolean(ArgName :: binary()) ->
+          binary().
+
+echo_singleton_boolean(ArgName) ->
+    <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":\\\"~p\\\"}~n\", [", ArgName/binary, "] )\n">>.
+
+
+-spec echo_singleton_string(ArgName :: binary()) ->
+          binary().
+
+echo_singleton_string(ArgName) ->
+    <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":\\\"~s\\\"}~n\", [", ArgName/binary, "] )\n">>.
+
+
+-spec echo_boolean_list(ArgName :: binary()) ->
+          binary().
+
+echo_boolean_list(ArgName) ->
+    <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( ( for v <- ",
+      ArgName/binary, ", do: if v, do: \"\\\"true\\\"\", else: \"\\\"false\\\"\" ), \", \" )] )\n">>.
+
+
+-spec echo_string_list(ArgName :: binary()) ->
+          binary().
+
+echo_string_list(ArgName) ->
+    <<":io.format( \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":[~s]}~n\", [Enum.join( ( for v <- ",
+      ArgName/binary, ", do: \"\\\"#{v}\\\"\" ), \", \" )] )\n">>.
 
 
 -spec prefix() ->
-  binary().
+          binary().
 
 prefix() ->
-  <<>>.
+    <<>>.
 
 
 -spec end_of_transmission() ->
-  binary().
+          binary().
 
 end_of_transmission() ->
-  <<"IO.puts( \"", ?EOT, "\\n\" )\n">>.
+    <<"IO.puts( \"", ?EOT, "\\n\" )\n">>.
 
 
 -spec suffix() ->
-  binary().
+          binary().
 
 suffix() ->
-  <<>>.
+    <<>>.
 
 
--spec process_script( Script :: binary() ) ->
-  binary().
+-spec process_script(Script :: binary()) ->
+          binary().
 
-process_script( Script ) ->
- Script.
+process_script(Script) ->
+    Script.
 
--spec get_run_info( Request :: #{ atom() => _ } ) -> [].
 
-get_run_info( _Request ) ->
-  [].
+-spec get_run_info(Request :: #{atom() => _}) -> [].
+
+get_run_info(_Request) ->
+    [].

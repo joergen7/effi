@@ -1,7 +1,7 @@
 # Effi
 ###### Erlang foreign function interface
 
-[![hex.pm](https://img.shields.io/hexpm/v/effi.svg?style=flat-square)](https://hex.pm/packages/effi) [![Build Status](https://travis-ci.org/joergen7/effi.svg?branch=master)](https://travis-ci.org/joergen7/effi)
+[![hex.pm](https://img.shields.io/hexpm/v/effi.svg?style=flat-square)](https://hex.pm/packages/effi)
 
 The Erlang foreign function interface (Effi) is a way to run code in arbitrary foreign languages, e.g., Python or Octave from a native (Erlang) environment.
 

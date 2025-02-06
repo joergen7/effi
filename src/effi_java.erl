@@ -24,186 +24,196 @@
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_java ).
--behaviour( effi ).
-
+-module(effi_java).
+-behaviour(effi).
 
 %%====================================================================
 %% Exports
 %%====================================================================
 
 % effi callbacks
--export( [bind_singleton_boolean/2,
-          bind_singleton_string/2,
-          bind_boolean_list/2,
-          bind_string_list/2,
-          echo_singleton_boolean/1,
-          echo_singleton_string/1,
-          echo_boolean_list/1,
-          echo_string_list/1,
-          prefix/0,
-          end_of_transmission/0,
-          suffix/0,
-          process_script/1,
-          run_extended_script/3,
-          get_run_info/1] ).
-
+-export([bind_singleton_boolean/2,
+         bind_singleton_string/2,
+         bind_boolean_list/2,
+         bind_string_list/2,
+         echo_singleton_boolean/1,
+         echo_singleton_string/1,
+         echo_boolean_list/1,
+         echo_string_list/1,
+         prefix/0,
+         end_of_transmission/0,
+         suffix/0,
+         process_script/1,
+         run_extended_script/3,
+         get_run_info/1]).
 
 %%====================================================================
 %% Includes
 %%====================================================================
 
--include( "effi.hrl" ).
-
+-include("effi.hrl").
 
 %%====================================================================
 %% Effi callback function implementations
 %%====================================================================
 
--spec bind_singleton_boolean( ArgName :: binary(), Value :: binary() ) ->
-  binary().
 
-bind_singleton_boolean( ArgName, Value ) ->
-  <<"final boolean ", ArgName/binary, " = ", Value/binary, ";\n">>.
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) ->
+          binary().
 
-
--spec bind_singleton_string( ArgName :: binary(), Value :: binary() ) ->
-  binary().
-
-bind_singleton_string( ArgName, Value ) ->
-  <<"final String ", ArgName/binary, " = \"", Value/binary, "\";\n">>.
+bind_singleton_boolean(ArgName, Value) ->
+    <<"final boolean ", ArgName/binary, " = ", Value/binary, ";\n">>.
 
 
--spec bind_boolean_list( ArgName :: binary(), Value :: [binary()] ) ->
-  binary().
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) ->
+          binary().
 
-bind_boolean_list( ArgName, ValueLst ) ->
-  
-
-  S = string:join( [binary_to_list( Value ) || Value <- ValueLst], ", " ),
-  B = list_to_binary( S ),
-
-  <<"final boolean[] ", ArgName/binary, " = { ", B/binary, " };\n">>.
-
--spec bind_string_list( ArgName :: binary(), ValueLst :: [binary()] ) ->
-  binary().
-
-bind_string_list( ArgName, ValueLst )
-when is_binary( ArgName ),
-     is_list( ValueLst ) ->
-
-  F =
-    fun( X ) when is_binary( X ) ->
-      "\""++binary_to_list( X )++"\""
-    end,
-
-  S = string:join( [F( Value ) || Value <- ValueLst], ", " ),
-  B = list_to_binary( S ),
-
-  <<"final String[] ", ArgName/binary, " = { ", B/binary, " };\n">>.
+bind_singleton_string(ArgName, Value) ->
+    <<"final String ", ArgName/binary, " = \"", Value/binary, "\";\n">>.
 
 
--spec echo_singleton_boolean( ArgName :: binary() ) ->
-  binary().
+-spec bind_boolean_list(ArgName :: binary(), Value :: [binary()]) ->
+          binary().
 
-echo_singleton_boolean( ArgName ) ->
-  <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ).append( \"\\\" }\") );\n">>.
+bind_boolean_list(ArgName, ValueLst) ->
 
--spec echo_singleton_string( ArgName :: binary() ) ->
-  binary().
+    S = string:join([ binary_to_list(Value) || Value <- ValueLst ], ", "),
+    B = list_to_binary(S),
 
-echo_singleton_string( ArgName ) ->
-  <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ).append( \"\\\" }\" ) );\n">>.
+    <<"final boolean[] ", ArgName/binary, " = { ", B/binary, " };\n">>.
 
 
--spec echo_boolean_list( ArgName :: binary() ) ->
-  binary().
+-spec bind_string_list(ArgName :: binary(), ValueLst :: [binary()]) ->
+          binary().
 
-echo_boolean_list( ArgName ) ->
-  <<"StringBuffer __s = new StringBuffer();\n",
-    "__s.append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [\" );\n",
-    "boolean __comma = false;\n"
-    "for( boolean x : ", ArgName/binary, " ) {\n",
-    "  if( __comma )\n",
-    "    __s.append( ',' );\n"
-    "  __comma = true;"
-    "  __s.append( '\"' ).append( x ).append( '\"' );\n",
-    "}\n",
-    "System.out.println( __s.append( \"] }\" ) );\n\n">>.
+bind_string_list(ArgName, ValueLst)
+  when is_binary(ArgName),
+       is_list(ValueLst) ->
+
+    F =
+        fun(X) when is_binary(X) ->
+                "\"" ++ binary_to_list(X) ++ "\""
+        end,
+
+    S = string:join([ F(Value) || Value <- ValueLst ], ", "),
+    B = list_to_binary(S),
+
+    <<"final String[] ", ArgName/binary, " = { ", B/binary, " };\n">>.
 
 
+-spec echo_singleton_boolean(ArgName :: binary()) ->
+          binary().
 
--spec echo_string_list( ArgName :: binary() ) ->
-  binary().
+echo_singleton_boolean(ArgName) ->
+    <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ).append( \"\\\" }\") );\n">>.
 
-echo_string_list( ArgName ) ->
-  <<"StringBuffer __s = new StringBuffer();\n",
-    "__s.append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": [\" );\n",
-    "boolean __comma = false;\n"
-    "for( String x : ", ArgName/binary, " ) {\n",
-    "  if( __comma )\n",
-    "    __s.append( ',' );\n"
-    "  __comma = true;"
-    "  __s.append( '\"' ).append( x ).append( '\"' );\n",
-    "}\n",
-    "System.out.println( __s.append( \"] }\" ) );\n\n">>.
+
+-spec echo_singleton_string(ArgName :: binary()) ->
+          binary().
+
+echo_singleton_string(ArgName) ->
+    <<"System.out.println( new StringBuffer().append( \"", ?MSG, "{ \\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\" ).append( ", ArgName/binary, " ).append( \"\\\" }\" ) );\n">>.
+
+
+-spec echo_boolean_list(ArgName :: binary()) ->
+          binary().
+
+echo_boolean_list(ArgName) ->
+    <<"StringBuffer __s = new StringBuffer();\n",
+      "__s.append( \"",
+      ?MSG,
+      "{ \\\"arg_name\\\": \\\"",
+      ArgName/binary,
+      "\\\", \\\"value\\\": [\" );\n",
+      "boolean __comma = false;\n"
+      "for( boolean x : ",
+      ArgName/binary,
+      " ) {\n",
+      "  if( __comma )\n",
+      "    __s.append( ',' );\n"
+      "  __comma = true;"
+      "  __s.append( '\"' ).append( x ).append( '\"' );\n",
+      "}\n",
+      "System.out.println( __s.append( \"] }\" ) );\n\n">>.
+
+
+-spec echo_string_list(ArgName :: binary()) ->
+          binary().
+
+echo_string_list(ArgName) ->
+    <<"StringBuffer __s = new StringBuffer();\n",
+      "__s.append( \"",
+      ?MSG,
+      "{ \\\"arg_name\\\": \\\"",
+      ArgName/binary,
+      "\\\", \\\"value\\\": [\" );\n",
+      "boolean __comma = false;\n"
+      "for( String x : ",
+      ArgName/binary,
+      " ) {\n",
+      "  if( __comma )\n",
+      "    __s.append( ',' );\n"
+      "  __comma = true;"
+      "  __s.append( '\"' ).append( x ).append( '\"' );\n",
+      "}\n",
+      "System.out.println( __s.append( \"] }\" ) );\n\n">>.
 
 
 -spec prefix() ->
-  binary().
+          binary().
 
 prefix() ->
-  <<"import java.io.BufferedReader;\n",
-    "import java.io.BufferedWriter;\n",
-    "import java.io.FileReader;\n",
-    "import java.io.FileWriter;\n",
-    "import java.io.File;\n",
-    "import java.io.IOException;\n",
-    "public class Main {\n",
-    "public static void main( String[] __args ) throws IOException {\n">>.
+    <<"import java.io.BufferedReader;\n",
+      "import java.io.BufferedWriter;\n",
+      "import java.io.FileReader;\n",
+      "import java.io.FileWriter;\n",
+      "import java.io.File;\n",
+      "import java.io.IOException;\n",
+      "public class Main {\n",
+      "public static void main( String[] __args ) throws IOException {\n">>.
 
 
 -spec end_of_transmission() ->
-  binary().
+          binary().
 
 end_of_transmission() ->
-  <<"System.out.println( \"", ?EOT, "\" );\n">>.
+    <<"System.out.println( \"", ?EOT, "\" );\n">>.
 
 
 -spec suffix() ->
-  binary().
+          binary().
 
 suffix() ->
-  <<"}\n}\n">>.
+    <<"}\n}\n">>.
 
 
--spec process_script( Script :: binary() ) ->
-  binary().
+-spec process_script(Script :: binary()) ->
+          binary().
 
-process_script( Script ) ->
-  Script.
-
-
--spec run_extended_script( ExtendedScript :: binary(), Dir :: string(), RunInfo :: _ ) ->
-    {ok, binary(), [#{ atom() => _ }]}
-  | {error, binary()}.
-
-run_extended_script( ExtendedScript, Dir, _ ) ->
-
-  JavaFile = string:join( [Dir, "Main.java"], "/" ),
-  ok = file:write_file( JavaFile, ExtendedScript ),
-
-  ScriptFile = string:join( [Dir, "__script.sh"], "/" ),
-  ok = file:write_file( ScriptFile, "set -eu -o pipefail\njavac Main.java\njava Main\n" ),
-
-  Call = "bash __script.sh",
+process_script(Script) ->
+    Script.
 
 
-  Port = effi:create_port( Call, Dir ),
+-spec run_extended_script(ExtendedScript :: binary(), Dir :: string(), RunInfo :: _) ->
+          {ok, binary(), [#{atom() => _}]} |
+          {error, binary()}.
 
-  effi:listen_port( Port ).
+run_extended_script(ExtendedScript, Dir, _) ->
 
--spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+    JavaFile = string:join([Dir, "Main.java"], "/"),
+    ok = file:write_file(JavaFile, ExtendedScript),
 
-get_run_info( _Request ) ->
-  [].
+    ScriptFile = string:join([Dir, "__script.sh"], "/"),
+    ok = file:write_file(ScriptFile, "set -eu -o pipefail\njavac Main.java\njava Main\n"),
+
+    Call = "bash __script.sh",
+
+    Port = effi:create_port(Call, Dir),
+
+    effi:listen_port(Port).
+
+
+-spec get_run_info(Request :: #{atom() => _}) -> [].
+
+get_run_info(_Request) ->
+    [].

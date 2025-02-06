@@ -1,14 +1,12 @@
 {application, effi,
- [
-  {description, "Erlang foreign function interface"},
+ [{description, "Erlang foreign function interface"},
   {vsn, "0.1.8"},
-  {modules, [
-             effi,
+  {modules, [effi,
              effi_awk,
              effi_bash,
              effi_elixir,
              effi_erlang,
-			 effi_fs,
+             effi_fs,
              effi_gnuplot,
              effi_java,
              effi_javascript,
@@ -16,17 +14,11 @@
              effi_octave,
              effi_python,
              effi_r,
-             effi_racket
-            ]},
+             effi_racket]},
   {registered, []},
-  {applications, [
-                  kernel,
-                  stdlib
-                 ]},
+  {applications, [kernel,
+                  stdlib]},
   {env, []},
   {maintainers, ["Jorgen Brandt"]},
   {licenses, ["Apache 2.0"]},
-  {links, [
-           {"GitHub", "https://github.com/joergen7/effi/"}
-          ]}
- ]}.
+  {links, [{"GitHub", "https://github.com/joergen7/effi/"}]}]}.

@@ -20,111 +20,122 @@
 %% @author Jörgen Brandt <joergen@cuneiform-lang.org>
 %% @copyright 2015
 %%
-%% @doc The standalone application entry point is {@link main/1}. 
-%% The create_port callback defined here is an abstract way to execute child 
-%% processes in foreign languages. 
-%% There are two foreign language interfaces, both implementing this callback,
+%% @doc The standalone application entry point is {@link main/1}.
+ %% The create_port callback defined here is an abstract way to execute child
+ %% processes in foreign languages.
+ %% There are two foreign language interfaces, both implementing this callback,
 %% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
 %% Bash, R).
 %%
 %% @end
 %% -------------------------------------------------------------------
 
--module( effi_matlab ).
+-module(effi_matlab).
 
--behaviour( effi ).
+-behaviour(effi).
 
 %%====================================================================
 %% Exports
 %%====================================================================
 
 % effi callbacks
--export( [bind_singleton_boolean/2,
-          bind_singleton_string/2,
-          bind_boolean_list/2,
-          bind_string_list/2,
-          echo_singleton_boolean/1,
-          echo_singleton_string/1,
-          echo_boolean_list/1,
-          echo_string_list/1,
-          prefix/0,
-          end_of_transmission/0,
-          suffix/0,
-          process_script/1,
-          run_extended_script/3,
-          get_run_info/1] ).
-
+-export([bind_singleton_boolean/2,
+         bind_singleton_string/2,
+         bind_boolean_list/2,
+         bind_string_list/2,
+         echo_singleton_boolean/1,
+         echo_singleton_string/1,
+         echo_boolean_list/1,
+         echo_string_list/1,
+         prefix/0,
+         end_of_transmission/0,
+         suffix/0,
+         process_script/1,
+         run_extended_script/3,
+         get_run_info/1]).
 
 %%====================================================================
 %% Includes
 %%====================================================================
 
--include( "effi.hrl" ).
+-include("effi.hrl").
 
 %%====================================================================
 %% Effi callback function implementations
 %%====================================================================
 
-bind_singleton_boolean( ArgName, Value ) ->
-  effi_octave:bind_singleton_boolean( ArgName, Value ).
 
-bind_singleton_string( Argname, Value ) ->
-  effi_octave:bind_singleton_string( Argname, Value ).
+bind_singleton_boolean(ArgName, Value) ->
+    effi_octave:bind_singleton_boolean(ArgName, Value).
 
-bind_boolean_list( ArgName, Value ) ->
-  effi_octave:bind_boolean_list( ArgName, Value ).
 
-bind_string_list( ArgName, Value ) ->
-  effi_octave:bind_string_list( ArgName, Value ).
+bind_singleton_string(Argname, Value) ->
+    effi_octave:bind_singleton_string(Argname, Value).
 
-echo_singleton_boolean( ArgName ) ->
-  effi_octave:echo_singleton_boolean( ArgName ).
 
-echo_singleton_string( ArgName ) ->
-  effi_octave:echo_singleton_string( ArgName ).
+bind_boolean_list(ArgName, Value) ->
+    effi_octave:bind_boolean_list(ArgName, Value).
 
-echo_boolean_list( ArgName ) ->
-  effi_octave:echo_boolean_list( ArgName ).
 
-echo_string_list( ArgName ) ->
-  effi_octave:echo_string_list( ArgName ).
+bind_string_list(ArgName, Value) ->
+    effi_octave:bind_string_list(ArgName, Value).
+
+
+echo_singleton_boolean(ArgName) ->
+    effi_octave:echo_singleton_boolean(ArgName).
+
+
+echo_singleton_string(ArgName) ->
+    effi_octave:echo_singleton_string(ArgName).
+
+
+echo_boolean_list(ArgName) ->
+    effi_octave:echo_boolean_list(ArgName).
+
+
+echo_string_list(ArgName) ->
+    effi_octave:echo_string_list(ArgName).
+
 
 prefix() ->
-  effi_octave:prefix().
+    effi_octave:prefix().
+
 
 end_of_transmission() ->
-  effi_octave:end_of_transmission().
+    effi_octave:end_of_transmission().
+
 
 suffix() ->
-  Suffix = effi_octave:suffix(),
-  <<Suffix/binary, "exit( 0 );\n">>.
-
-process_script( Script ) ->
-  effi_octave:process_script( Script ).
+    Suffix = effi_octave:suffix(),
+    <<Suffix/binary, "exit( 0 );\n">>.
 
 
--spec run_extended_script( ExtendedScript, Dir, RunInfo ) ->
-          {ok, binary(), [#{ atom() => _ }]}
-        | {error, binary()}
-when ExtendedScript :: binary(),
-     Dir            :: string(),
-     RunInfo        :: _.
+process_script(Script) ->
+    effi_octave:process_script(Script).
 
-run_extended_script( ExtendedScript, Dir, _ )
-when is_binary( ExtendedScript ),
-     is_list( Dir ) ->
 
-  ScriptFile = string:join( [Dir, "script.m"], "/" ),
-  Call = "matlab -nodisplay -nojvm -r script",
+-spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
+          {ok, binary(), [#{atom() => _}]} |
+          {error, binary()}
+              when ExtendedScript :: binary(),
+                   Dir :: string(),
+                   RunInfo :: _.
 
-  ok = file:write_file( ScriptFile, ExtendedScript ),
+run_extended_script(ExtendedScript, Dir, _)
+  when is_binary(ExtendedScript),
+       is_list(Dir) ->
 
-  Port = effi:create_port( Call, Dir ),
+    ScriptFile = string:join([Dir, "script.m"], "/"),
+    Call = "matlab -nodisplay -nojvm -r script",
 
-  effi:listen_port( Port ).
+    ok = file:write_file(ScriptFile, ExtendedScript),
 
--spec get_run_info( Request :: #{ atom() => _ } ) -> [].
+    Port = effi:create_port(Call, Dir),
 
-get_run_info( _Request ) ->
-  [].
+    effi:listen_port(Port).
 
+
+-spec get_run_info(Request :: #{atom() => _}) -> [].
+
+get_run_info(_Request) ->
+    [].
