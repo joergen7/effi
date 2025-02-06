@@ -58,8 +58,7 @@
 %%====================================================================
 
 
--spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) ->
-          binary().
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: <<_:32, _:_*8>>) -> <<_:64, _:_*8>>.
 
 bind_singleton_boolean(ArgName, <<"true">>) ->
     <<"(define ", ArgName/binary, " #t)\n">>;
@@ -68,8 +67,7 @@ bind_singleton_boolean(ArgName, <<"false">>) ->
     <<"(define ", ArgName/binary, " #f)\n">>.
 
 
--spec bind_singleton_string(ArgName :: binary(), Value :: binary()) ->
-          binary().
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> <<_:64, _:_*8>>.
 
 bind_singleton_string(ArgName, Value) ->
     <<"(define ", ArgName/binary, " \"", Value/binary, "\")\n">>.
@@ -105,8 +103,7 @@ bind_string_list(ArgName, ValueLst) ->
     <<"(define ", ArgName/binary, " (list", B/binary, "))\n">>.
 
 
--spec echo_singleton_boolean(ArgName :: binary()) ->
-          binary().
+-spec echo_singleton_boolean(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_singleton_boolean(ArgName) ->
     <<"(if ", ArgName/binary, "\n",
@@ -114,15 +111,13 @@ echo_singleton_boolean(ArgName) ->
       "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"false\\\"}\\n\"))\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) ->
-          binary().
+-spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_singleton_string(ArgName) ->
     <<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":~s}\\n\" ", ArgName/binary, ")\n">>.
 
 
--spec echo_boolean_list(ArgName :: binary()) ->
-          binary().
+-spec echo_boolean_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_boolean_list(ArgName) ->
     <<"(let* ([boolean-to-string (lambda (x) (if x \"\\\"true\\\"\" \"\\\"false\\\"\"))]\n",
@@ -131,8 +126,7 @@ echo_boolean_list(ArgName) ->
       "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) ->
-          binary().
+-spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_string_list(ArgName) ->
     <<"(let* ([quote-string (lambda (x) (string-append \"\\\"\" x \"\\\"\"))]\n",
@@ -141,22 +135,19 @@ echo_string_list(ArgName) ->
       "  (printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[~a]}\\n\" s))\n">>.
 
 
--spec prefix() ->
-          binary().
+-spec prefix() -> <<_:512>>.
 
 prefix() ->
     <<"#lang racket/base\n(require (only-in racket/string string-join))\n">>.
 
 
--spec end_of_transmission() ->
-          binary().
+-spec end_of_transmission() -> <<_:152>>.
 
 end_of_transmission() ->
     <<"(printf \"", ?EOT, "\\n\")\n">>.
 
 
--spec suffix() ->
-          binary().
+-spec suffix() -> <<>>.
 
 suffix() ->
     <<>>.
@@ -170,7 +161,7 @@ process_script(Script) ->
 
 
 -spec run_extended_script(ExtendedScript :: binary(), Dir :: string(), RunInfo :: _) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, _) ->

@@ -52,12 +52,12 @@
 %%====================================================================
 
 
--spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
-          {ok, binary(), [#{atom() => _}]} |
-          {error, binary()}
+-spec run_extended_script(ExtendedScript, Dir, RunInfo) -> Result
               when ExtendedScript :: binary(),
                    Dir :: string(),
-                   RunInfo :: #run_info{}.
+                   RunInfo :: #run_info{},
+                   Result :: {ok, binary(), [#{atom() => binary()}]} |
+                             {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, RunInfo)
   when is_binary(ExtendedScript),

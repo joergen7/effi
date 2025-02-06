@@ -46,7 +46,7 @@
 
 
 -spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}
               when ExtendedScript :: binary(),
                    Dir :: string(),

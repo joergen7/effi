@@ -147,7 +147,7 @@ get_run_info(_Request) ->
 -spec run_extended_script(ExtendedScript :: binary(),
                           Dir :: string(),
                           RunInfo :: []) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, _RunInfo) ->

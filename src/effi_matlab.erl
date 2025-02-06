@@ -114,12 +114,12 @@ process_script(Script) ->
     effi_octave:process_script(Script).
 
 
--spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
-          {ok, binary(), [#{atom() => _}]} |
-          {error, binary()}
+-spec run_extended_script(ExtendedScript, Dir, RunInfo) -> Result
               when ExtendedScript :: binary(),
                    Dir :: string(),
-                   RunInfo :: _.
+                   RunInfo :: _,
+                   Result :: {ok, binary(), [#{atom() => binary()}]} |
+                             {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, _)
   when is_binary(ExtendedScript),

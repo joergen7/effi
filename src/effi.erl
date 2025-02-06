@@ -107,7 +107,7 @@
 -callback run_extended_script(ExtendedScript :: binary(),
                               Dir :: string(),
                               RunInfo :: _) ->
-              {ok, binary(), [#{atom() => _}]} |
+              {ok, binary(), [#{atom() => binary()}]} |
               {error, binary()}.
 
 -callback get_run_info(Request :: #{atom() => _}) -> _.

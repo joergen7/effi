@@ -58,8 +58,7 @@
 %%====================================================================
 
 
--spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) ->
-          binary().
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: <<_:32, _:_*8>>) -> <<_:64, _:_*8>>.
 
 bind_singleton_boolean(ArgName, <<"true">>) ->
     <<ArgName/binary, " = TRUE\n">>;
@@ -68,8 +67,7 @@ bind_singleton_boolean(ArgName, <<"false">>) ->
     <<ArgName/binary, " = FALSE\n">>.
 
 
--spec bind_singleton_string(ArgName :: binary(), Value :: binary()) ->
-          binary().
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> <<_:48, _:_*8>>.
 
 bind_singleton_string(ArgName, Value) ->
     <<ArgName/binary, " = \"", Value/binary, "\"\n">>.
@@ -107,8 +105,7 @@ bind_string_list(ArgName, ValueLst) ->
     <<ArgName/binary, " = c( ", B/binary, " )\n">>.
 
 
--spec echo_singleton_boolean(ArgName :: binary()) ->
-          binary().
+-spec echo_singleton_boolean(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_singleton_boolean(ArgName) ->
     <<"if( ", ArgName/binary, " ) {\n",
@@ -118,15 +115,13 @@ echo_singleton_boolean(ArgName) ->
       "}\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) ->
-          binary().
+-spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_singleton_string(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\", ", ArgName/binary, ", \"\\\"}\\n\", sep=\"\" )\n">>.
 
 
--spec echo_boolean_list(ArgName :: binary()) ->
-          binary().
+-spec echo_boolean_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_boolean_list(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
@@ -134,8 +129,7 @@ echo_boolean_list(ArgName) ->
       ArgName/binary, " ) ), \"] }\\n\", sep=\"\" )\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) ->
-          binary().
+-spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_string_list(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
@@ -143,22 +137,19 @@ echo_string_list(ArgName) ->
       ArgName/binary, " ) ), \"] }\\n\", sep=\"\" )\n">>.
 
 
--spec prefix() ->
-          binary().
+-spec prefix() -> <<>>.
 
 prefix() ->
     <<>>.
 
 
--spec end_of_transmission() ->
-          binary().
+-spec end_of_transmission() -> <<_:136>>.
 
 end_of_transmission() ->
     <<"cat( \"", ?EOT, "\\n\" )\n">>.
 
 
--spec suffix() ->
-          binary().
+-spec suffix() -> <<>>.
 
 suffix() ->
     <<>>.
@@ -172,7 +163,7 @@ process_script(Script) ->
 
 
 -spec run_extended_script(ExtendedScript :: binary(), Dir :: string(), RunInfo :: _) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, _) ->

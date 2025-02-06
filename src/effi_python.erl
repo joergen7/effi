@@ -59,7 +59,7 @@
 
 
 -spec run_extended_script(ExtendedScript, Dir, RunInfo) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}
               when ExtendedScript :: binary(),
                    Dir :: string(),
@@ -86,7 +86,7 @@ bind_singleton_boolean(ArgName, <<"false">>) ->
     <<ArgName/binary, " = False\n">>.
 
 
--spec bind_singleton_string(ArgName, Value) -> binary()
+-spec bind_singleton_string(ArgName, Value) -> <<_:48, _:_*8>>
               when ArgName :: binary(),
                    Value :: binary().
 
@@ -123,7 +123,7 @@ echo_singleton_boolean(ArgName)
       "{\"arg_name\":\"", ArgName/binary, "\",\"value\":\"false\"}\\n' )\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) -> binary().
+-spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_singleton_string(ArgName)
   when is_binary(ArgName) ->
@@ -138,7 +138,7 @@ echo_boolean_list(ArgName) ->
       ArgName/binary, " ) )+']}\\n')\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) -> binary().
+-spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
 
 echo_string_list(ArgName)
   when is_binary(ArgName) ->

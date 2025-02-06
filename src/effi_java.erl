@@ -195,7 +195,7 @@ process_script(Script) ->
 
 
 -spec run_extended_script(ExtendedScript :: binary(), Dir :: string(), RunInfo :: _) ->
-          {ok, binary(), [#{atom() => _}]} |
+          {ok, binary(), [#{atom() => binary()}]} |
           {error, binary()}.
 
 run_extended_script(ExtendedScript, Dir, _) ->
