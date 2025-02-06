@@ -21,9 +21,9 @@
 %% @copyright 2015
 %%
 %% @doc The standalone application entry point is {@link main/1}.
- %% The create_port callback defined here is an abstract way to execute child
- %% processes in foreign languages.
- %% There are two foreign language interfaces, both implementing this callback,
+%% The create_port callback defined here is an abstract way to execute child
+%% processes in foreign languages.
+%% There are two foreign language interfaces, both implementing this callback,
 %% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
 %% Bash, R).
 %%
@@ -319,7 +319,7 @@ listen_port(Port) ->
 
 %% opt_spec_list/0
 %% @doc Returns the command line parameters that effi can parse, in a format that the getopt module understands.
- get_optspec_lst() ->
+get_optspec_lst() ->
     [{version, $v, "version", undefined, "Show effi version."},
      {help, $h, "help", undefined, "Show command line options."},
      {dir, $d, "dir", {string, "."}, "Working directory in which to look for input data and run the request."},

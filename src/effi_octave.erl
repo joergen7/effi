@@ -21,9 +21,9 @@
 %% @copyright 2015
 %%
 %% @doc The standalone application entry point is {@link main/1}.
- %% The create_port callback defined here is an abstract way to execute child
- %% processes in foreign languages.
- %% There are two foreign language interfaces, both implementing this callback,
+%% The create_port callback defined here is an abstract way to execute child
+%% processes in foreign languages.
+%% There are two foreign language interfaces, both implementing this callback,
 %% {@link effi_script} (e.g., Perl, Python) and {@link effi_interact} (e.g.,
 %% Bash, R).
 %%
