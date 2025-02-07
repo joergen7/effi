@@ -86,7 +86,7 @@ run_extended_script(ExtendedScript, Dir, _)
     effi:listen_port(Port).
 
 
--spec bind_singleton_string(ArgName, Value) -> <<_:56, _:_*8>>
+-spec bind_singleton_string(ArgName, Value) -> binary()
               when ArgName :: binary(),
                    Value :: binary().
 
@@ -97,9 +97,9 @@ bind_singleton_string(ArgName, Value)
     <<ArgName/binary, " = '", Value/binary, "';\n">>.
 
 
--spec bind_singleton_boolean(ArgName, Value) -> <<_:64, _:_*8>>
+-spec bind_singleton_boolean(ArgName, Value) -> binary()
               when ArgName :: binary(),
-                   Value :: <<_:32, _:_*8>>.
+                   Value :: binary().
 
 bind_singleton_boolean(ArgName, <<"true">>) ->
     <<ArgName/binary, " = true;\n">>;
@@ -121,7 +121,7 @@ bind_boolean_list(ArgName, Value)
     <<ArgName/binary, " = ", B/binary, ";\n">>.
 
 
--spec bind_string_list(ArgName, Value) -> <<_:40, _:_*8>>
+-spec bind_string_list(ArgName, Value) -> binary()
               when ArgName :: binary(),
                    Value :: [binary()].
 
@@ -134,7 +134,7 @@ bind_string_list(ArgName, Value)
     <<ArgName/binary, " = ", B/binary, ";\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_singleton_string(ArgName :: binary()) -> binary().
 
 echo_singleton_string(ArgName)
   when is_binary(ArgName) ->
@@ -161,7 +161,7 @@ echo_singleton_boolean(ArgName)
       "end\n\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_string_list(ArgName :: binary()) -> binary().
 
 echo_string_list(ArgName)
   when is_binary(ArgName) ->
@@ -185,7 +185,7 @@ echo_string_list(ArgName)
       "fprintf( 1, ']}\\n' )\n\n">>.
 
 
--spec echo_boolean_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_boolean_list(ArgName :: binary()) -> binary().
 
 echo_boolean_list(ArgName) ->
 

@@ -58,7 +58,7 @@
 %%====================================================================
 
 
--spec bind_singleton_boolean(ArgName :: binary(), Value :: <<_:32, _:_*8>>) -> <<_:64, _:_*8>>.
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) -> binary().
 
 bind_singleton_boolean(ArgName, <<"true">>) ->
     <<ArgName/binary, " = TRUE\n">>;
@@ -67,7 +67,7 @@ bind_singleton_boolean(ArgName, <<"false">>) ->
     <<ArgName/binary, " = FALSE\n">>.
 
 
--spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> <<_:48, _:_*8>>.
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> binary().
 
 bind_singleton_string(ArgName, Value) ->
     <<ArgName/binary, " = \"", Value/binary, "\"\n">>.
@@ -105,7 +105,7 @@ bind_string_list(ArgName, ValueLst) ->
     <<ArgName/binary, " = c( ", B/binary, " )\n">>.
 
 
--spec echo_singleton_boolean(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_singleton_boolean(ArgName :: binary()) -> binary().
 
 echo_singleton_boolean(ArgName) ->
     <<"if( ", ArgName/binary, " ) {\n",
@@ -115,13 +115,13 @@ echo_singleton_boolean(ArgName) ->
       "}\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_singleton_string(ArgName :: binary()) -> binary().
 
 echo_singleton_string(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary, "\\\", \\\"value\\\": \\\"\", ", ArgName/binary, ", \"\\\"}\\n\", sep=\"\" )\n">>.
 
 
--spec echo_boolean_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_boolean_list(ArgName :: binary()) -> binary().
 
 echo_boolean_list(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
@@ -129,7 +129,7 @@ echo_boolean_list(ArgName) ->
       ArgName/binary, " ) ), \"] }\\n\", sep=\"\" )\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_string_list(ArgName :: binary()) -> binary().
 
 echo_string_list(ArgName) ->
     <<"cat( \"", ?MSG, "{\\\"arg_name\\\": \\\"", ArgName/binary,
@@ -143,7 +143,7 @@ prefix() ->
     <<>>.
 
 
--spec end_of_transmission() -> <<_:136>>.
+-spec end_of_transmission() -> binary().
 
 end_of_transmission() ->
     <<"cat( \"", ?EOT, "\\n\" )\n">>.

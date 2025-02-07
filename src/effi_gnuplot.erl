@@ -53,22 +53,32 @@
 -spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) ->
           binary().
 
-bind_singleton_boolean(_ArgName, _Value) ->
-    error(nyi).
+bind_singleton_boolean(ArgName, Value) ->
+    V = case Value of
+            <<"true">> -> <<"1">>;
+            <<"false">> -> <<"0">>
+        end,
+    <<ArgName/binary, "=", V/binary, "\n">>.
 
 
 -spec bind_singleton_string(ArgName :: binary(), Value :: binary()) ->
           binary().
 
-bind_singleton_string(_ArgName, _Value) ->
-    error(nyi).
+bind_singleton_string(ArgName, Value) ->
+    <<ArgName/binary, "=\"", Value/binary, "\"\n">>.
 
 
 -spec bind_boolean_list(ArgName :: binary(), Value :: [binary()]) ->
           binary().
 
-bind_boolean_list(_ArgName, _Value) ->
-    error(nyi).
+bind_boolean_list(ArgName, Value) ->
+    F = fun(<<"true">>) -> "1";
+           (<<"false">>) -> "0"
+        end,
+    L = list_to_binary(integer_to_list(length(Value))),
+    SLst = [ F(V) || V <- Value ],
+    B = list_to_binary(string:join(SLst, ",")),
+    <<"array ", ArgName/binary, "[", L/binary, "]=[", B/binary, "]\n">>.
 
 
 -spec bind_string_list(ArgName :: binary(), Value :: [binary()]) ->
@@ -84,16 +94,18 @@ bind_string_list(ArgName, Value) ->
 -spec echo_singleton_boolean(ArgName :: binary()) ->
           binary().
 
-echo_singleton_boolean(_ArgName) ->
-    error(nyi).
+echo_singleton_boolean(ArgName) ->
+    <<"if (", ArgName/binary, ") {print \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":\\\"true\\\"}\"} else {print \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":\\\"false\\\"}\"}">>.
 
 
 -spec echo_singleton_string(ArgName :: binary()) ->
           binary().
 
 echo_singleton_string(ArgName) ->
-    <<"print \"", ?MSG, "\", \"{\\\"arg_name\\\":\\\"", ArgName/binary,
-      "\\\", \\\"value\\\":\\\"\",", ArgName/binary, ",\"\\\"}\"\n">>.
+    <<"print \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary,
+      "\\\",\\\"value\\\":\\\"\".", ArgName/binary, ".\"\\\"}\"\n">>.
 
 
 -spec echo_boolean_list(ArgName :: binary()) ->

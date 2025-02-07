@@ -50,7 +50,7 @@
 -include("effi.hrl").
 
 
--spec bind_singleton_boolean(ArgName :: binary(), Value :: <<_:32, _:_*8>>) -> <<_:64, _:_*8>>.
+-spec bind_singleton_boolean(ArgName :: binary(), Value :: binary()) -> binary().
 
 bind_singleton_boolean(ArgName, <<"true">>) when is_binary(ArgName) ->
     <<"(set (", ArgName/binary, " #t))\n">>;
@@ -59,7 +59,7 @@ bind_singleton_boolean(ArgName, <<"false">>) when is_binary(ArgName) ->
     <<"(set (", ArgName/binary, " #f))\n">>.
 
 
--spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> <<_:64, _:_*8>>.
+-spec bind_singleton_string(ArgName :: binary(), Value :: binary()) -> binary().
 
 bind_singleton_string(ArgName, Value) when is_binary(ArgName), is_binary(Value) ->
     <<"(set (", ArgName/binary, " \"", Value/binary, "\"))\n">>.
@@ -89,25 +89,25 @@ bind_string_list(ArgName, Value) ->
     <<"(set (", ArgName/binary, " (list", B/binary, ")))\n">>.
 
 
--spec echo_singleton_boolean(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_singleton_boolean(ArgName :: binary()) -> binary().
 
 echo_singleton_boolean(ArgName) when is_binary(ArgName) ->
     <<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\n\" (if ", ArgName/binary, " \"true\" \"false\"))\n">>.
 
 
--spec echo_singleton_string(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_singleton_string(ArgName :: binary()) -> binary().
 
 echo_singleton_string(ArgName) ->
     <<"(printf \"", ?MSG, "{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":\\\"%s\\\"}\\n\" ", ArgName/binary, ")\n">>.
 
 
--spec echo_boolean_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_boolean_list(ArgName :: binary()) -> binary().
 
 echo_boolean_list(ArgName) ->
     <<"(let ((f (lambda (x) (if x \"true\" \"false\"))))\n  (printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n  (if (length ", ArgName/binary, ")\n     (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" (f hd)) (map (lambda (x) (printf \",\\\"%s\\\"\" (f x))) tl)))\n  (printf \"]}\\n\"))\n">>.
 
 
--spec echo_string_list(ArgName :: binary()) -> <<_:64, _:_*8>>.
+-spec echo_string_list(ArgName :: binary()) -> binary().
 
 echo_string_list(ArgName) ->
     <<"(printf \"<MSG>{\\\"arg_name\\\":\\\"", ArgName/binary, "\\\",\\\"value\\\":[\")\n(if (length ", ArgName/binary, ")\n   (let ((hd (first ", ArgName/binary, ")) (tl (rest ", ArgName/binary, "))) (printf \"\\\"%s\\\"\" hd) (map (lambda (x) (printf \",\\\"%s\\\"\" x)) tl)))\n(printf \"]}\\n\")\n">>.
@@ -119,7 +119,7 @@ prefix() ->
     <<>>.
 
 
--spec end_of_transmission() -> <<_:128>>.
+-spec end_of_transmission() -> binary().
 
 end_of_transmission() ->
     <<"(print \"", ?EOT, "\")\n">>.
